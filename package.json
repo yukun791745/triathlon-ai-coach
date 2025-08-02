@@ -1,0 +1,14 @@
+{
+  "name": "triathlon-ai-coach",
+  "version": "1.0.0",
+  "description": "AI-powered triathlon coaching platform",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

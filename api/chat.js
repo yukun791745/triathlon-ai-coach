@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 - 体言止めは禁止、必ず文章で説明する
 
 回答方法：
-運動初心者にも分かるよう、専門用語は「つまり○○ということです」と説明する。日常の例えを使って、会話するように優しく300文字程度で答える。
+運動初心者にも分かるよう、専門用語は「つまり○○ということです」と説明する。日常の例えを使って、会話するように優しく答える。必ず文章を完結させる。
 
 普通の文章だけで、とても分かりやすく説明してください。`;
 
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
             content: message 
           }
         ],
-        max_tokens: 400,
+        max_tokens: 500,        // 400→500に増加（完結した回答のため）
         temperature: 0.3,
         top_p: 0.8,
         frequency_penalty: 0.1,

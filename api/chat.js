@@ -23,24 +23,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。運動を始めたばかりの初心者に説明するように答えてください。
+    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。
 
 絶対に守ること：
-・見出し記号（# ## ###）は一切使わない
-・太字記号（** *）は一切使わない  
-・箇条書き記号（- • 1. 2.）は一切使わない
-・体言止めは使わない、必ず文章で説明する
+- 見出し記号は使わない（#、##、###など）
+- 太字記号は使わない（**、*など）
+- 箇条書きは使わない（1.、2.、-、•など）
+- 体言止めは禁止、必ず文章で説明する
 
-説明方法：
-・専門用語には必ず「つまり〜ということです」と説明を加える
-・日常生活の例え話を使う
-・「なぜそうなるのか」理由も含めて説明する
-・300文字程度で、会話するように優しく説明する
+回答方法：
+運動初心者にも分かるよう、専門用語は「つまり○○ということです」と説明する。日常の例えを使って、会話するように優しく300文字程度で答える。
 
-初心者が理解できるよう、とても分かりやすく説明してください。`;
+普通の文章だけで、とても分かりやすく説明してください。`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒に短縮
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -60,12 +57,11 @@ export default async function handler(req, res) {
             content: message 
           }
         ],
-        max_tokens: 400,        // 250→400に増加（300文字対応）
-        temperature: 0.1,       // 0.3→0.1に（最高速度優先）
-        top_p: 0.7,            // さらに絞り込み
-        frequency_penalty: 0.2,
-        presence_penalty: 0.2,
-        stop: ["###", "##", "#", "**", "*", "-", "•"] // マークダウン強制停止
+        max_tokens: 400,
+        temperature: 0.3,
+        top_p: 0.8,
+        frequency_penalty: 0.1,
+        presence_penalty: 0.1
       }),
       signal: controller.signal
     });
@@ -83,17 +79,15 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
-      // マークダウン記号を強制除去（より強力な処理）
+      // 強力なマークダウン除去
       let cleanedReply = data.choices[0].message.content
-        .replace(/\*\*([^*]+)\*\*/g, '$1')     // **太字**を除去
-        .replace(/\*([^*]+)\*/g, '$1')         // *斜体*を除去
-        .replace(/#{1,6}\s?/g, '')             // # ## ### などを除去
-        .replace(/^[\s]*[-•*]\s*/gm, '')       // 箇条書き記号を除去
-        .replace(/^[\s]*\d+\.\s*/gm, '')       // 番号付きリストを除去
-        .replace(/:\s?\*\*/g, '：')            // **: を：に変更
-        .replace(/\*\*/g, '')                  // 残った**を除去
-        .replace(/\n{3,}/g, '\n\n')            // 過度な改行を整理
-        .replace(/\s{2,}/g, ' ')               // 過度なスペースを整理
+        .replace(/\*\*([^*]*)\*\*/g, '$1')     // **太字**
+        .replace(/\*([^*]*)\*/g, '$1')         // *斜体*
+        .replace(/#{1,6}\s*/g, '')             // ##### などの見出し
+        .replace(/^[\s]*[-•*+]\s+/gm, '')      // - • * + の箇条書き
+        .replace(/^[\s]*\d+\.\s+/gm, '')       // 1. 2. 3. の番号付き
+        .replace(/^\s*[\-\*]{3,}\s*$/gm, '')   // --- *** の区切り線
+        .replace(/\n{3,}/g, '\n\n')            // 過度な改行
         .trim();
       
       return res.status(200).json({ 

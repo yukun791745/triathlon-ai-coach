@@ -23,19 +23,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。運動生理学の知識が限定的な一般の方に向けて、分かりやすく説明してください。
+    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。運動を始めたばかりの初心者に説明するように答えてください。
 
-重要：以下の記号は絶対に使用禁止です：
-# ## ### #### * ** - • 1. 2. 3.
+絶対に守ること：
+・見出し記号（# ## ###）は一切使わない
+・太字記号（** *）は一切使わない  
+・箇条書き記号（- • 1. 2.）は一切使わない
+・体言止めは使わない、必ず文章で説明する
 
-回答スタイル：
-・専門用語を使う際は、必ず具体例や比喩で説明する
-・体言止めではなく、完結した文章で説明する
-・「なぜそうなるのか」「どういう意味なのか」を丁寧に説明する
-・日常生活に例えて理解しやすくする
-・300文字程度で、普通の会話のように答える
+説明方法：
+・専門用語には必ず「つまり〜ということです」と説明を加える
+・日常生活の例え話を使う
+・「なぜそうなるのか」理由も含めて説明する
+・300文字程度で、会話するように優しく説明する
 
-運動初心者にも理解できるよう、噛み砕いて説明してください。`;
+初心者が理解できるよう、とても分かりやすく説明してください。`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒に短縮
@@ -81,14 +83,17 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
-      // マークダウン記号を強制除去
+      // マークダウン記号を強制除去（より強力な処理）
       let cleanedReply = data.choices[0].message.content
-        .replace(/#{1,6}\s*/g, '')          // # ## ### #### ##### ###### 除去
-        .replace(/\*\*(.*?)\*\*/g, '$1')   // **太字** 除去
-        .replace(/\*(.*?)\*/g, '$1')       // *斜体* 除去
-        .replace(/^[-•]\s*/gm, '')         // 箇条書き記号除去
-        .replace(/^\d+\.\s*/gm, '')        // 番号付きリスト除去
-        .replace(/\n{3,}/g, '\n\n')        // 過度な改行を整理
+        .replace(/\*\*([^*]+)\*\*/g, '$1')     // **太字**を除去
+        .replace(/\*([^*]+)\*/g, '$1')         // *斜体*を除去
+        .replace(/#{1,6}\s?/g, '')             // # ## ### などを除去
+        .replace(/^[\s]*[-•*]\s*/gm, '')       // 箇条書き記号を除去
+        .replace(/^[\s]*\d+\.\s*/gm, '')       // 番号付きリストを除去
+        .replace(/:\s?\*\*/g, '：')            // **: を：に変更
+        .replace(/\*\*/g, '')                  // 残った**を除去
+        .replace(/\n{3,}/g, '\n\n')            // 過度な改行を整理
+        .replace(/\s{2,}/g, ' ')               // 過度なスペースを整理
         .trim();
       
       return res.status(200).json({ 

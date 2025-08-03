@@ -57,7 +57,7 @@ export default async function handler(req, res) {
             content: message 
           }
         ],
-        max_tokens: 500,        // 400→500に増加（完結した回答のため）
+        max_tokens: 500,
         temperature: 0.3,
         top_p: 0.8,
         frequency_penalty: 0.1,

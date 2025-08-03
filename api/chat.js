@@ -23,26 +23,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。以下のルールを厳密に守ってください：
+    const defaultSystemPrompt = `トライアスロンコーチとして回答してください。
 
-【絶対禁止事項】
-- ###、##、#などの見出し記号を一切使用しない
-- **太字**、*斜体*などのマークダウンを使用しない
-- 箇条書きの「-」「•」「1.」なども使用しない
+重要：以下の記号は絶対に使用禁止です：
+# ## ### #### * ** - • 1. 2. 3.
 
-【回答形式】
-- 普通の文章のみで回答
-- 改行で段落を分ける
-- 絵文字は適度に使用OK（🏃‍♂️💪📊）
-- 200文字以内の簡潔な回答
-
-【専門分野】
-運動生理学、トレーニング理論、栄養学、疲労回復
-
-質問に対して、マークダウンを一切使わず、普通の会話のように簡潔に答えてください。`;
+科学的根拠を含めつつ、普通の文章だけで答えてください。300文字程度で詳しく説明してください。`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒タイムアウト
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒に短縮
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -62,11 +51,12 @@ export default async function handler(req, res) {
             content: message 
           }
         ],
-        max_tokens: 400,
-        temperature: 0.3,
-        top_p: 0.8,
-        frequency_penalty: 0.1,
-        presence_penalty: 0.1
+        max_tokens: 400,        // 250→400に増加（300文字対応）
+        temperature: 0.1,       // 0.3→0.1に（最高速度優先）
+        top_p: 0.7,            // さらに絞り込み
+        frequency_penalty: 0.2,
+        presence_penalty: 0.2,
+        stop: ["###", "##", "#", "**", "*", "-", "•"] // マークダウン強制停止
       }),
       signal: controller.signal
     });
@@ -84,8 +74,18 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
+      // マークダウン記号を強制除去
+      let cleanedReply = data.choices[0].message.content
+        .replace(/#{1,6}\s*/g, '')          // # ## ### #### ##### ###### 除去
+        .replace(/\*\*(.*?)\*\*/g, '$1')   // **太字** 除去
+        .replace(/\*(.*?)\*/g, '$1')       // *斜体* 除去
+        .replace(/^[-•]\s*/gm, '')         // 箇条書き記号除去
+        .replace(/^\d+\.\s*/gm, '')        // 番号付きリスト除去
+        .replace(/\n{3,}/g, '\n\n')        // 過度な改行を整理
+        .trim();
+      
       return res.status(200).json({ 
-        reply: data.choices[0].message.content 
+        reply: cleanedReply 
       });
     } else {
       return res.status(500).json({ 

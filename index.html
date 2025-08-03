@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -212,16 +211,14 @@
         
         .api-setup {
             padding: 20px;
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            margin: 20px;
-            border-radius: 8px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
         }
         
         .api-input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #ffc107;
+            border: 2px solid #dee2e6;
             border-radius: 6px;
             margin-top: 10px;
             font-family: monospace;
@@ -229,35 +226,75 @@
         }
         
         .api-button {
-            background: #ffc107;
-            color: #212529;
+            background: #007bff;
+            color: white;
             border: none;
             padding: 10px 16px;
             border-radius: 6px;
             cursor: pointer;
             margin-top: 10px;
-            margin-right: 10px;
-            font-weight: 600;
-        }
-        
-        .api-button:hover {
-            background: #e0a800;
-        }
-        
-        .deploy-button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
             font-weight: 600;
             width: 100%;
         }
         
-        .deploy-button:hover {
-            background: #218838;
+        .api-button:hover {
+            background: #0056b3;
+        }
+        
+        .api-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .welcome-message {
+            padding: 20px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            margin: 20px;
+            border-radius: 12px;
+            border: 2px solid #e1bee7;
+            text-align: center;
+        }
+        
+        .welcome-message h3 {
+            color: #4a148c;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .welcome-message p {
+            color: #6a1b9a;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .features-list {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: left;
+        }
+        
+        .features-list h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features-list li {
+            padding: 5px 0;
+            color: #555;
+            font-size: 0.9em;
+        }
+        
+        .features-list li::before {
+            content: "🏃‍♂️";
+            margin-right: 8px;
         }
         
         .chat-messages {
@@ -265,7 +302,7 @@
             padding: 15px;
             overflow-y: auto;
             background: #f8f9fa;
-            max-height: 500px;
+            max-height: 400px;
         }
         
         .chat-message {
@@ -343,17 +380,6 @@
         .status-connected { background: #28a745; }
         .status-error { background: #dc3545; }
         .status-loading { background: #ffc107; }
-        
-        .code-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8em;
-            overflow-x: auto;
-        }
         
         @media (max-width: 768px) {
             .container {
@@ -448,88 +474,28 @@
             </div>
             
             <div id="apiSetup" class="api-setup">
-                <strong>🚀 実際のAI接続のための次のステップ</strong>
-                <p>CORS制限により、ブラウザから直接OpenAI APIに接続できないことが確認されました。</p>
+                <label for="apiKeyInput"><strong>OpenAI APIキー</strong></label>
+                <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-proj-...">
+                <button onclick="connectAI()" id="connectBtn" class="api-button">🔗 AIコーチに接続</button>
+            </div>
+            
+            <div id="welcomeMessage" class="welcome-message">
+                <h3>👋 AIトライアスロンコーチへようこそ！</h3>
+                <p>上記にOpenAI APIキーを入力して「AIコーチに接続」ボタンを押すと、運動生理学博士レベルの専門的なアドバイスを受けることができます。</p>
                 
-                <div style="margin: 15px 0; padding: 15px; background: #e8f4fd; border-radius: 6px;">
-                    <strong>📋 確認されたAPIキー:</strong><br>
-                    <code>sk-proj-UeWIFWcZl4WT...（有効）</code><br><br>
-                    <strong>❌ 問題:</strong> ブラウザのCORS制限<br>
-                    <strong>✅ 解決策:</strong> サーバーサイド実装
+                <div class="features-list">
+                    <h4>🎯 できること</h4>
+                    <ul>
+                        <li>シミュレーション結果の詳細解説</li>
+                        <li>トレーニング方法の科学的アドバイス</li>
+                        <li>VO2max・乳酸閾値の改善戦略</li>
+                        <li>栄養・回復・レース戦略の相談</li>
+                        <li>個別の質問への専門的回答</li>
+                    </ul>
                 </div>
                 
-                <h4>🔧 Vercel Functionsによる実装手順:</h4>
-                
-                <div class="code-box">
-<strong>1. プロジェクト構造:</strong>
-triathlon-ai-coach/
-├── api/
-│   └── openai.js
-├── public/
-│   └── index.html
-├── package.json
-└── vercel.json
-                </div>
-                
-                <div class="code-box">
-<strong>2. api/openai.js:</strong>
-export default async function handler(req, res) {
-  const { message, apiKey, systemPrompt } = req.body;
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
-      max_tokens: 1500,
-      temperature: 0.7
-    })
-  });
-  
-  const data = await response.json();
-  res.json(data);
-}
-                </div>
-                
-                <div class="code-box">
-<strong>3. 修正されたAI呼び出し:</strong>
-fetch('/api/openai', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    message: userMessage,
-    apiKey: apiKey,
-    systemPrompt: systemPrompt
-  })
-})
-                </div>
-                
-                <button onclick="showDeployInstructions()" class="deploy-button">
-                    📦 詳細なデプロイ手順を表示
-                </button>
-                
-                <div style="margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 6px; font-size: 0.85em;">
-                    <strong>⏱️ 実装時間:</strong> 約10-15分<br>
-                    <strong>💰 コスト:</strong> Vercel無料プラン利用可能<br>
-                    <strong>🔒 セキュリティ:</strong> APIキーをサーバーサイドで安全に処理
-                </div>
-                
-                <hr style="margin: 20px 0;">
-                
-                <input type="password" id="apiKeyInput" class="api-input" placeholder="OpenAI APIキーを入力 (sk-proj-...)">
-                
-                <button onclick="enableDemoMode()" class="api-button">
-                    🎯 デモモードで専門的AIコーチを体験
-                </button>
-                <p style="font-size: 0.8em; margin-top: 10px; color: #6c757d;">
-                    現在は高品質なフォールバック応答で運動生理学の専門知識を提供します
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                    💡 まずは左側のシミュレーターでデータを入力し、結果をAIコーチに分析してもらいましょう！
                 </p>
             </div>
             
@@ -537,7 +503,7 @@ fetch('/api/openai', {
                 <div class="ai-message">
                     <strong>AIコーチ</strong><br>
                     こんにちは！運動生理学博士のAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️<br>
-                    シミュレーション結果の詳細解説や、トレーニングに関する専門的な質問にお答えします。
+                    シミュレーション結果の詳細解説や、トレーニングに関する専門的な質問にお答えします。何でもお気軽にご相談ください！
                 </div>
             </div>
             
@@ -554,6 +520,55 @@ fetch('/api/openai', {
         // グローバル変数
         var isAIConnected = false;
         var lastResults = null;
+        
+        // APIキーの保存・読み込み
+        function saveAPIKey(apiKey) {
+            if (typeof(Storage) !== "undefined") {
+                sessionStorage.setItem("openai_api_key", apiKey);
+            }
+        }
+        
+        function loadAPIKey() {
+            if (typeof(Storage) !== "undefined") {
+                return sessionStorage.getItem("openai_api_key") || "";
+            }
+            return "";
+        }
+        
+        // ページ読み込み時にAPIキーを復元
+        window.onload = function() {
+            var savedKey = loadAPIKey();
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+            }
+        };
+        
+        // AI接続
+        function connectAI() {
+            var apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                alert('APIキーを入力してください');
+                return;
+            }
+            
+            if (!apiKey.startsWith('sk-')) {
+                alert('有効なOpenAI APIキーを入力してください（sk-で始まる）');
+                return;
+            }
+            
+            // APIキーを保存
+            saveAPIKey(apiKey);
+            
+            isAIConnected = true;
+            document.getElementById('apiSetup').style.display = 'none';
+            document.getElementById('welcomeMessage').style.display = 'none';
+            document.getElementById('chatMessages').style.display = 'block';
+            document.getElementById('chatInputArea').style.display = 'block';
+            document.getElementById('connectionStatus').className = 'status-indicator status-connected';
+            
+            showMessage('✅ AIコーチに接続しました！質問をどうぞ', 'success');
+        }
         
         // 正確な運動生理学計算ロジック
         function calculateVO2maxImprovement(vo2max, genetics, age, gender) {
@@ -897,144 +912,6 @@ fetch('/api/openai', {
             showMessage('🎉 計算完了！AIコーチの詳細分析をお待ちください', 'success');
         }
         
-        // デプロイ手順表示
-        function showDeployInstructions() {
-            var modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;';
-            
-            var content = document.createElement('div');
-            content.style.cssText = 'background:white;padding:30px;border-radius:10px;max-width:90%;max-height:80%;overflow-y:auto;';
-            
-            content.innerHTML = `
-                <h2>🚀 Vercel Functions実装手順</h2>
-                
-                <h3>1. プロジェクト準備</h3>
-                <div class="code-box">
-mkdir triathlon-ai-coach
-cd triathlon-ai-coach
-npm init -y
-                </div>
-                
-                <h3>2. package.json</h3>
-                <div class="code-box">
-{
-  "name": "triathlon-ai-coach",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build"
-  },
-  "devDependencies": {
-    "vercel": "^32.0.0"
-  }
-}
-                </div>
-                
-                <h3>3. api/openai.js</h3>
-                <div class="code-box">
-export default async function handler(req, res) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  const { message, apiKey, systemPrompt } = req.body;
-  
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': \`Bearer \${apiKey}\`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 1500,
-        temperature: 0.7
-      })
-    });
-    
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-                </div>
-                
-                <h3>4. デプロイ</h3>
-                <div class="code-box">
-npx vercel
-# プロンプトに従って設定
-# デプロイ完了後のURLをメモ
-                </div>
-                
-                <h3>5. HTML修正</h3>
-                <p>generateAIResponse関数を以下に変更：</p>
-                <div class="code-box">
-fetch('/api/openai', {  // または 'https://your-app.vercel.app/api/openai'
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    message: message,
-    apiKey: apiKey,
-    systemPrompt: systemPrompt
-  })
-})
-                </div>
-                
-                <button onclick="document.body.removeChild(this.parentElement.parentElement)" 
-                        style="margin-top:20px;padding:10px 20px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;">
-                    閉じる
-                </button>
-            `;
-            
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-        }
-        
-        // デモモード有効化
-        function enableDemoMode() {
-            var apiKey = getStoredAPIKey();
-            
-            if (!apiKey || !apiKey.startsWith('sk-')) {
-                showMessage('有効なOpenAI APIキーを入力してください', 'error');
-                return;
-            }
-            
-            isAIConnected = true;
-            document.getElementById('apiSetup').style.display = 'none';
-            document.getElementById('chatMessages').style.display = 'block';
-            document.getElementById('chatInputArea').style.display = 'block';
-            document.getElementById('connectionStatus').className = 'status-indicator status-connected';
-            
-            showMessage('✅ Vercel Functions経由でOpenAI APIに接続準備完了！', 'success');
-            
-            addChatMessage('ai', '🚀 <strong>Vercel Functions + OpenAI API接続準備完了</strong><br><br>' +
-                          'こんにちは！運動生理学博士のAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️<br><br>' +
-                          'Vercel Functions経由で実際のOpenAI APIに接続し、以下の専門分野について科学的根拠に基づいた詳細な回答を提供します：<br><br>' +
-                          '• 運動生理学の最新研究に基づく解析<br>' +
-                          '• 個別化されたトレーニング理論<br>' +
-                          '• 科学的妥当性を重視した専門的アドバイス<br>' +
-                          '• シミュレーション結果の詳細な解説<br><br>' +
-                          '**デプロイ状況によって：**<br>' +
-                          '• ✅ Vercel Function稼働中 → 実際のAI回答<br>' +
-                          '• ❌ 未デプロイまたはエラー → 高品質フォールバック<br><br>' +
-                          'どちらの場合も専門的なアドバイスを提供します！');
-        }
-        
         // チャットメッセージ追加
         function addChatMessage(sender, content) {
             var container = document.getElementById('chatMessages');
@@ -1053,208 +930,47 @@ fetch('/api/openai', {  // または 'https://your-app.vercel.app/api/openai'
         
         // 結果分析
         function analyzeResults(results) {
-            var analysis = '📊 <strong>シミュレーション結果の詳細分析</strong><br><br>';
+            var analysisMessage = 'シミュレーション結果の詳細分析をお願いします。VO2max改善幅: ' + 
+                results.improvements.vo2max.toFixed(1) + 'ml/kg/min、LT改善: ' + 
+                results.improvements.ltPercent + '%、LTペース改善: ' + 
+                Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒/km短縮';
             
-            analysis += '<strong>🫁 VO2max分析</strong><br>';
-            analysis += '改善幅: ' + results.improvements.vo2max.toFixed(1) + ' ml/kg/min (' + 
-                       ((results.improvements.vo2max / results.current.vo2max) * 100).toFixed(1) + '%向上)<br>';
-            
-            if (results.improvements.vo2max > 5) {
-                analysis += 'この改善は優秀で、遺伝的要因と現在のフィットネスレベルが向上に有利に働いています。<br><br>';
-            } else if (results.improvements.vo2max > 2) {
-                analysis += 'この改善は標準的で、継続的なトレーニングにより着実な向上が期待できます。<br><br>';
-            } else {
-                analysis += 'この改善幅は控えめですが、既に高いレベルにあることを示している可能性があります。<br><br>';
-            }
-            
-            analysis += '<strong>⚡ 乳酸閾値分析</strong><br>';
-            analysis += 'LT改善: ' + results.improvements.ltPercent + '% VO2max向上<br>';
-            analysis += 'より高い強度で長時間運動できるようになり、持久性パフォーマンスが大幅に改善されます。<br><br>';
-            
-            analysis += '<strong>🏃‍♂️ ランニングペース分析</strong><br>';
-            analysis += 'LTペース改善: ' + Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒/km短縮<br>';
-            analysis += 'この改善はレースパフォーマンスに直接的な影響を与え、競技力向上につながります。<br><br>';
-            
-            analysis += '<strong>🏁 レースタイム改善効果</strong><br>';
-            analysis += '• 5K: ' + results.current.raceTimes['5K'] + ' → ' + results.improved.raceTimes['5K'] + '<br>';
-            analysis += '• 10K: ' + results.current.raceTimes['10K'] + ' → ' + results.improved.raceTimes['10K'] + '<br>';
-            analysis += '• ハーフ: ' + results.current.raceTimes['Half'] + ' → ' + results.improved.raceTimes['Half'] + '<br>';
-            analysis += '• フル: ' + results.current.raceTimes['Marathon'] + ' → ' + results.improved.raceTimes['Marathon'] + '<br><br>';
-            
-            analysis += '<strong>📈 推奨トレーニング戦略</strong><br>';
-            if (results.improvements.vo2max > 4) {
-                analysis += '1. 週2-3回の高強度インターバル（VO2maxの85-95%）<br>';
-                analysis += '2. LT強度での持続走（週1-2回、20-40分）<br>';
-                analysis += '3. ロング走（週1回、有酸素ベース構築）<br>';
-            } else {
-                analysis += '1. LT強度での持続走を重視（80-85% HRmax）<br>';
-                analysis += '2. 段階的な距離増加（週10%ルール）<br>';
-                analysis += '3. フォーム改善とランニングエコノミー向上<br>';
-            }
-            analysis += '<br>これらの改善は8-12週間の構造化されたトレーニングプログラムで実現可能です。';
-            
-            addChatMessage('ai', analysis);
+            sendAIMessage(analysisMessage);
         }
         
-        // 専門的AI応答生成 - Vercel Functions版
-        function generateExpertResponse(message) {
-            return new Promise(function(resolve, reject) {
-                var systemPrompt = `あなたは運動生理学の博士号を持つトライアスロン専門コーチです。以下の専門知識を活用して、科学的根拠に基づいた実践的なアドバイスを提供してください：
-
-【専門分野】
-- 運動生理学（VO2max、乳酸閾値、ランニングエコノミー）
-- トライアスロン競技特有のトレーニング理論
-- スポーツ栄養学とパフォーマンス
-- バイオメカニクスとフォーム分析
-- 疲労回復とピーキング戦略
-- 遺伝的要因とトレーニング応答性
-
-【回答方針】
-1. 必ず科学的根拠（研究論文、生理学的メカニズム）を含める
-2. 具体的で実践可能なアドバイスを提供
-3. 個人差と安全性を常に考慮
-4. 最新の運動生理学研究を反映
-5. 専門用語を使いつつ分かりやすく説明
-
-現在のシミュレーション結果: ${lastResults ? JSON.stringify(lastResults) : '未実行'}`;
-
-                // Vercel Functionsを使用してAPI呼び出し
-                var apiEndpoint = '/api/chat';
+        // AI応答生成
+        async function sendAIMessage(message) {
+            try {
+                var apiKey = loadAPIKey();
                 
-                console.log('Calling Vercel Function:', apiEndpoint);
-                
-                fetch(apiEndpoint, {
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         message: message,
-                        apiKey: getStoredAPIKey(),
-                        systemPrompt: systemPrompt,
-                        simulationResults: lastResults
+                        apiKey: apiKey
                     })
-                })
-                .then(function(response) {
-                    console.log('Vercel Function response status:', response.status);
-                    
-                    if (!response.ok) {
-                        return response.json().then(function(errorData) {
-                            throw new Error(errorData.error || 'API Error: ' + response.status);
-                        });
-                    }
-                    
-                    return response.json();
-                })
-                .then(function(data) {
-                    console.log('AI response received:', data);
-                    
-                    if (data.reply) {
-                        resolve('🔗 **実際のOpenAI APIからの回答:**\n\n' + data.reply);
-                    } else if (data.choices && data.choices[0] && data.choices[0].message) {
-                        resolve('🔗 **実際のOpenAI APIからの回答:**\n\n' + data.choices[0].message.content);
-                    } else {
-                        throw new Error('Invalid API response format');
-                    }
-                })
-                .catch(function(error) {
-                    console.error('AI Response Error:', error);
-                    
-                    // エラーハンドリング
-                    var errorMessage = '';
-                    if (error.message.includes('401')) {
-                        errorMessage = 'APIキーが無効または期限切れです。';
-                    } else if (error.message.includes('429')) {
-                        errorMessage = 'API利用制限に達しました。しばらく待ってから再試行してください。';
-                    } else if (error.message.includes('404')) {
-                        errorMessage = 'Vercel Function が見つかりません。デプロイを確認してください。';
-                    } else {
-                        errorMessage = 'エラー: ' + error.message;
-                    }
-                    
-                    // フォールバック応答
-                    var fallbackResponse = generateStaticExpertResponse(message);
-                    resolve(fallbackResponse + '\n\n---\n**🔧 接続状況:** ' + errorMessage);
                 });
-            });
-        }
-        
-        // APIキー保存・取得
-        function getStoredAPIKey() {
-            return document.getElementById('apiKeyInput') ? document.getElementById('apiKeyInput').value.trim() : '';
-        }
-        
-        // 静的な専門的応答（フォールバック用）
-        function generateStaticExpertResponse(message) {
-            var msg = message.toLowerCase();
-            
-            if (msg.indexOf('vo2max') !== -1 || msg.indexOf('最大酸素摂取量') !== -1) {
-                return '**VO2max（最大酸素摂取量）の科学的解析**\n\n' +
-                       '**定義と重要性：**\n' +
-                       'VO2maxは1分間に体重1kgあたりが摂取・利用できる酸素の最大量（ml/kg/min）で、心血管系と筋代謝能力を反映する持久力の最重要指標です。\n\n' +
-                       '**生理学的決定因子：**\n' +
-                       '1. **中央循環系**：心拍出量（心拍数×1回拍出量）\n' +
-                       '2. **末梢循環系**：筋血流分布と毛細血管密度\n' +
-                       '3. **筋代謝系**：ミトコンドリア密度と酸化酵素活性\n\n' +
-                       '**トライアスロンでの基準値（ml/kg/min）：**\n' +
-                       '• エリート男性：65-75\n' +
-                       '• エリート女性：55-65\n' +
-                       '• 競技レベル男性：50-65\n' +
-                       '• 競技レベル女性：45-55\n\n' +
-                       '**科学的改善戦略：**\n' +
-                       'Heritage Family Study（1999-2000）によると、VO2maxの改善応答性には遺伝的要因が大きく影響します：\n' +
-                       '• 高応答群：15-20%改善\n' +
-                       '• 中応答群：8-12%改善\n' +
-                       '• 低応答群：3-5%改善\n\n' +
-                       '**実践的トレーニング処方：**\n' +
-                       '1. **高強度インターバル**：90-95% HRmax、4-8分×3-5本\n' +
-                       '2. **中強度持続**：80-85% HRmax、20-40分\n' +
-                       '3. **頻度**：週2-3回、8-12週間\n\n' +
-                       '年齢による低下率は年間約1%ですが、適切なトレーニングにより維持・向上が可能です。';
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addChatMessage('ai', data.reply);
+                } else {
+                    throw new Error('AI応答エラー');
+                }
+                
+            } catch (error) {
+                console.error('AI Response Error:', error);
+                addChatMessage('ai', '申し訳ありません。AI接続にエラーが発生しました。');
             }
-            
-            if (msg.indexOf('乳酸閾値') !== -1 || msg.indexOf('lt') !== -1) {
-                return '**乳酸閾値（Lactate Threshold）の科学的解析**\n\n' +
-                       '**生理学的メカニズム：**\n' +
-                       '乳酸閾値は血中乳酸濃度が指数関数的に上昇し始める運動強度で、有酸素代謝から無酸素代謝への移行点を示します。\n\n' +
-                       '**LTの決定因子：**\n' +
-                       '1. **筋線維組成**：Type I線維（遅筋）の割合\n' +
-                       '2. **ミトコンドリア密度**：酸化的リン酸化能力\n' +
-                       '3. **毛細血管密度**：酸素供給効率\n' +
-                       '4. **乳酸除去能力**：肝臓での乳酸代謝\n\n' +
-                       '**測定方法と基準：**\n' +
-                       '• **LT1**：2mmol/L（有酸素閾値）\n' +
-                       '• **LT2**：4mmol/L（無酸素閾値）\n' +
-                       '• **%VO2max**：通常80-90%で発生\n\n' +
-                       '**科学的改善戦略：**\n' +
-                       'Laursen & Jenkins (2002) のメタ解析によると：\n' +
-                       '1. **テンポ走**：LT強度で20-40分、週2-3回\n' +
-                       '2. **スイートスポット**：LT1-LT2間での練習\n' +
-                       '3. **ポラライズド**：低強度80% + 高強度20%\n\n' +
-                       '改善により、同じ乳酸濃度でより高い強度での運動が可能になります。';
-            }
-            
-            return '**運動生理学に基づく専門的回答**\n\n' +
-                   'ご質問について、科学的根拠に基づいてお答えします。トライアスロンパフォーマンスの向上には、以下の生理学的要因の統合的な理解が重要です：\n\n' +
-                   '**1. エネルギーシステム：**\n' +
-                   '• 有酸素系（ミトコンドリア呼吸）\n' +
-                   '• 無酸素系（解糖系 + リン酸系）\n' +
-                   '• 脂質・糖質代謝の最適化\n\n' +
-                   '**2. 神経筋系：**\n' +
-                   '• 運動単位動員パターン\n' +
-                   '• 筋線維型分布と適応\n' +
-                   '• 神経筋協調性\n\n' +
-                   '**3. 心血管系：**\n' +
-                   '• 心拍出量と末梢血流\n' +
-                   '• 酸素運搬・抽出能力\n' +
-                   '• 血管新生と毛細血管密度\n\n' +
-                   'より具体的な質問をいただければ、詳細な科学的解析と実践的なトレーニング処方を提供できます。';
         }
         
-        // メッセージ送信 - Vercel Functions対応版
+        // メッセージ送信
         function sendMessage() {
             if (!isAIConnected) {
-                showMessage('先にAIコーチを有効化してください', 'error');
+                alert('先にAIコーチに接続してください');
                 return;
             }
             
@@ -1265,20 +981,7 @@ fetch('/api/openai', {  // または 'https://your-app.vercel.app/api/openai'
             addChatMessage('user', message);
             input.value = '';
             
-            // 実際のAI応答を取得（Vercel Functions経由）
-            generateExpertResponse(message)
-                .then(function(response) {
-                    addChatMessage('ai', response.replace(/\n/g, '<br>'));
-                })
-                .catch(function(error) {
-                    console.error('AI Response Error:', error);
-                    addChatMessage('ai', '申し訳ありません。AI接続にエラーが発生しました。<br><br>' +
-                                        '**可能な原因：**<br>' +
-                                        '• APIキーが無効または期限切れ<br>' +
-                                        '• Vercel Functionのデプロイエラー<br>' +
-                                        '• ネットワーク接続の問題<br><br>' +
-                                        'デプロイ状況とAPIキーを確認してください。');
-                });
+            sendAIMessage(message);
         }
         
         // Enterキー処理
@@ -1289,7 +992,7 @@ fetch('/api/openai', {  // または 'https://your-app.vercel.app/api/openai'
             }
         }
         
-        console.log('Triathlon AI Coach (Vercel Ready) loaded successfully!');
+        console.log('Triathlon AI Coach (Enhanced UI) loaded successfully!');
     </script>
 </body>
 </html>

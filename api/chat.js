@@ -23,18 +23,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    const defaultSystemPrompt = `あなたは親しみやすいトライアスロンコーチです。
+    const defaultSystemPrompt = `トライアスロンコーチとして答えてください。
 
-絶対に守ること：
-- 見出し記号は使わない（#、##、###など）
-- 太字記号は使わない（**、*など）
-- 箇条書きは使わない（1.、2.、-、•など）
-- 体言止めは禁止、必ず文章で説明する
+重要な制約：
+記号類は一切使用禁止です。見出し、太字、箇条書きなどのマークダウン記号は絶対に使わないでください。
 
-回答方法：
-運動初心者にも分かるよう、専門用語は「つまり○○ということです」と説明する。日常の例えを使って、会話するように優しく答える。必ず文章を完結させる。
+回答形式：
+運動初心者向けに、普通の文章のみで説明してください。専門用語には必ず分かりやすい説明を加えてください。
 
-普通の文章だけで、とても分かりやすく説明してください。`;
+このルールを必ず守ってください。`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -54,7 +51,7 @@ export default async function handler(req, res) {
           },
           { 
             role: 'user', 
-            content: message 
+            content: message + "\n\n注意：マークダウン記号（#、**、-、1.など）は一切使わず、普通の文章のみで回答してください。"
           }
         ],
         max_tokens: 500,
@@ -79,15 +76,19 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
-      // 強力なマークダウン除去
+      // 非常に強力なマークダウン除去
       let cleanedReply = data.choices[0].message.content
-        .replace(/\*\*([^*]*)\*\*/g, '$1')     // **太字**
-        .replace(/\*([^*]*)\*/g, '$1')         // *斜体*
-        .replace(/#{1,6}\s*/g, '')             // ##### などの見出し
-        .replace(/^[\s]*[-•*+]\s+/gm, '')      // - • * + の箇条書き
-        .replace(/^[\s]*\d+\.\s+/gm, '')       // 1. 2. 3. の番号付き
-        .replace(/^\s*[\-\*]{3,}\s*$/gm, '')   // --- *** の区切り線
-        .replace(/\n{3,}/g, '\n\n')            // 過度な改行
+        .replace(/\*\*([^*]*)\*\*/g, '$1')           // **太字**
+        .replace(/\*([^*]*)\*/g, '$1')               // *斜体*
+        .replace(/#{1,6}\s*/g, '')                   // ### 見出し
+        .replace(/^[\s]*[-•*+]\s+/gm, '')            // - 箇条書き
+        .replace(/^[\s]*\d+\.\s+/gm, '')             // 1. 番号付き
+        .replace(/^\s*[\-\*_]{3,}\s*$/gm, '')        // --- 区切り線
+        .replace(/\*\*([^*]*)\*\*/g, '')             // 残った**
+        .replace(/\*/g, '')                          // 残った*
+        .replace(/#+/g, '')                          // 残った#
+        .replace(/\n{3,}/g, '\n\n')                  // 過度な改行
+        .replace(/：\s*\*/g, '：')                   // ：*の組み合わせ
         .trim();
       
       return res.status(200).json({ 

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トライアスロン AIコーチ | データ連携版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            min-height: calc(100vh - 40px);
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Strava連携パネル */
+        .strava-header {
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+        }
+        
+        .connect-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(252, 76, 2, 0.3);
+        }
+        
+        .connect-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* アクティビティリスト */
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .activity-type {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .activity-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .activity-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #4facfe;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.8em;
+        }
+        
+        /* アクティビティ詳細 */
+        .detail-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        .detail-content {
+            padding: 0;
+        }
+        
+        .activity-detail {
+            padding: 20px;
+        }
+        
+        .detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .detail-stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 5px;
+        }
+        
+        .detail-stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .ai-feedback {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .ai-feedback h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .feedback-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #4facfe;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .activity-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Strava連携パネル -->
+        <div class="panel">
+            <div class="header strava-header">
+                <h1>🏃‍♂️ Strava連携</h1>
+                <p>アクティビティデータを取得</p>
+            </div>
+            
+            <div class="content">
+                <div id="connectionStatus" class="status">未接続</div>
+                
+                <button id="connectBtn" class="connect-btn" onclick="connectStrava()">
+                    Stravaに接続
+                </button>
+                
+                <div id="userInfo" style="display: none;">
+                    <h3>接続済みユーザー</h3>
+                    <div id="userDetails"></div>
+                </div>
+                
+                <div id="syncSection" style="display: none;">
+                    <button id="syncBtn" class="connect-btn" onclick="syncActivities()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        📊 アクティビティを同期
+                    </button>
+                    <div id="syncStatus"></div>
+                </div>
+                
+                <div id="stravaInstructions">
+                    <h3>📋 セットアップ手順</h3>
+                    <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                        <li>Strava Developer Accountを作成</li>
+                        <li>Application登録</li>
+                        <li>Client ID & Secretを設定</li>
+                        <li>認証フローを完了</li>
+                    </ol>
+                    
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong>🔧 開発者向け:</strong><br>
+                        <code>CLIENT_ID</code> と <code>CLIENT_SECRET</code> をNetlify環境変数に設定してください。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- アクティビティリストパネル -->
+        <div class="panel">
+            <div class="header">
+                <h1>📈 アクティビティ一覧</h1>
+                <p>過去30日のトレーニング</p>
+            </div>
+            
+            <div class="content">
+                <div id="activityList">
+                    <div style="text-align: center; color: #666; margin-top: 50px;">
+                        Stravaに接続してアクティビティを表示
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- アクティビティ詳細パネル -->
+        <div class="panel">
+            <div class="header detail-header">
+                <h1>🔍 アクティビティ詳細</h1>
+                <p>AIコーチによる分析</p>
+            </div>
+            
+            <div class="detail-content">
+                <div id="activityDetail">
+                    <div style="text-align: center; color: #666; margin: 50px 20px;">
+                        アクティビティを選択して詳細を表示
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase設定（実際の値に更新）
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuptU8RKnew6UOfPukKY3yGgi3cWduGdk",
+            authDomain: "triathlon-ai-coach-18486.firebaseapp.com",
+            projectId: "triathlon-ai-coach-18486",
+            storageBucket: "triathlon-ai-coach-18486.firebasestorage.app",
+            messagingSenderId: "849991082816",
+            appId: "1:849991082816:web:007ca462056475916150a5"
+        };
+        
+        // Firebase初期化
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // グローバル変数
+        let currentUser = null;
+        let stravaToken = null;
+        let activities = [];
+        
+        // Strava設定（実際の値に更新済み）
+        const STRAVA_CLIENT_ID = '171117';
+        const REDIRECT_URI = window.location.origin + '/strava-callback';
+        
+        // ページ読み込み時の初期化
+        window.addEventListener('load', function() {
+            initializeAuth();
+            handleStravaCallback();
+        });
+        
+        // Firebase認証初期化
+        function initializeAuth() {
+            auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    currentUser = user;
+                    console.log('ユーザーログイン:', user.email);
+                    checkStravaConnection();
+                } else {
+                    // 匿名ログイン（簡易実装）
+                    auth.signInAnonymously().catch(function(error) {
+                        console.error('認証エラー:', error);
+                    });
+                }
+            });
+        }
+        
+        // Strava接続状況確認
+        async function checkStravaConnection() {
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists && userDoc.data().stravaToken) {
+                    stravaToken = userDoc.data().stravaToken;
+                    updateConnectionStatus('connected', '✅ Strava接続済み');
+                    showSyncSection();
+                    loadStoredActivities();
+                } else {
+                    updateConnectionStatus('', '未接続');
+                }
+            } catch (error) {
+                console.error('接続状況確認エラー:', error);
+                updateConnectionStatus('error', '❌ 接続確認エラー');
+            }
+        }
+        
+        // Strava認証開始
+        function connectStrava() {
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=read,activity:read_all`;
+            window.location.href = authUrl;
+        }
+        
+        // Stravaコールバック処理
+        async function handleStravaCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code && !stravaToken) {
+                updateConnectionStatus('loading', '🔄 認証処理中...');
+                
+                try {
+                    // Netlify Functionを呼び出してトークン取得
+                    const response = await fetch('/.netlify/functions/strava-auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: code })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.access_token) {
+                        stravaToken = data.access_token;
+                        
+                        // Firestoreに保存
+                        await db.collection('users').doc(currentUser.uid).set({
+                            stravaToken: stravaToken,
+                            stravaAthlete: data.athlete,
+                            connectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        
+                        updateConnectionStatus('connected', '✅ Strava接続完了！');
+                        showSyncSection();
+                        
+                        // URLからコードパラメータを削除
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                    } else {
+                        throw new Error('トークン取得失敗');
+                    }
+                } catch (error) {
+                    console.error('認証エラー:', error);
+                    updateConnectionStatus('error', '❌ 認証に失敗しました');
+                }
+            }
+        }
+        
+        // アクティビティ同期
+        async function syncActivities() {
+            if (!stravaToken) return;
+            
+            updateSyncStatus('loading', '🔄 アクティビティを同期中...');
+            
+            try {
+                // Netlify Functionを呼び出してアクティビティ取得
+                const response = await fetch('/.netlify/functions/strava-activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        token: stravaToken,
+                        userId: currentUser.uid 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.activities) {
+                    activities = data.activities;
+                    displayActivities(activities);
+                    updateSyncStatus('success', `✅ ${activities.length}件のアクティビティを同期しました`);
+                } else {
+                    throw new Error('アクティビティ取得失敗');
+                }
+                
+            } catch (error) {
+                console.error('同期エラー:', error);
+                updateSyncStatus('error', '❌ 同期に失敗しました');
+            }
+        }
+        
+        // 保存済みアクティビティ読み込み
+        async function loadStoredActivities() {
+            try {
+                const activitiesRef = db.collection('users').doc(currentUser.uid).collection('activities');
+                const snapshot = await activitiesRef.orderBy('start_date', 'desc').limit(30).get();
+                
+                activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (activities.length > 0) {
+                    displayActivities(activities);
+                }
+            } catch (error) {
+                console.error('アクティビティ読み込みエラー:', error);
+            }
+        }
+        
+        // アクティビティ表示
+        function displayActivities(activitiesData) {
+            const container = document.getElementById('activityList');
+            
+            if (activitiesData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティが見つかりません</div>';
+                return;
+            }
+            
+            const html = activitiesData.map(activity => {
+                const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
+                const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
+                const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+                const avgSpeed = activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '0';
+                
+                return `
+                    <div class="activity-item" onclick="showActivityDetail('${activity.id}')">
+                        <div class="activity-header">
+                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
+                            <span class="activity-date">${date}</span>
+                        </div>
+                        <div class="activity-stats">
+                            <div class="stat">
+                                <div class="stat-value">${distance}</div>
+                                <div class="stat-label">km</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${duration}</div>
+                                <div class="stat-label">時間</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${avgSpeed}</div>
+                                <div class="stat-label">km/h</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // アクティビティ詳細表示
+        async function showActivityDetail(activityId) {
+            const activity = activities.find(a => a.id == activityId);
+            if (!activity) return;
+            
+            const container = document.getElementById('activityDetail');
+            
+            // 基本情報表示
+            const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
+            const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+            const avgSpeed = activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '0';
+            const avgHR = activity.average_heartrate ? Math.round(activity.average_heartrate) : '-';
+            const maxHR = activity.max_heartrate ? Math.round(activity.max_heartrate) : '-';
+            const elevation = activity.total_elevation_gain ? Math.round(activity.total_elevation_gain) : '0';
+            
+            const html = `
+                <div class="activity-detail">
+                    <h2>${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</h2>
+                    <p style="color: #666; margin-bottom: 20px;">${new Date(activity.start_date).toLocaleString('ja-JP')}</p>
+                    
+                    <div class="detail-stats">
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${distance}</div>
+                            <div class="detail-stat-label">距離 (km)</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${duration}</div>
+                            <div class="detail-stat-label">時間</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${avgSpeed}</div>
+                            <div class="detail-stat-label">平均速度 (km/h)</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${avgHR}</div>
+                            <div class="detail-stat-label">平均心拍</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${maxHR}</div>
+                            <div class="detail-stat-label">最大心拍</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${elevation}</div>
+                            <div class="detail-stat-label">獲得標高 (m)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-feedback">
+                        <h3>🤖 AIコーチからのフィードバック</h3>
+                        <div id="aiFeedback" class="feedback-content">
+                            <div class="loading-spinner"></div>
+                            分析中...
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // AIフィードバック生成
+            generateAIFeedback(activity);
+        }
+        
+        // AIフィードバック生成
+        async function generateAIFeedback(activity) {
+            try {
+                const systemPrompt = `あなたは運動生理学の専門知識を持つトライアスロンコーチです。以下のアクティビティデータを分析して、分かりやすく実践的なフィードバックを400字程度で提供してください。
+
+アクティビティタイプ: ${activity.sport_type || activity.type}
+距離: ${activity.distance ? (activity.distance / 1000).toFixed(1) : '不明'}km
+時間: ${formatDuration(activity.moving_time || activity.elapsed_time)}
+平均心拍: ${activity.average_heartrate ? Math.round(activity.average_heartrate) : '不明'}bpm
+最大心拍: ${activity.max_heartrate ? Math.round(activity.max_heartrate) : '不明'}bpm
+平均速度: ${activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '不明'}km/h
+
+ユーザーの改善点、良かった点、次回への提案を含めてください。`;
+
+                const response = await fetch('/.netlify/functions/openai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `このアクティビティについて分析してフィードバックをください: ${activity.name}`,
+                        apiKey: localStorage.getItem('triathlon_coach_api_key'), // 既存のAPIキーを使用
+                        systemPrompt: systemPrompt
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const feedback = data.choices[0].message.content;
+                    document.getElementById('aiFeedback').innerHTML = feedback.replace(/\n/g, '<br>');
+                } else {
+                    throw new Error('AI応答の取得に失敗');
+                }
+                
+            } catch (error) {
+                console.error('AIフィードバックエラー:', error);
+                document.getElementById('aiFeedback').innerHTML = 
+                    `このアクティビティの分析結果をお伝えします。<br><br>
+                     ${getBasicFeedback(activity)}<br><br>
+                     より詳細な分析については、OpenAI APIキーの設定をご確認ください。`;
+            }
+        }
+        
+        // 基本的なフィードバック生成（フォールバック）
+        function getBasicFeedback(activity) {
+            const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : 0;
+            const avgHR = activity.average_heartrate ? Math.round(activity.average_heartrate) : null;
+            const activityType = activity.sport_type || activity.type;
+            
+            let feedback = `${distance}kmの${activityType}、お疲れさまでした！`;
+            
+            if (avgHR) {
+                if (avgHR < 140) {
+                    feedback += `平均心拍${avgHR}bpmは軽い有酸素強度でした。回復や基礎持久力向上に効果的です。`;
+                } else if (avgHR < 160) {
+                    feedback += `平均心拍${avgHR}bpmは中強度での良いトレーニングでした。持久力向上に最適な強度です。`;
+                } else {
+                    feedback += `平均心拍${avgHR}bpmは高強度でした。しっかりと追い込めていますね。回復を意識してください。`;
+                }
+            }
+            
+            return feedback;
+        }
+        
+        // ユーティリティ関数
+        function updateConnectionStatus(className, message) {
+            const status = document.getElementById('connectionStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function updateSyncStatus(className, message) {
+            const status = document.getElementById('syncStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function showSyncSection() {
+            document.getElementById('syncSection').style.display = 'block';
+            document.getElementById('stravaInstructions').style.display = 'none';
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function getActivityIcon(type) {
+            const icons = {
+                'Run': '🏃‍♂️',
+                'Ride': '🚴‍♂️', 
+                'Swim': '🏊‍♂️',
+                'WeightTraining': '🏋️‍♂️',
+                'Yoga': '🧘‍♂️',
+                'default': '🏃‍♂️'
+            };
+            return icons[type] || icons.default;
+        }

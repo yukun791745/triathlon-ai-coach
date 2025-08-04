@@ -1332,12 +1332,10 @@ npx vercel
 
 現在のシミュレーション結果: ${lastResults ? JSON.stringify(lastResults) : '未実行'}`;
 
-                // Vercel Functionsを使用してAPI呼び出し
-                var apiEndpoint = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                    ? '/api/openai'  // ローカル開発
-                    : '/api/openai'; // 本番環境（Vercelが自動でURLを解決）
+                // Netlify Functionsを使用してAPI呼び出し
+                var apiEndpoint = '/.netlify/functions/openai';
                 
-                console.log('Calling Vercel Function:', apiEndpoint);
+                console.log('Calling Netlify Function:', apiEndpoint);
                 
                 fetch(apiEndpoint, {
                     method: 'POST',
@@ -1352,7 +1350,7 @@ npx vercel
                     })
                 })
                 .then(function(response) {
-                    console.log('Vercel Function response status:', response.status);
+                    console.log('Netlify Function response status:', response.status);
                     
                     if (!response.ok) {
                         return response.json().then(function(errorData) {
@@ -1363,10 +1361,10 @@ npx vercel
                     return response.json();
                 })
                 .then(function(data) {
-                    console.log('AI response received:', data);
+                    console.log('OpenAI response received via Netlify Functions:', data);
                     
                     if (data.choices && data.choices[0] && data.choices[0].message) {
-                        resolve('🔗 **実際のOpenAI APIからの回答:**\n\n' + data.choices[0].message.content);
+                        resolve('🤖 **OpenAI APIからの専門的回答:**\n\n' + data.choices[0].message.content);
                     } else {
                         throw new Error('Invalid API response format');
                     }
@@ -1381,7 +1379,7 @@ npx vercel
                     } else if (error.message.includes('429')) {
                         errorMessage = 'API利用制限に達しました。しばらく待ってから再試行してください。';
                     } else if (error.message.includes('404')) {
-                        errorMessage = 'Vercel Function が見つかりません。デプロイを確認してください。';
+                        errorMessage = 'Netlify Function が見つかりません。デプロイを確認してください。';
                     } else {
                         errorMessage = 'エラー: ' + error.message;
                     }
@@ -1448,7 +1446,7 @@ npx vercel
                     addChatMessage('ai', '申し訳ありません。AI接続にエラーが発生しました。<br><br>' +
                                         '**可能な原因：**<br>' +
                                         '• APIキーが無効または期限切れ<br>' +
-                                        '• Vercel Functionのデプロイエラー<br>' +
+                                        '• Netlify Functionのデプロイエラー<br>' +
                                         '• ネットワーク接続の問題<br><br>' +
                                         'デプロイ状況とAPIキーを確認してください。');
                 });

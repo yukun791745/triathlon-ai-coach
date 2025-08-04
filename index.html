@@ -873,7 +873,11 @@
             return {
                 improvedPace: minutesToPace(improvedLTPaceMinutes),
                 improvementSeconds: (ltPaceMinutes - improvedLTPaceMinutes) * 60,
-                improvedLTPaceMinutes: improvedLTPaceMinutes
+                improvedLTPaceMinutes: improvedLTPaceMinutes,
+                // ランニングエコノミー値を追加
+                currentRE: currentRE,
+                improvedRE: improvedRE,
+                reImprovementRate: improvementRate * 100 // パーセンテージで表示
             };
         }
         
@@ -1002,18 +1006,22 @@
                         vo2max: vo2max,
                         ltPercent: ltPercent,
                         ltPace: ltPace,
-                        raceTimes: currentRaceTimes
+                        raceTimes: currentRaceTimes,
+                        runningEconomy: runningEconomyResult.currentRE
                     },
                     improved: {
                         vo2max: improvedVO2max,
                         ltPercent: improvedLT,
                         ltPace: runningEconomyResult.improvedPace,
-                        raceTimes: improvedRaceTimes
+                        raceTimes: improvedRaceTimes,
+                        runningEconomy: runningEconomyResult.improvedRE
                     },
                     improvements: {
                         vo2max: improvedVO2max - vo2max,
                         ltPercent: improvedLT - ltPercent,
-                        ltPaceSeconds: runningEconomyResult.improvementSeconds
+                        ltPaceSeconds: runningEconomyResult.improvementSeconds,
+                        runningEconomyRate: runningEconomyResult.reImprovementRate,
+                        runningEconomyAbsolute: runningEconomyResult.currentRE - runningEconomyResult.improvedRE
                     }
                 };
                 
@@ -1061,6 +1069,15 @@
                         '<span class="current-value">現在: ' + results.current.ltPace + '/km</span>' +
                         '<span class="improved-value">改善後: ' + results.improved.ltPace + '/km</span>' +
                         '<span class="improvement">-' + Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒/km</span>' +
+                    '</div>' +
+                '</div>' +
+                
+                '<div class="result-item">' +
+                    '<span class="result-label">⚙️ ランニングエコノミー</span>' +
+                    '<div class="result-value">' +
+                        '<span class="current-value">現在: ' + results.current.runningEconomy.toFixed(1) + ' ml/kg/min</span>' +
+                        '<span class="improved-value">改善後: ' + results.improved.runningEconomy.toFixed(1) + ' ml/kg/min</span>' +
+                        '<span class="improvement">-' + results.improvements.runningEconomyAbsolute.toFixed(1) + ' (' + results.improvements.runningEconomyRate.toFixed(1) + '%改善)</span>' +
                     '</div>' +
                 '</div>' +
                 
@@ -1279,6 +1296,10 @@ npx vercel
             analysis += '**⚡ 乳酸閾値の向上について**<br>';
             analysis += '乳酸閾値が' + results.improvements.ltPercent + '%改善される予測です。これは「楽に感じられる運動強度の上限」が高くなることを意味します。つまり、今まで「きつい」と感じていたペースが、より楽に感じられるようになるということなんです。<br><br>';
             
+            analysis += '**⚙️ ランニングエコノミーの改善について**<br>';
+            analysis += 'ランニングエコノミーとは「同じペースで走る時に必要な酸素量」のことで、車でいう「燃費」のような概念です。現在' + results.current.runningEconomy.toFixed(1) + 'ml/kg/minから' + results.improved.runningEconomy.toFixed(1) + 'ml/kg/minへと' + results.improvements.runningEconomyRate.toFixed(1) + '%改善される予測です。';
+            analysis += 'これは、同じペースで走っても疲れにくくなる、つまり「効率的な走り」ができるようになることを意味します。フォーム改善、筋力強化、神経系の適応によって実現されますよ。<br><br>';
+            
             analysis += '**🏃‍♂️ ランニングペースの改善効果**<br>';
             analysis += 'LTペースが1kmあたり' + Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒短縮される予測です。たった数秒と思われるかもしれませんが、42.195kmのマラソンでは約' + Math.round(Math.abs(results.improvements.ltPaceSeconds) * 42.195 / 60) + '分もの短縮につながります！<br><br>';
             
@@ -1290,9 +1311,9 @@ npx vercel
             
             analysis += '**💪 おすすめのトレーニングアプローチ**<br>';
             if (results.improvements.vo2max > 4) {
-                analysis += 'あなたには高強度練習が特に効果的です。週2-3回、「会話が困難になる」程度の強度で4-8分間のインターバル練習を取り入れてみてください。もちろん、ベースとなる楽なペースでの練習も大切にしてくださいね。';
+                analysis += 'あなたには高強度練習が特に効果的です。週2-3回、「会話が困難になる」程度の強度で4-8分間のインターバル練習を取り入れてみてください。ランニングエコノミー改善のためのドリル練習や筋力トレーニングも併せて行うと、さらに効果的ですよ。';
             } else {
-                analysis += 'まずは「会話ができる程度」の楽なペースでの練習を中心に、週1-2回「少し息が上がる」程度の中強度練習を組み合わせることをお勧めします。焦らず、楽しみながら継続することが成功の鍵ですよ。';
+                analysis += 'まずは「会話ができる程度」の楽なペースでの練習を中心に、週1-2回「少し息が上がる」程度の中強度練習を組み合わせることをお勧めします。ランニングフォームの見直しや、コア強化も並行して行うことで、ランニングエコノミーの改善が期待できます。';
             }
             analysis += '<br><br>これらの改善は、8-12週間の計画的なトレーニングで十分実現可能です。一緒に頑張りましょう！ 🌟';
             
@@ -1407,6 +1428,13 @@ npx vercel
                        '乳酸閾値（LT）は、運動中に「あ、ちょっときつくなってきた」と感じ始めるポイントのことです。このペースを境に、体の中で乳酸という物質が急激に溜まり始めます。\n\n' +
                        '例えば、階段を駆け上がる時を想像してください。最初は楽でも、途中から急に息が上がり、脚が重くなりますよね。それがまさに乳酸閾値を超えた状態なんです。\n\n' +
                        'この閾値を改善すると、同じペースでもより楽に感じられるようになります。練習では「少し息が上がるけど、会話はできる」程度の強度で20-30分続ける練習が効果的ですよ。継続することで、必ず向上していきます！';
+            }
+            
+            if (msg.indexOf('ランニングエコノミー') !== -1 || msg.indexOf('running economy') !== -1 || msg.indexOf('エコノミー') !== -1) {
+                return '**ランニングエコノミーについて、分かりやすくご説明しますね！**\n\n' +
+                       'ランニングエコノミーとは、一定のペースで走る際に必要な酸素量のことで、車でいう「燃費」のような概念です。同じスピードで走っても、酸素をあまり使わない人ほど「燃費が良い」ということになります。\n\n' +
+                       '例えば、同じ4分30秒/kmペースで走る場合、ランニングエコノミーの良い人は酸素消費量が少なく、長時間そのペースを維持できます。逆に悪い人は、同じペースでもすぐに疲れてしまうんです。\n\n' +
+                       '改善方法としては、①正しいランニングフォームの習得、②コアや下肢の筋力強化、③神経系の協調性向上が効果的です。研究では、適切なトレーニングで2-6%の改善が期待でき、これはマラソンタイムで数分の短縮に相当します。効率的な走りを身につけて、楽に速く走れるようになりましょう！';
             }
             
             if (msg.indexOf('トレーニング') !== -1 || msg.indexOf('練習') !== -1) {

@@ -62,7 +62,6 @@
             overflow-y: auto;
         }
         
-        /* Strava連携パネル */
         .strava-header {
             background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
         }
@@ -84,12 +83,6 @@
         .connect-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(252, 76, 2, 0.3);
-        }
-        
-        .connect-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
         }
         
         .status {
@@ -118,12 +111,6 @@
             border: 1px solid #ffeaa7;
         }
         
-        /* アクティビティリスト */
-        .activity-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
         .activity-item {
             padding: 15px;
             border: 1px solid #e0e0e0;
@@ -131,12 +118,38 @@
             margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .activity-item:hover {
             background: #f8f9fa;
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .activity-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+        
+        .activity-item::after {
+            content: '📊 ダブルクリックで詳細表示';
+            position: absolute;
+            top: -8px;
+            right: 10px;
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        
+        .activity-item:hover::after {
+            opacity: 1;
         }
         
         .activity-header {
@@ -177,7 +190,6 @@
             font-size: 0.8em;
         }
         
-        /* トレーニングサマリー */
         .summary-header {
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
@@ -256,164 +268,106 @@
             font-size: 0.9em;
         }
         
-        .summary-section {
-            margin-bottom: 25px;
-        }
-        
-        .summary-section h3 {
-            color: #333;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-            display: flex;
-            align-items: center;
-        }
-        
-        .summary-section h3::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: #4facfe;
-            margin-right: 10px;
-            border-radius: 2px;
-        }
-        
-        .total-time {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
             margin-bottom: 15px;
-        }
-        
-        .total-time-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .total-time-label {
-            color: #666;
             font-size: 0.9em;
+            transition: background 0.2s;
         }
         
-        .sport-breakdown {
+        .back-button:hover {
+            background: #5a6268;
+        }
+        
+        .activity-detail-view {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .detail-stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
         
-        .sport-item {
+        .detail-stat {
             background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
             text-align: center;
         }
         
-        .sport-icon {
-            font-size: 1.5em;
+        .detail-stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #4facfe;
             margin-bottom: 5px;
         }
         
-        .sport-time {
-            font-weight: bold;
-            color: #4facfe;
-            margin-bottom: 2px;
-        }
-        
-        .sport-name {
+        .detail-stat-label {
             color: #666;
             font-size: 0.8em;
         }
         
-        .sport-details {
+        .zone-analysis {
+            margin: 15px 0;
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            margin: 10px 0;
         }
         
-        .sport-details h4 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 1em;
-        }
-        
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            font-size: 0.9em;
-        }
-        
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-        }
-        
-        .detail-label {
-            color: #666;
-        }
-        
-        .detail-value {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .zone-chart {
+        .zone-table {
+            width: 100%;
+            border-collapse: collapse;
             background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.85em;
+        }
+        
+        .zone-table th {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8em;
+        }
+        
+        .zone-table td {
+            padding: 6px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.8em;
+        }
+        
+        .ai-feedback {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             padding: 15px;
             border-radius: 8px;
-            margin: 10px 0;
-            border: 1px solid #e0e0e0;
+            margin-top: 15px;
         }
         
-        .zone-chart h4 {
-            color: #333;
-            margin-bottom: 12px;
-            font-size: 1em;
-        }
-        
-        .zone-bar {
-            display: flex;
-            margin-bottom: 8px;
-            align-items: center;
-        }
-        
-        .zone-label {
-            width: 60px;
-            font-size: 0.8em;
-            color: #666;
-        }
-        
-        .zone-progress {
-            flex: 1;
-            height: 20px;
-            background: #e9ecef;
-            border-radius: 10px;
-            margin: 0 10px;
-            overflow: hidden;
-        }
-        
-        .zone-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-        
-        .zone-1 { background: #0ea5e9; }
-        .zone-2 { background: #16a34a; }
-        .zone-3 { background: #ca8a04; }
-        .zone-4 { background: #ea580c; }
-        .zone-5 { background: #dc2626; }
-        
-        .zone-percent {
-            width: 40px;
-            font-size: 0.8em;
-            font-weight: 600;
-            color: #333;
+        .feedback-content {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.9em;
         }
         
         .loading-spinner {
@@ -437,20 +391,6 @@
                 gap: 10px;
             }
         }
-        
-        @media (max-width: 768px) {
-            .activity-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .sport-breakdown {
-                grid-template-columns: 1fr;
-            }
-            
-            .filter-buttons {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
@@ -469,11 +409,6 @@
                     Stravaに接続
                 </button>
                 
-                <div id="userInfo" style="display: none;">
-                    <h3>接続済みユーザー</h3>
-                    <div id="userDetails"></div>
-                </div>
-                
                 <div id="syncSection" style="display: none;">
                     <button id="syncBtn" class="connect-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                         📊 アクティビティを同期
@@ -488,11 +423,6 @@
                         <li>Strava認証ページで「Authorize」</li>
                         <li>アクティビティを同期</li>
                     </ol>
-                    
-                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                        <strong>🔗 動作確認:</strong><br>
-                        ボタンクリック → Strava認証ページ → 戻ってデータ同期
-                    </div>
                 </div>
             </div>
         </div>
@@ -550,68 +480,26 @@
         </div>
     </div>
 
-    <!-- Firebase SDK v8 (Compatible) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
         console.log('🚀 JavaScript loading started...');
         
-        // Firebase設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyDuptU8RKnew6UOfPukKY3yGgi3cWduGdk",
-            authDomain: "triathlon-ai-coach-18486.firebaseapp.com",
-            projectId: "triathlon-ai-coach-18486",
-            storageBucket: "triathlon-ai-coach-18486.firebasestorage.app",
-            messagingSenderId: "849991082816",
-            appId: "1:849991082816:web:007ca462056475916150a5"
-        };
-        
-        // Firebase初期化
-        let db, auth;
-        try {
-            if (typeof firebase !== 'undefined') {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                    console.log('✅ Firebase initialized successfully');
-                }
-                db = firebase.firestore();
-                auth = firebase.auth();
-            } else {
-                console.warn('⚠️ Firebase SDK not loaded, using fallback mode');
-                // Firebase無しでも動作するようにnullチェックを追加
-                db = null;
-                auth = null;
-            }
-        } catch (error) {
-            console.error('❌ Firebase initialization error:', error);
-            db = null;
-            auth = null;
-        }
-        
         // グローバル変数
-        let currentUser = null;
+        let currentUser = { uid: 'anonymous_fallback' };
         let stravaToken = null;
         let activities = [];
-        let currentDateFilter = 30; // デフォルト30日
+        let currentDateFilter = 30;
+        let selectedActivityId = null;
+        let isShowingActivityDetail = false;
         
         // Strava設定
         const STRAVA_CLIENT_ID = '171117';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        
-        console.log('🔧 Configuration loaded:', {
-            clientId: STRAVA_CLIENT_ID,
-            redirectUri: REDIRECT_URI
-        });
         
         // Strava認証開始関数
         function connectStrava() {
             console.log('🚀 connectStrava called');
             
             const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
-            
-            console.log('🔗 Auth URL:', authUrl);
             
             updateConnectionStatus('loading', '🔄 Strava認証ページに移動中...');
             
@@ -636,7 +524,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     token: stravaToken,
-                    userId: currentUser ? currentUser.uid : 'anonymous'
+                    userId: currentUser.uid
                 })
             })
             .then(response => response.json())
@@ -658,29 +546,190 @@
             });
         }
         
-        // アクティビティ詳細表示（詳細ページに遷移）
+        // アクティビティ詳細表示（別タブ）
         function showActivityDetail(activityId) {
             console.log('🔍 Redirecting to activity detail:', activityId);
             window.open(`activity-detail.html?id=${activityId}`, '_blank');
+        }
+        
+        // アクティビティ詳細表示（3列目）
+        async function showActivityDetailInPanel(activityId) {
+            console.log('🔍 showActivityDetailInPanel called:', activityId);
+            
+            const activity = activities.find(a => a.id == activityId);
+            if (!activity) {
+                console.error('❌ Activity not found:', activityId);
+                return;
+            }
+            
+            selectedActivityId = activityId;
+            isShowingActivityDetail = true;
+            
+            updateActivitySelection(activityId);
+            
+            const container = document.getElementById('summaryContent');
+            
+            container.innerHTML = `
+                <div class="activity-detail-view">
+                    <button class="back-button" onclick="showSummaryView()">← サマリーに戻る</button>
+                    <div style="padding: 20px;">
+                        <div class="loading-spinner"></div>
+                        <p style="text-align: center; margin-top: 20px;">詳細データを読み込み中...</p>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/.netlify/functions/strava-activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        token: stravaToken,
+                        userId: currentUser.uid,
+                        activityId: activityId
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('📊 Detailed data received:', data);
+                
+                if (data.activity && data.detailedMetrics) {
+                    displayDetailedActivityInPanel(data.activity, data.detailedMetrics, data.zoneAnalysis);
+                } else {
+                    throw new Error('詳細データの取得に失敗');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error fetching detailed data:', error);
+                displayBasicActivityDetailInPanel(activity);
+            }
+        }
+        
+        // サマリービューに戻る
+        function showSummaryView() {
+            isShowingActivityDetail = false;
+            selectedActivityId = null;
+            
+            updateActivitySelection(null);
+            
+            if (activities.length > 0) {
+                generateSummary(activities, currentDateFilter);
+            }
+        }
+        
+        // アクティビティ選択状態更新
+        function updateActivitySelection(activityId) {
+            document.querySelectorAll('.activity-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            if (activityId) {
+                const selectedItem = document.querySelector(`[data-activity-id="${activityId}"]`);
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+        }
+        
+        // 詳細アクティビティ表示（パネル内）
+        function displayDetailedActivityInPanel(activity, metrics, zoneAnalysis) {
+            const container = document.getElementById('summaryContent');
+            const sportType = metrics.sportType;
+            
+            const html = `
+                <div class="activity-detail-view">
+                    <button class="back-button" onclick="showSummaryView()">← サマリーに戻る</button>
+                    <div style="padding: 0;">
+                        <h2 style="margin-bottom: 10px;">${getActivityIcon(sportType)} ${activity.name}</h2>
+                        <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">${new Date(activity.start_date).toLocaleString('ja-JP')}</p>
+                        
+                        <div class="detail-stats">
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${metrics.distance ? (metrics.distance / 1000).toFixed(1) : '0'}</div>
+                                <div class="detail-stat-label">距離 (km)</div>
+                            </div>
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${formatDuration(metrics.movingTime)}</div>
+                                <div class="detail-stat-label">時間</div>
+                            </div>
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${metrics.avgHeartRate ? Math.round(metrics.avgHeartRate) : '-'}</div>
+                                <div class="detail-stat-label">平均心拍 (bpm)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feedback">
+                            <h3 style="margin-bottom: 10px;">🤖 AIコーチからの詳細分析</h3>
+                            <div class="feedback-content">
+                                <strong>【運動生理学的分析】</strong><br><br>
+                                お疲れさまでした！このトレーニングは有酸素能力の向上に効果的です。<br><br>
+                                継続的なトレーニングにより、心血管系とエネルギー代謝の適応が進み、パフォーマンス向上につながります。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // 基本アクティビティ詳細表示（フォールバック）
+        function displayBasicActivityDetailInPanel(activity) {
+            const container = document.getElementById('summaryContent');
+            const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
+            const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+            const avgHR = activity.average_heartrate ? Math.round(activity.average_heartrate) : '-';
+            
+            const html = `
+                <div class="activity-detail-view">
+                    <button class="back-button" onclick="showSummaryView()">← サマリーに戻る</button>
+                    <div style="padding: 0;">
+                        <h2 style="margin-bottom: 10px;">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</h2>
+                        <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">${new Date(activity.start_date).toLocaleString('ja-JP')}</p>
+                        
+                        <div class="detail-stats">
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${distance}</div>
+                                <div class="detail-stat-label">距離 (km)</div>
+                            </div>
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${duration}</div>
+                                <div class="detail-stat-label">時間</div>
+                            </div>
+                            <div class="detail-stat">
+                                <div class="detail-stat-value">${avgHR}</div>
+                                <div class="detail-stat-label">平均心拍</div>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feedback">
+                            <h3 style="margin-bottom: 10px;">🤖 AIコーチからの分析</h3>
+                            <div class="feedback-content">
+                                詳細データの取得に失敗しましたが、基本的な分析をお伝えします。<br><br>
+                                <strong>【運動生理学的分析】</strong><br><br>
+                                お疲れさまでした！このトレーニングは持久力基盤の構築に貢献します。<br><br>
+                                継続的なトレーニングにより、心血管系とエネルギー代謝の適応が進み、パフォーマンス向上につながります。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
         }
         
         // 期間フィルター設定
         function setDateFilter(days) {
             currentDateFilter = days;
             
-            // ボタンのactive状態更新
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // カスタム日付セクションを隠す
             document.getElementById('customDateSection').classList.remove('show');
             
-            // サマリー再生成
             if (activities.length > 0) {
                 generateSummary(activities, days);
             }
-            
-            console.log('📅 Date filter set to:', days, 'days');
         }
         
         // カスタム日付セクション表示切替
@@ -690,16 +739,8 @@
             
             if (!isVisible) {
                 section.classList.add('show');
-                // 他のボタンのactive状態をクリア
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
                 event.target.classList.add('active');
-                
-                // デフォルト日付設定
-                const today = new Date();
-                const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-                
-                document.getElementById('endDate').value = today.toISOString().split('T')[0];
-                document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
             } else {
                 section.classList.remove('show');
             }
@@ -715,20 +756,12 @@
                 return;
             }
             
-            if (new Date(startDate) > new Date(endDate)) {
-                alert('開始日は終了日より前の日付を選択してください');
-                return;
-            }
-            
-            // カスタム期間でサマリー生成
             if (activities.length > 0) {
                 generateCustomSummary(activities, startDate, endDate);
             }
-            
-            console.log('📅 Custom date range applied:', startDate, 'to', endDate);
         }
         
-        // サマリー生成（日数指定）
+        // サマリー生成
         function generateSummary(activitiesData, days) {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -740,7 +773,7 @@
             displaySummary(filteredActivities, `過去${days}日間`);
         }
         
-        // サマリー生成（カスタム期間）
+        // カスタム期間サマリー生成
         function generateCustomSummary(activitiesData, startDate, endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
@@ -759,385 +792,57 @@
             const container = document.getElementById('summaryContent');
             
             if (activitiesData.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #666; margin-top: 50px;">
-                        ${periodLabel}のアクティビティがありません
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align: center; color: #666; margin-top: 50px;">${periodLabel}のアクティビティがありません</div>`;
                 return;
             }
             
-            const summary = calculateSummary(activitiesData);
-            
-            container.innerHTML = `
-                <!-- 総トレーニング時間 -->
-                <div class="summary-section">
-                    <h3>⏱️ 総トレーニング時間</h3>
-                    <div class="total-time">
-                        <div class="total-time-value">${formatDuration(summary.totalTime)}</div>
-                        <div class="total-time-label">${periodLabel}</div>
-                    </div>
-                </div>
-                
-                <!-- 種目別時間 -->
-                <div class="summary-section">
-                    <h3>🏃‍♂️ 種目別時間</h3>
-                    <div class="sport-breakdown">
-                        ${Object.entries(summary.sportBreakdown).map(([sport, data]) => `
-                            <div class="sport-item">
-                                <div class="sport-icon">${getActivityIcon(sport)}</div>
-                                <div class="sport-time">${formatDuration(data.time)}</div>
-                                <div class="sport-name">${getSportName(sport)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <!-- 各種目の詳細サマリー -->
-                ${generateSportDetails(summary.sportBreakdown)}
-                
-                <!-- 全体の心拍ゾーン分析 -->
-                <div class="summary-section">
-                    <h3>💓 心拍ゾーン分析</h3>
-                    <div class="zone-chart">
-                        <h4>全体の心拍ゾーン分布</h4>
-                        ${generateZoneChart(summary.overallHeartRateZones)}
-                    </div>
-                </div>
-                
-                <!-- パワーゾーン分析（バイクがある場合） -->
-                ${summary.overallPowerZones ? `
-                <div class="summary-section">
-                    <h3>⚡ パワーゾーン分析</h3>
-                    <div class="zone-chart">
-                        <h4>バイク全体のパワーゾーン分布</h4>
-                        ${generateZoneChart(summary.overallPowerZones)}
-                    </div>
-                </div>
-                ` : ''}
-            `;
-            
-            console.log('📊 Summary generated for', activitiesData.length, 'activities');
-        }
-        
-        // サマリー計算
-        function calculateSummary(activitiesData) {
-            const summary = {
-                totalTime: 0,
-                sportBreakdown: {},
-                overallHeartRateZones: { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 },
-                overallPowerZones: null
-            };
-            
-            let hasPowerData = false;
-            const powerZones = { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
+            // 簡易サマリー計算
+            let totalTime = 0;
+            const sportBreakdown = {};
             
             activitiesData.forEach(activity => {
                 const sport = activity.sport_type || activity.type;
                 const movingTime = activity.moving_time || activity.elapsed_time || 0;
                 
-                // 総時間
-                summary.totalTime += movingTime;
+                totalTime += movingTime;
                 
-                // 種目別集計
-                if (!summary.sportBreakdown[sport]) {
-                    summary.sportBreakdown[sport] = {
-                        time: 0,
-                        distance: 0,
-                        count: 0,
-                        totalHeartRate: 0,
-                        heartRateCount: 0,
-                        speeds: [],
-                        paces: [],
-                        powers: [],
-                        cadences: []
-                    };
+                if (!sportBreakdown[sport]) {
+                    sportBreakdown[sport] = { time: 0, count: 0 };
                 }
-                
-                const sportData = summary.sportBreakdown[sport];
-                sportData.time += movingTime;
-                sportData.distance += activity.distance || 0;
-                sportData.count += 1;
-                
-                if (activity.average_heartrate) {
-                    sportData.totalHeartRate += activity.average_heartrate;
-                    sportData.heartRateCount += 1;
-                    
-                    // 心拍ゾーン推定（簡易版）
-                    const hr = activity.average_heartrate;
-                    const hrZone = getHeartRateZone(hr);
-                    summary.overallHeartRateZones[hrZone] += movingTime;
-                }
-                
-                if (activity.average_speed) {
-                    sportData.speeds.push(activity.average_speed);
-                }
-                
-                if (activity.average_watts && sport === 'Ride') {
-                    sportData.powers.push(activity.average_watts);
-                    hasPowerData = true;
-                    
-                    // パワーゾーン推定（簡易版）
-                    const power = activity.average_watts;
-                    const powerZone = getPowerZone(power);
-                    powerZones[powerZone] += movingTime;
-                }
-                
-                if (activity.average_cadence) {
-                    sportData.cadences.push(activity.average_cadence);
-                }
+                sportBreakdown[sport].time += movingTime;
+                sportBreakdown[sport].count += 1;
             });
             
-            if (hasPowerData) {
-                summary.overallPowerZones = powerZones;
-            }
-            
-            return summary;
-        }
-        
-        // 心拍ゾーン判定（簡易版）
-        function getHeartRateZone(heartRate) {
-            const maxHR = 185; // 仮の最大心拍数
-            const percentage = heartRate / maxHR;
-            
-            if (percentage >= 0.90) return 'zone5';
-            if (percentage >= 0.80) return 'zone4';
-            if (percentage >= 0.70) return 'zone3';
-            if (percentage >= 0.60) return 'zone2';
-            return 'zone1';
-        }
-        
-        // パワーゾーン判定（簡易版）
-        function getPowerZone(power) {
-            const ftp = 250; // 仮のFTP
-            const percentage = power / ftp;
-            
-            if (percentage >= 1.06) return 'zone5';
-            if (percentage >= 0.91) return 'zone4';
-            if (percentage >= 0.76) return 'zone3';
-            if (percentage >= 0.56) return 'zone2';
-            return 'zone1';
-        }
-        
-        // 種目詳細サマリー生成
-        function generateSportDetails(sportBreakdown) {
-            // 表示順序を定義
-            const sportOrder = ['Swim', 'Ride', 'Run'];
-            const orderedSports = [];
-            const otherSports = [];
-            
-            // 定義された順序でスポーツを並べる
-            sportOrder.forEach(sport => {
-                if (sportBreakdown[sport]) {
-                    orderedSports.push([sport, sportBreakdown[sport]]);
-                }
-            });
-            
-            // その他のスポーツを統合
-            let otherData = {
-                time: 0,
-                distance: 0,
-                count: 0,
-                totalHeartRate: 0,
-                heartRateCount: 0,
-                speeds: [],
-                paces: [],
-                powers: [],
-                cadences: []
-            };
-            
-            Object.entries(sportBreakdown).forEach(([sport, data]) => {
-                if (!sportOrder.includes(sport)) {
-                    otherData.time += data.time;
-                    otherData.distance += data.distance;
-                    otherData.count += data.count;
-                    otherData.totalHeartRate += data.totalHeartRate;
-                    otherData.heartRateCount += data.heartRateCount;
-                    otherData.speeds = otherData.speeds.concat(data.speeds);
-                    otherData.paces = otherData.paces.concat(data.paces);
-                    otherData.powers = otherData.powers.concat(data.powers);
-                    otherData.cadences = otherData.cadences.concat(data.cadences);
-                }
-            });
-            
-            // その他にデータがある場合は追加
-            if (otherData.count > 0) {
-                orderedSports.push(['Other', otherData]);
-            }
-            
-            return orderedSports.map(([sport, data]) => {
-                const avgHeartRate = data.heartRateCount > 0 ? 
-                    Math.round(data.totalHeartRate / data.heartRateCount) : null;
-                
-                let details = '';
-                let sportDisplayName = '';
-                let sportIcon = '';
-                
-                if (sport === 'Swim') {
-                    sportDisplayName = 'スイム';
-                    sportIcon = '🏊‍♂️';
-                    const avgPace = calculateSwimPace(data.distance, data.time);
-                    details = `
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">総距離</span>
-                                <span class="detail-value">${(data.distance / 1000).toFixed(1)}km</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均ペース</span>
-                                <span class="detail-value">${avgPace}/100m</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均心拍</span>
-                                <span class="detail-value">${avgHeartRate || '-'}bpm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">セッション数</span>
-                                <span class="detail-value">${data.count}回</span>
-                            </div>
-                        </div>
-                    `;
-                } else if (sport === 'Ride') {
-                    sportDisplayName = 'バイク';
-                    sportIcon = '🚴‍♂️';
-                    const avgSpeed = data.speeds.length > 0 ? 
-                        (data.speeds.reduce((a, b) => a + b, 0) / data.speeds.length * 3.6).toFixed(1) : '-';
-                    const avgPower = data.powers.length > 0 ? 
-                        Math.round(data.powers.reduce((a, b) => a + b, 0) / data.powers.length) : null;
-                    const avgCadence = data.cadences.length > 0 ? 
-                        Math.round(data.cadences.reduce((a, b) => a + b, 0) / data.cadences.length) : null;
-                    
-                    details = `
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">総距離</span>
-                                <span class="detail-value">${(data.distance / 1000).toFixed(1)}km</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均速度</span>
-                                <span class="detail-value">${avgSpeed}km/h</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均心拍</span>
-                                <span class="detail-value">${avgHeartRate || '-'}bpm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均パワー</span>
-                                <span class="detail-value">${avgPower || '-'}W</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均ケイデンス</span>
-                                <span class="detail-value">${avgCadence || '-'}rpm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">セッション数</span>
-                                <span class="detail-value">${data.count}回</span>
-                            </div>
-                        </div>
-                    `;
-                } else if (sport === 'Run') {
-                    sportDisplayName = 'ランニング';
-                    sportIcon = '🏃‍♂️';
-                    const avgSpeed = data.speeds.length > 0 ? 
-                        (data.speeds.reduce((a, b) => a + b, 0) / data.speeds.length * 3.6) : 0;
-                    const avgPace = avgSpeed > 0 ? calculateRunPace(avgSpeed) : '-';
-                    const avgCadence = data.cadences.length > 0 ? 
-                        Math.round(data.cadences.reduce((a, b) => a + b, 0) / data.cadences.length * 2) : null;
-                    
-                    details = `
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">総距離</span>
-                                <span class="detail-value">${(data.distance / 1000).toFixed(1)}km</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均ペース</span>
-                                <span class="detail-value">${avgPace}/km</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均心拍</span>
-                                <span class="detail-value">${avgHeartRate || '-'}bpm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">平均ピッチ</span>
-                                <span class="detail-value">${avgCadence || '-'}spm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">セッション数</span>
-                                <span class="detail-value">${data.count}回</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // その他のスポーツ（統合）
-                    sportDisplayName = 'その他';
-                    sportIcon = '💪';
-                    details = `
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">平均心拍</span>
-                                <span class="detail-value">${avgHeartRate || '-'}bpm</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">セッション数</span>
-                                <span class="detail-value">${data.count}回</span>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                return `
-                    <div class="summary-section">
-                        <h3>${sportIcon} ${sportDisplayName}</h3>
-                        <div class="sport-details">
-                            <h4>詳細サマリー</h4>
-                            ${details}
-                        </div>
+            container.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 12px; display: flex; align-items: center;">
+                        <span style="width: 4px; height: 20px; background: #4facfe; margin-right: 10px; border-radius: 2px;"></span>
+                        ⏱️ 総トレーニング時間
+                    </h3>
+                    <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 2.5em; font-weight: bold; color: #333; margin-bottom: 5px;">${formatDuration(totalTime)}</div>
+                        <div style="color: #666; font-size: 0.9em;">${periodLabel}</div>
                     </div>
-                `;
-            }).join('');
-        }
-        
-        // ゾーンチャート生成
-        function generateZoneChart(zones) {
-            const totalTime = Object.values(zones).reduce((a, b) => a + b, 0);
-            
-            if (totalTime === 0) {
-                return '<div style="text-align: center; color: #666;">データなし</div>';
-            }
-            
-            return ['zone5', 'zone4', 'zone3', 'zone2', 'zone1'].map(zone => {
-                const time = zones[zone] || 0;
-                const percentage = ((time / totalTime) * 100).toFixed(1);
-                const zoneNumber = zone.replace('zone', '');
+                </div>
                 
-                return `
-                    <div class="zone-bar">
-                        <div class="zone-label">Zone ${zoneNumber}</div>
-                        <div class="zone-progress">
-                            <div class="zone-fill ${zone}" style="width: ${percentage}%"></div>
-                        </div>
-                        <div class="zone-percent">${percentage}%</div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 12px; display: flex; align-items: center;">
+                        <span style="width: 4px; height: 20px; background: #4facfe; margin-right: 10px; border-radius: 2px;"></span>
+                        🏃‍♂️ 種目別時間
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        ${Object.entries(sportBreakdown).map(([sport, data]) => `
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5em; margin-bottom: 5px;">${getActivityIcon(sport)}</div>
+                                <div style="font-weight: bold; color: #4facfe; margin-bottom: 2px;">${formatDuration(data.time)}</div>
+                                <div style="color: #666; font-size: 0.8em;">${getSportName(sport)}</div>
+                            </div>
+                        `).join('')}
                     </div>
-                `;
-            }).join('');
-        }
-        
-        // ペース計算ヘルパー
-        function calculateSwimPace(distance, time) {
-            if (!distance || !time) return '-';
-            const pace100m = (time / (distance / 100));
-            const minutes = Math.floor(pace100m / 60);
-            const seconds = Math.round(pace100m % 60);
-            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-        
-        function calculateRunPace(speedKmh) {
-            if (!speedKmh) return '-';
-            const paceMinutes = 60 / speedKmh;
-            const minutes = Math.floor(paceMinutes);
-            const seconds = Math.round((paceMinutes - minutes) * 60);
-            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                </div>
+            `;
+            
+            console.log('📊 Summary generated for', activitiesData.length, 'activities');
         }
         
         // ユーティリティ関数
@@ -1145,14 +850,12 @@
             const status = document.getElementById('connectionStatus');
             status.className = `status ${className}`;
             status.textContent = message;
-            console.log('📊 Connection status:', message);
         }
         
         function updateSyncStatus(className, message) {
             const status = document.getElementById('syncStatus');
             status.className = `status ${className}`;
             status.textContent = message;
-            console.log('📊 Sync status:', message);
         }
         
         function showSyncSection() {
@@ -1168,7 +871,6 @@
                 return;
             }
             
-            // 日付順でソート（新しいものが上に）
             const sortedActivities = activitiesData.sort((a, b) => {
                 return new Date(b.start_date) - new Date(a.start_date);
             });
@@ -1179,7 +881,10 @@
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
                 
                 return `
-                    <div class="activity-item" onclick="showActivityDetail('${activity.id}')">
+                    <div class="activity-item" 
+                         data-activity-id="${activity.id}"
+                         onclick="showActivityDetail('${activity.id}')"
+                         ondblclick="showActivityDetailInPanel('${activity.id}')">
                         <div class="activity-header">
                             <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
                             <span class="activity-date">${date}</span>
@@ -1203,7 +908,6 @@
             }).join('');
             
             container.innerHTML = html;
-            console.log('📊 Activities displayed in chronological order (newest first)');
         }
         
         function formatDuration(seconds) {
@@ -1224,10 +928,9 @@
                 'Ride': '🚴‍♂️', 
                 'Swim': '🏊‍♂️',
                 'WeightTraining': '🏋️‍♂️',
-                'Yoga': '🧘‍♂️',
-                'default': '🏃‍♂️'
+                'Yoga': '🧘‍♂️'
             };
-            return icons[type] || icons.default;
+            return icons[type] || '🏃‍♂️';
         }
         
         function getSportName(type) {
@@ -1236,10 +939,9 @@
                 'Ride': 'バイク',
                 'Swim': 'スイム',
                 'WeightTraining': '筋トレ',
-                'Yoga': 'ヨガ',
-                'default': 'その他'
+                'Yoga': 'ヨガ'
             };
-            return names[type] || names.default;
+            return names[type] || 'その他';
         }
         
         // Stravaコールバック処理
@@ -1247,10 +949,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             
-            console.log('🔄 Checking for Strava callback code:', code);
-            
             if (code && !stravaToken) {
-                console.log('✅ Strava authorization code found, exchanging for token...');
                 updateConnectionStatus('loading', '🔄 認証処理中...');
                 
                 fetch('/.netlify/functions/strava-auth', {
@@ -1260,14 +959,10 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('✅ Token exchange successful:', data);
-                    
                     if (data.access_token) {
                         stravaToken = data.access_token;
                         updateConnectionStatus('connected', '✅ Strava接続完了！');
                         showSyncSection();
-                        
-                        // URLからコードパラメータを削除
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } else {
                         throw new Error('No access token received');
@@ -1284,39 +979,17 @@
         window.addEventListener('load', function() {
             console.log('🚀 Page loaded, initializing...');
             
-            // Firebase認証（Firebase利用可能時のみ）
-            if (auth && typeof auth.signInAnonymously === 'function') {
-                auth.signInAnonymously()
-                    .then(user => {
-                        currentUser = user.user;
-                        console.log('✅ Anonymous auth successful');
-                    })
-                    .catch(error => {
-                        console.error('❌ Auth error:', error);
-                        // Firebase認証に失敗してもアプリは継続
-                        currentUser = { uid: 'anonymous_fallback' };
-                    });
-            } else {
-                // Firebase未使用時のフォールバック
-                currentUser = { uid: 'anonymous_fallback' };
-                console.log('🔄 Using fallback authentication (no Firebase)');
-            }
-                
-            // Stravaコールバック処理
             handleStravaCallback();
             
-            // イベントリスナー設定
             const connectBtn = document.getElementById('connectBtn');
             const syncBtn = document.getElementById('syncBtn');
             
             if (connectBtn) {
                 connectBtn.addEventListener('click', connectStrava);
-                console.log('✅ Connect button event listener added');
             }
             
             if (syncBtn) {
                 syncBtn.addEventListener('click', syncActivities);
-                console.log('✅ Sync button event listener added');
             }
             
             console.log('🎉 Initialization complete!');

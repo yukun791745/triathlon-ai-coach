@@ -939,10 +939,19 @@
             document.querySelectorAll('.view-toggle button').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
             
-            // ビュー切り替えのロジックをここに実装
-            // 現在はカード表示のみ実装
+            // クリックされたボタンをアクティブにする
+            const clickedButton = event.target;
+            clickedButton.classList.add('active');
+            
+            // ビュー切り替えのロジック（現在はカード表示のみ実装）
+            if (view === 'list') {
+                // リスト表示の実装（将来的に）
+                console.log('リスト表示に切り替え');
+            } else {
+                // カード表示（現在の表示）
+                console.log('カード表示に切り替え');
+            }
         }
 
         // ユーティリティ関数

@@ -576,13 +576,25 @@
         async function generateAIAnalysis(activity, metrics, zoneAnalysis) {
             const container = document.getElementById('aiContent');
             
+            // ローディング表示
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 15px;"></div>
+                    <p>AI分析を生成中...</p>
+                </div>
+            `;
+            
             try {
                 const apiKey = localStorage.getItem('triathlon_coach_api_key');
+                console.log('🔑 API Key check:', apiKey ? 'あり' : 'なし');
                 
                 if (!apiKey) {
+                    console.log('⚠️ No API key found, using fallback analysis');
                     container.innerHTML = generateFallbackAnalysis(activity, metrics, zoneAnalysis);
                     return;
                 }
+
+                console.log('🤖 Calling OpenAI API...');
                 
                 const systemPrompt = `あなたは運動生理学の博士号を持つトライアスロンコーチです。以下のアクティビティデータを詳細に分析して、運動生理学的観点から包括的なフィードバックを500字程度で提供してください。
 
@@ -619,17 +631,26 @@ ${metrics.avgCadence || metrics.average_cadence ? 'ケイデンス/ピッチ: ' 
                     })
                 });
 
+                console.log('📡 API Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`API呼び出しエラー: ${response.status} ${response.statusText}`);
+                }
+
                 const data = await response.json();
+                console.log('📊 API Response received:', data);
                 
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     const feedback = data.choices[0].message.content;
+                    console.log('✅ AI analysis generated successfully');
                     container.innerHTML = feedback.replace(/\n/g, '<br>');
                 } else {
-                    throw new Error('AI応答の取得に失敗');
+                    throw new Error('AI応答の形式が無効です');
                 }
                 
             } catch (error) {
                 console.error('❌ AI analysis error:', error);
+                console.log('🔄 Falling back to default analysis');
                 container.innerHTML = generateFallbackAnalysis(activity, metrics, zoneAnalysis);
             }
         }

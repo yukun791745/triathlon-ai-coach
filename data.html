@@ -525,7 +525,12 @@
                 return;
             }
             
-            const html = activitiesData.map(activity => {
+            // 日付順でソート（新しいものが上に）
+            const sortedActivities = activitiesData.sort((a, b) => {
+                return new Date(b.start_date) - new Date(a.start_date);
+            });
+            
+            const html = sortedActivities.map(activity => {
                 const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
                 const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
@@ -555,6 +560,7 @@
             }).join('');
             
             container.innerHTML = html;
+            console.log('📊 Activities displayed in chronological order (newest first)');
         }
         
         function formatDuration(seconds) {

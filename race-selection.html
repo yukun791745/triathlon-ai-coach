@@ -3,615 +3,635 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>トライアスロン大会一覧 2025</title>
+    <title>Triathlon AI Coach - レース選択</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 32px 16px;
         }
-
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
         }
-
+        
         .header {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
             text-align: center;
-            padding: 40px 20px;
+            margin-bottom: 32px;
         }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
         }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+        
+        .subtitle {
+            font-size: 20px;
+            color: #4b5563;
+            margin-bottom: 16px;
         }
-
-        .filters {
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
+        
+        .version {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
         }
-
-        .filter-row {
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .search-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .search-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .search-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
         }
-
-        .filter-group {
+        
+        .form-group {
             display: flex;
             flex-direction: column;
         }
-
-        .filter-group label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-            font-size: 0.9rem;
+        
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
         }
-
-        .filter-group select, .filter-group input {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
         }
-
-        .filter-group select:focus, .filter-group input:focus {
+        
+        .form-input:focus, .form-select:focus {
             outline: none;
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
-
-        .stats {
+        
+        .search-result {
+            margin-top: 16px;
             text-align: center;
-            padding: 20px 30px;
-            background: #e8f5e8;
-            border-bottom: 1px solid #d4edda;
+            color: #4b5563;
+            font-weight: 500;
         }
-
-        .stats h3 {
-            color: #2e7d32;
-            font-size: 1.3rem;
-        }
-
-        .race-grid {
+        
+        .races-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            padding: 30px;
+            gap: 24px;
         }
-
+        
         .race-card {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
             overflow: hidden;
-            border: 2px solid transparent;
+            transition: all 0.3s ease;
         }
-
+        
         .race-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            border-color: #4CAF50;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15);
         }
-
-        .race-card-header {
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .race-card-header h3 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-        }
-
-        .race-card-body {
+        
+        .race-content {
             padding: 20px;
         }
-
+        
+        .race-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .category-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .category-international {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+        
+        .category-championship {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+        
+        .category-major {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #9ca3af;
+        }
+        
+        .category-lumina {
+            background-color: #ede9fe;
+            color: #6b21a8;
+            border: 1px solid #a855f7;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-open {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        
+        .race-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
         .race-info {
-            display: grid;
-            gap: 12px;
+            margin-bottom: 16px;
         }
-
+        
         .race-info-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            color: #4b5563;
+            margin-bottom: 6px;
+            font-size: 14px;
         }
-
-        .race-info-item .icon {
-            width: 20px;
-            height: 20px;
+        
+        .race-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .race-features {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f0f0f0;
-            border-radius: 50%;
-            font-size: 0.8rem;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
         }
-
-        .race-info-item .text {
-            flex: 1;
-            font-size: 0.95rem;
+        
+        .feature-tag {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
         }
-
-        .distance-badge {
-            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        
+        .race-button {
+            display: block;
+            width: 100%;
+            background-color: #2563eb;
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .distance-badge.olympic {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        }
-
-        .distance-badge.sprint {
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-        }
-
-        .distance-badge.long {
-            background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-
-        .no-results h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .debug-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            margin: 20px 30px;
+            padding: 12px 16px;
             border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.9rem;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease;
         }
-
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .filter-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .race-grid {
-                grid-template-columns: 1fr;
-                padding: 20px;
-                gap: 20px;
-            }
+        
+        .race-button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- ヘッダー -->
         <div class="header">
-            <h1>🏊‍♂️🚴‍♂️🏃‍♂️ トライアスロン大会一覧 2025</h1>
-            <p>全国のトライアスロン大会情報をチェック！</p>
-        </div>
-
-        <div class="filters">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="region-select">🗾 地域</label>
-                    <select id="region-select">
-                        <option value="">すべての地域</option>
-                        <option value="北海道">北海道</option>
-                        <option value="東北">東北</option>
-                        <option value="関東">関東</option>
-                        <option value="中部">中部</option>
-                        <option value="関西">関西</option>
-                        <option value="中国">中国</option>
-                        <option value="四国">四国</option>
-                        <option value="九州">九州</option>
-                        <option value="沖縄">沖縄</option>
-                    </select>
+            <h1 class="title">🏊‍♂️🚴‍♂️🏃‍♂️ Triathlon AI Coach</h1>
+            <p class="subtitle">トライアスロン大会データベース</p>
+            <p class="version">VanillaJS版 - 5大会収録（距離フィルター追加版）</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-count">5</div>
+                    <div class="stat-label">総大会数</div>
                 </div>
-
-                <div class="filter-group">
-                    <label for="month-select">📅 開催月</label>
-                    <select id="month-select">
-                        <option value="">すべての月</option>
-                        <option value="4">4月</option>
-                        <option value="5">5月</option>
-                        <option value="6">6月</option>
-                        <option value="7">7月</option>
-                        <option value="8">8月</option>
-                        <option value="9">9月</option>
+                <div class="stat-card">
+                    <div class="stat-number" id="filtered-count">5</div>
+                    <div class="stat-label">表示中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">国際大会</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">日本選手権</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 検索・フィルター -->
+        <div class="search-panel">
+            <h2 class="search-title">🔍 検索・フィルター</h2>
+            
+            <div class="search-grid">
+                <div class="form-group">
+                    <label class="form-label">大会名・開催地</label>
+                    <input type="text" class="form-input" id="search-input" placeholder="検索...">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">開催月</label>
+                    <select class="form-select" id="month-select">
+                        <option value="">全ての月</option>
+                        <option value="01">1月</option>
+                        <option value="02">2月</option>
+                        <option value="03">3月</option>
+                        <option value="04">4月</option>
+                        <option value="05">5月</option>
+                        <option value="06">6月</option>
+                        <option value="07">7月</option>
+                        <option value="08">8月</option>
+                        <option value="09">9月</option>
                         <option value="10">10月</option>
                         <option value="11">11月</option>
+                        <option value="12">12月</option>
                     </select>
                 </div>
-
-                <div class="filter-group">
-                    <label for="distance-select">🏆 競技距離</label>
-                    <select id="distance-select">
-                        <option value="">すべての距離</option>
-                        <option value="スプリント">🏆 スプリント</option>
-                        <option value="オリンピック">🏆 オリンピック</option>
-                        <option value="ミドル">🏆 ミドル</option>
-                        <option value="ロング">🏆 ロング</option>
-                        <option value="アイアンマン">🏆 アイアンマン</option>
-                        <option value="リレー">🏆 リレー</option>
-                        <option value="アクアスロン">🏆 アクアスロン</option>
-                        <option value="デュアスロン">🏆 デュアスロン</option>
-                        <option value="キッズ">🏆 キッズ</option>
-                        <option value="エイジグループ">🏆 エイジグループ</option>
-                        <option value="チーム">🏆 チーム</option>
+                
+                <div class="form-group">
+                    <label class="form-label">カテゴリー</label>
+                    <select class="form-select" id="category-select">
+                        <option value="">全カテゴリー</option>
+                        <option value="JTU国際大会">JTU国際大会</option>
+                        <option value="JTU選手権">JTU選手権</option>
+                        <option value="主要大会">主要大会</option>
+                        <option value="LUMINA大会">LUMINA大会</option>
                     </select>
                 </div>
-
-                <div class="filter-group">
-                    <label for="search-input">🔍 大会名検索</label>
-                    <input type="text" id="search-input" placeholder="大会名を入力...">
+                
+                <div class="form-group">
+                    <label class="form-label">🏆 競技距離</label>
+                    <select class="form-select" id="distance-select">
+                        <option value="">全ての距離</option>
+                        <option value="スーパースプリント">スーパースプリント</option>
+                        <option value="スプリント">スプリント</option>
+                        <option value="スタンダード">スタンダード</option>
+                        <option value="ミドル">ミドル</option>
+                        <option value="ロング">ロング</option>
+                        <option value="アイアンマン">アイアンマン</option>
+                    </select>
                 </div>
             </div>
+            
+            <div class="search-result" id="search-result">5 件の大会</div>
         </div>
-
-        <div class="stats">
-            <h3 id="race-count">読み込み中...</h3>
+        
+        <!-- 大会一覧 -->
+        <div class="races-grid" id="races-container">
+            <!-- JavaScript で動的に生成 -->
         </div>
-
-        <div class="debug-info" id="debug-info">
-            <strong>🐛 デバッグ情報:</strong><br>
-            <div id="debug-content">初期化中...</div>
-        </div>
-
-        <div class="race-grid" id="race-grid">
-            <div style="text-align: center; padding: 40px; color: #666;">
-                <h3>大会データを読み込み中...</h3>
-            </div>
+        
+        <!-- フッター -->
+        <div class="footer">
+            <p>🚀 VanillaJS版テスト - 距離フィルター追加完了</p>
+            <p style="margin-top: 8px;">React版で問題が解決したら完全版51大会を収録</p>
         </div>
     </div>
 
     <script>
-        // デバッグ用ログ関数
-        function debugLog(message) {
-            console.log('🐛 DEBUG:', message);
-            const debugContent = document.getElementById('debug-content');
-            if (debugContent) {
-                debugContent.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
-            }
-        }
-
-        // DOM要素の安全な取得
-        function safeGetElement(id) {
-            const element = document.getElementById(id);
-            if (!element) {
-                debugLog(`❌ 要素が見つかりません: ${id}`);
-                return null;
-            }
-            debugLog(`✅ 要素取得成功: ${id}`);
-            return element;
-        }
-
+        // デバッグログ
+        console.log('🚀 スクリプト開始');
+        
         // 大会データ
-        const raceData = [
+        const races = [
             {
-                id: 1,
-                name: "石垣島トライアスロン",
-                region: "沖縄",
-                date: "2025-04-20",
-                location: "石垣市",
-                distance: "オリンピック",
-                description: "美しい海と自然に囲まれた南国のトライアスロン"
+                id: 'jtu_yokohama_wts_2025',
+                name: 'ワールドトライアスロンシリーズ横浜大会',
+                date: '2025-05-17',
+                location: '神奈川県横浜市',
+                distance: 'スタンダード',
+                level: 'エリート・エイジ',
+                category: 'JTU国際大会',
+                url: 'https://yokohamatriathlon.jp/',
+                description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催',
+                features: ['世界選手権', 'TV中継', 'パラ併催'],
+                entryStatus: '要確認'
             },
             {
-                id: 2,
-                name: "湘南国際トライアスロン",
-                region: "関東",
-                date: "2025-05-18",
-                location: "藤沢市",
-                distance: "オリンピック",
-                description: "関東最大級のトライアスロン大会"
+                id: 'jtu_osaka_atc_2025',
+                name: 'アジアトライアスロンカップ大阪城大会',
+                date: '2025-05-25',
+                location: '大阪府大阪市',
+                distance: 'スタンダード',
+                level: 'エリート・エイジ',
+                category: 'JTU国際大会',
+                url: 'https://www.jtu.or.jp/',
+                description: 'アジア最高峰のカップ戦。大阪城を舞台にした美しいコース',
+                features: ['アジアカップ', '大阪城', '国際レベル'],
+                entryStatus: '要確認'
             },
             {
-                id: 3,
-                name: "佐渡国際トライアスロン",
-                region: "中部",
-                date: "2025-09-07",
-                location: "佐渡市",
-                distance: "ロング",
-                description: "日本最高峰のロングディスタンス"
+                id: 'miyakojima_2025',
+                name: '第39回全日本トライアスロン宮古島大会',
+                date: '2025-04-20',
+                location: '沖縄県宮古島市',
+                distance: 'ロング',
+                level: 'エイジ',
+                category: '主要大会',
+                url: 'https://tri-miyako.com/',
+                description: '39年の歴史を誇る国内最高峰のロングディスタンス大会',
+                features: ['39年の歴史', '宮古ブルー', 'ロング'],
+                entryStatus: '要確認'
             },
             {
-                id: 4,
-                name: "宮古島トライアスロン",
-                region: "沖縄",
-                date: "2025-04-13",
-                location: "宮古島市",
-                distance: "ロング",
-                description: "エメラルドブルーの海が美しい宮古島"
+                id: 'ishigaki_2025',
+                name: '石垣島トライアスロン大会',
+                date: '2025-04-13',
+                location: '沖縄県石垣市',
+                distance: 'ロング',
+                level: 'エイジ',
+                category: '主要大会',
+                url: 'https://ishigaki-triathlon.jp/',
+                description: '石垣島の美しい自然の中で行われる人気のロング大会',
+                features: ['石垣島', '美しい海', 'エイジ'],
+                entryStatus: 'エントリー中'
             },
             {
-                id: 5,
-                name: "東京トライアスロンフェスタ",
-                region: "関東",
-                date: "2025-05-25",
-                location: "お台場",
-                distance: "スプリント",
-                description: "都心で開催される人気大会"
+                id: 'jtu_supersprint_2025',
+                name: '日本スーパースプリントトライアスロン選手権',
+                date: '2025-06-22',
+                location: '愛知県蒲郡市',
+                distance: 'スーパースプリント',
+                level: 'エリート',
+                category: 'JTU選手権',
+                url: 'https://gama-triathlon.jp/',
+                description: '日本最高峰のスーパースプリント選手権。短距離での頂上決戦',
+                features: ['日本選手権', 'TV中継', '短距離'],
+                entryStatus: '要確認'
             }
         ];
 
-        // アプリケーション状態
-        let appState = {
-            allRaces: [],
-            filteredRaces: [],
-            filters: {
-                region: '',
-                month: '',
-                distance: '',
-                search: ''
+        console.log('📊 大会データ読み込み完了:', races.length, '件');
+
+        // DOM要素
+        console.log('🔍 DOM要素取得開始');
+        const searchInput = document.getElementById('search-input');
+        const monthSelect = document.getElementById('month-select');
+        const categorySelect = document.getElementById('category-select');
+        const distanceSelect = document.getElementById('distance-select');
+        const searchResult = document.getElementById('search-result');
+        const racesContainer = document.getElementById('races-container');
+        const filteredCount = document.getElementById('filtered-count');
+
+        // DOM要素の存在確認
+        console.log('✅ DOM要素確認:');
+        console.log('  searchInput:', !!searchInput);
+        console.log('  monthSelect:', !!monthSelect);
+        console.log('  categorySelect:', !!categorySelect);
+        console.log('  distanceSelect:', !!distanceSelect);
+        console.log('  searchResult:', !!searchResult);
+        console.log('  racesContainer:', !!racesContainer);
+        console.log('  filteredCount:', !!filteredCount);
+
+        // カテゴリーのCSSクラス取得
+        function getCategoryClass(category) {
+            switch (category) {
+                case 'JTU国際大会': return 'category-international';
+                case 'JTU選手権': return 'category-championship';
+                case 'LUMINA大会': return 'category-lumina';
+                default: return 'category-major';
             }
-        };
-
-        // DOM要素の参照
-        let elements = {};
-
-        // 初期化関数
-        function initializeApp() {
-            debugLog('🚀 アプリケーション初期化開始');
-
-            // DOM要素の取得
-            elements = {
-                regionSelect: safeGetElement('region-select'),
-                monthSelect: safeGetElement('month-select'),
-                distanceSelect: safeGetElement('distance-select'),
-                searchInput: safeGetElement('search-input'),
-                raceGrid: safeGetElement('race-grid'),
-                raceCount: safeGetElement('race-count'),
-                debugContent: safeGetElement('debug-content')
-            };
-
-            // 必須要素の存在確認
-            const requiredElements = ['regionSelect', 'monthSelect', 'distanceSelect', 'searchInput', 'raceGrid', 'raceCount'];
-            const missingElements = requiredElements.filter(key => !elements[key]);
-
-            if (missingElements.length > 0) {
-                const errorMsg = `❌ 必須DOM要素が見つかりません: ${missingElements.join(', ')}`;
-                debugLog(errorMsg);
-                console.error(errorMsg);
-                return false;
-            }
-
-            debugLog('✅ 全てのDOM要素の取得完了');
-
-            // データの初期化
-            appState.allRaces = [...raceData];
-            appState.filteredRaces = [...raceData];
-
-            debugLog(`📊 大会データ読み込み完了: ${appState.allRaces.length}件`);
-
-            // イベントリスナーの設定
-            setupEventListeners();
-
-            // 初期表示
-            updateDisplay();
-
-            debugLog('🎉 初期化完了');
-            return true;
         }
 
-        // イベントリスナーの設定
-        function setupEventListeners() {
-            debugLog('🔗 イベントリスナー設定開始');
-
-            if (elements.regionSelect) {
-                elements.regionSelect.addEventListener('change', handleFilterChange);
-            }
-            if (elements.monthSelect) {
-                elements.monthSelect.addEventListener('change', handleFilterChange);
-            }
-            if (elements.distanceSelect) {
-                elements.distanceSelect.addEventListener('change', handleFilterChange);
-            }
-            if (elements.searchInput) {
-                elements.searchInput.addEventListener('input', handleFilterChange);
-            }
-
-            debugLog('✅ イベントリスナー設定完了');
+        // ステータスのCSSクラス取得
+        function getStatusClass(status) {
+            return status === 'エントリー中' ? 'status-open' : 'status-pending';
         }
 
-        // フィルター変更処理
-        function handleFilterChange() {
-            debugLog('🔄 フィルター変更検出');
-
-            // フィルター値の更新
-            appState.filters = {
-                region: elements.regionSelect?.value || '',
-                month: elements.monthSelect?.value || '',
-                distance: elements.distanceSelect?.value || '',
-                search: elements.searchInput?.value || ''
-            };
-
-            debugLog(`📝 現在のフィルター: ${JSON.stringify(appState.filters)}`);
-
-            // フィルタリング実行
-            applyFilters();
-
-            // 表示更新
-            updateDisplay();
-        }
-
-        // フィルタリング処理
-        function applyFilters() {
-            appState.filteredRaces = appState.allRaces.filter(race => {
-                // 地域フィルター
-                if (appState.filters.region && race.region !== appState.filters.region) {
-                    return false;
-                }
-
-                // 月フィルター
-                if (appState.filters.month) {
-                    const raceMonth = new Date(race.date).getMonth() + 1;
-                    if (raceMonth !== parseInt(appState.filters.month)) {
-                        return false;
-                    }
-                }
-
-                // 距離フィルター
-                if (appState.filters.distance && race.distance !== appState.filters.distance) {
-                    return false;
-                }
-
-                // 検索フィルター
-                if (appState.filters.search) {
-                    const searchTerm = appState.filters.search.toLowerCase();
-                    if (!race.name.toLowerCase().includes(searchTerm) && 
-                        !race.location.toLowerCase().includes(searchTerm)) {
-                        return false;
-                    }
-                }
-
-                return true;
+        // 日付フォーマット
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'short'
             });
-
-            debugLog(`🔍 フィルタリング結果: ${appState.filteredRaces.length}件`);
         }
 
-        // 表示更新
-        function updateDisplay() {
-            debugLog('🖥️ 表示更新開始');
-
-            // 統計情報の更新
-            if (elements.raceCount) {
-                elements.raceCount.textContent = `${appState.filteredRaces.length} 件の大会が見つかりました`;
-            }
-
-            // 大会一覧の更新
-            if (elements.raceGrid) {
-                if (appState.filteredRaces.length === 0) {
-                    elements.raceGrid.innerHTML = `
-                        <div class="no-results">
-                            <h3>該当する大会が見つかりませんでした</h3>
-                            <p>フィルター条件を変更してお試しください</p>
-                        </div>
-                    `;
-                } else {
-                    elements.raceGrid.innerHTML = appState.filteredRaces.map(race => createRaceCard(race)).join('');
-                }
-            }
-
-            debugLog('✅ 表示更新完了');
-        }
-
-        // 大会カードのHTML生成
+        // 大会カード生成
         function createRaceCard(race) {
-            const raceDate = new Date(race.date);
-            const formattedDate = raceDate.toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            const distanceClass = race.distance.toLowerCase().replace(/[^a-z]/g, '');
-
             return `
-                <div class="race-card">
-                    <div class="race-card-header">
-                        <h3>${race.name}</h3>
-                    </div>
-                    <div class="race-card-body">
+                <div class="race-card" data-id="${race.id}">
+                    <div class="race-content">
+                        <div class="race-header">
+                            <span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span>
+                            <span class="status-badge ${getStatusClass(race.entryStatus)}">${race.entryStatus}</span>
+                        </div>
+                        
+                        <h3 class="race-title">${race.name}</h3>
+                        
                         <div class="race-info">
-                            <div class="race-info-item">
-                                <div class="icon">📅</div>
-                                <div class="text">${formattedDate}</div>
-                            </div>
-                            <div class="race-info-item">
-                                <div class="icon">📍</div>
-                                <div class="text">${race.location} (${race.region})</div>
-                            </div>
-                            <div class="race-info-item">
-                                <div class="icon">📝</div>
-                                <div class="text">${race.description}</div>
-                            </div>
+                            <div class="race-info-item">📅 ${formatDate(race.date)}</div>
+                            <div class="race-info-item">📍 ${race.location}</div>
+                            <div class="race-info-item">⏱️ ${race.distance}</div>
+                            <div class="race-info-item">👥 ${race.level}</div>
                         </div>
-                        <div class="distance-badge ${distanceClass}">
-                            🏆 ${race.distance}
+                        
+                        <p class="race-description">${race.description}</p>
+                        
+                        <div class="race-features">
+                            ${race.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
                         </div>
+                        
+                        <a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">
+                            🔗 公式サイト
+                        </a>
                     </div>
                 </div>
             `;
         }
 
-        // DOMContentLoaded後に初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            debugLog('📄 DOM読み込み完了');
+        // フィルタリング実行
+        function filterRaces() {
+            console.log('🔄 フィルタリング実行開始');
             
-            setTimeout(() => {
-                const success = initializeApp();
-                if (!success) {
-                    debugLog('❌ 初期化失敗');
-                    if (elements.raceGrid) {
-                        elements.raceGrid.innerHTML = `
-                            <div class="no-results">
-                                <h3>❌ 初期化エラー</h3>
-                                <p>アプリケーションの初期化に失敗しました。ページを再読み込みしてください。</p>
-                            </div>
-                        `;
-                    }
-                }
-            }, 100);
-        });
+            try {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedMonth = monthSelect.value;
+                const selectedCategory = categorySelect.value;
+                const selectedDistance = distanceSelect.value;
 
-        // ページ読み込み完了後のフォールバック
-        window.addEventListener('load', function() {
-            debugLog('🌐 ページ読み込み完了');
-            
-            // DOM要素が見つからない場合の再試行
-            if (!elements.regionSelect) {
-                debugLog('🔄 DOM要素再取得を試行');
-                setTimeout(() => {
-                    initializeApp();
-                }, 500);
+                console.log('📝 フィルター条件:', {
+                    search: searchTerm,
+                    month: selectedMonth,
+                    category: selectedCategory,
+                    distance: selectedDistance
+                });
+
+                const filtered = races.filter(race => {
+                    const matchesSearch = !searchTerm || 
+                        race.name.toLowerCase().includes(searchTerm) ||
+                        race.location.toLowerCase().includes(searchTerm);
+                    
+                    const matchesMonth = !selectedMonth || 
+                        race.date.substring(5, 7) === selectedMonth;
+                    
+                    const matchesCategory = !selectedCategory || 
+                        race.category === selectedCategory;
+
+                    const matchesDistance = !selectedDistance || 
+                        race.distance === selectedDistance;
+
+                    return matchesSearch && matchesMonth && matchesCategory && matchesDistance;
+                });
+
+                console.log('✅ フィルタリング結果:', filtered.length, '件');
+
+                // UI更新
+                if (racesContainer) {
+                    racesContainer.innerHTML = filtered.map(createRaceCard).join('');
+                    console.log('✅ レースカード生成完了');
+                }
+                
+                if (searchResult) {
+                    searchResult.textContent = `${filtered.length} 件の大会`;
+                }
+                
+                if (filteredCount) {
+                    filteredCount.textContent = filtered.length;
+                }
+                
+                console.log('✅ UI更新完了');
+                
+            } catch (error) {
+                console.error('❌ フィルタリングエラー:', error);
+                if (racesContainer) {
+                    racesContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">エラーが発生しました: ' + error.message + '</div>';
+                }
             }
-        });
+        }
+
+        // イベントリスナー設定
+        console.log('🔗 イベントリスナー設定開始');
+        
+        try {
+            if (searchInput) {
+                searchInput.addEventListener('input', filterRaces);
+                console.log('✅ searchInput イベントリスナー設定完了');
+            }
+            
+            if (monthSelect) {
+                monthSelect.addEventListener('change', filterRaces);
+                console.log('✅ monthSelect イベントリスナー設定完了');
+            }
+            
+            if (categorySelect) {
+                categorySelect.addEventListener('change', filterRaces);
+                console.log('✅ categorySelect イベントリスナー設定完了');
+            }
+            
+            if (distanceSelect) {
+                distanceSelect.addEventListener('change', filterRaces);
+                console.log('✅ distanceSelect イベントリスナー設定完了');
+            }
+            
+            console.log('✅ 全イベントリスナー設定完了');
+        } catch (error) {
+            console.error('❌ イベントリスナー設定エラー:', error);
+        }
+
+        // 初期表示
+        console.log('🎬 初期表示開始');
+        try {
+            filterRaces();
+            console.log('✅ 初期表示完了');
+        } catch (error) {
+            console.error('❌ 初期表示エラー:', error);
+        }
+
+        console.log('✅ VanillaJS版 Triathlon AI Coach 初期化完了（距離フィルター追加版）');
+        console.log('📊 大会数:', races.length);
+        console.log('🏆 距離フィルター追加完了');
     </script>
 </body>
 </html>

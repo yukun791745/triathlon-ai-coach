@@ -1,167 +1,4 @@
-// 高度なAIフィードバック生成
-        async function generateAdvancedAIFeedback(activity, metrics, zoneAnalysis) {
-            try {
-                const systemPrompt = `あなたは運動生理学の博士号を持つトライアスロンコーチです。以下のアクティビティデータを詳細に分析して、運動生理学的観点から包括的なフィードバックを500字程度で提供してください。
-
-【アクティビティ詳細】
-種目: ${metrics.sportType}
-距離: ${metrics.distance ? (metrics.distance / 1000).toFixed(2) : '不明'}km
-時間: ${formatDuration(metrics.movingTime)}
-${metrics.pace ? 'ペース: ' + metrics.pace : ''}
-${metrics.avgSpeed ? '平均速度: ' + metrics.avgSpeed + 'km/h' : ''}
-${metrics.avgHeartRate ? '平均心拍: ' + Math.round(metrics.avgHeartRate) + 'bpm' : ''}
-${metrics.avgPower ? '平均パワー: ' + Math.round(metrics.avgPower) + 'W' : ''}
-${metrics.normalizedPower ? 'NP: ' + Math.round(metrics.normalizedPower) + 'W' : ''}
-${metrics.avgCadence ? 'ケイデンス/ピッチ: ' + Math.round(metrics.avgCadence) : ''}
-
-【心拍ゾーン分析】
-${zoneAnalysis && zoneAnalysis.heartRateZones ? 
-  zoneAnalysis.heartRateZones.map(z => `${z.name}: ${z.percentage}% (${z.timeFormatted})`).join('\n') : 
-  '心拍データなし'}
-
-【パワーゾーン分析】（バイクの場合）
-${zoneAnalysis && zoneAnalysis.powerZones ? 
-  zoneAnalysis.powerZones.map(z => `${z.name}: ${z.percentage}% (${z.timeFormatted})`).join('\n') : 
-  'パワーデータなし'}
-
-【分析の観点】
-1. このトレーニングの運動生理学的効果（VO2max、LT、ランニングエコノミーへの影響）
-2. 心拍・パワーゾーン分布から見たトレーニング強度の適切性
-3. 持久力・筋力・神経系への具体的な適応効果
-4. トレーニング負荷と回復の観点
-5. パフォーマンス向上への寄与度
-6. 今後の改善提案
-
-専門的でありながら分かりやすく、励ましの要素も含めてください。`;
-
-                const response = await fetch('/.netlify/functions/openai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `このアクティビティについて詳細な運動生理学的分析をしてください: ${activity.name}`,
-                        apiKey: localStorage.getItem('triathlon_coach_api_key'),
-                        systemPrompt: systemPrompt
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const feedback = data.choices[0].message.content;
-                    document.getElementById('aiFeedback').innerHTML = feedback.replace(/\n/g, '<br>');
-                } else {
-                    throw new Error('AI応答の取得に失敗');
-                }
-                
-            } catch (error) {
-                console.error('❌ Advanced AI feedback error:', error);
-                document.getElementById('aiFeedback').innerHTML = 
-                    generateDetailedFallbackFeedback(activity, metrics, zoneAnalysis);
-            }
-        }
-        
-        // 詳細フォールバックフィードバック
-        function generateDetailedFallbackFeedback(activity, metrics, zoneAnalysis) {
-            const sportType = metrics.sportType;
-            const distance = metrics.distance ? (metrics.distance / 1000).toFixed(1) : '0';
-            const duration = formatDuration(metrics.movingTime);
-            const avgHR = metrics.avgHeartRate ? Math.round(metrics.avgHeartRate) : null;
-            
-            let feedback = `<strong>【運動生理学的分析】</strong><br><br>`;
-            
-            if (sportType === 'Swim') {
-                feedback += `${distance}kmのスイムトレーニング、お疲れさまでした！<br><br>`;
-                if (metrics.pace) {
-                    feedback += `ペース${metrics.pace}/100mでの持続的な泳ぎは、有酸素能力の向上に効果的です。`;
-                }
-            } else if (sportType === 'Ride') {
-                feedback += `${distance}kmのバイクトレーニング、お疲れさまでした！<br><br>`;
-                if (metrics.normalizedPower && metrics.avgPower) {
-                    const intensity = (metrics.normalizedPower / metrics.avgPower).toFixed(2);
-                    feedback += `NP/平均パワー比が${intensity}で、強度変動を含む実践的なトレーニングでした。`;
-                }
-            } else if (sportType === 'Run') {
-                feedback += `${distance}kmのランニング、お疲れさまでした！<br><br>`;
-                if (metrics.pace) {
-                    feedback += `${metrics.pace}/kmペースでの走りは、持久力基盤の構築に貢献します。`;
-                }
-            }
-            
-            if (avgHR) {
-                if (avgHR < 140) {
-                    feedback += `<br><br>平均心拍${avgHR}bpmは有酸素ベースゾーンで、毛細血管密度の向上とミトコンドリアの適応を促進します。`;
-                } else if (avgHR < 160) {
-                    feedback += `<br><br>平均心拍${avgHR}bpmは乳酸閾値周辺での良いトレーニング強度で、持久力の向上に最適です。`;
-                } else {
-                    feedback += `<br><br>平均心拍${avgHR}bpmの高強度トレーニングは、VO2maxの向上と神経筋系の適応を促進します。適切な回復を心がけてください。`;
-                }
-            }
-            
-            // ゾーン分析があれば追加
-            if (zoneAnalysis && zoneAnalysis.heartRateZones) {
-                const zone2_3 = zoneAnalysis.heartRateZones.filter(z => z.name === 'Zone 2' || z.name === 'Zone 3')
-                    .reduce((sum, z) => sum + parseFloat(z.percentage), 0);
-                if (zone2_3 > 70) {
-                    feedback += `<br><br>Zone2-3での時間配分が${zone2_3.toFixed(1)}%と適切で、有酸素基盤の強化に効果的なトレーニングでした。`;
-                }
-            }
-            
-            feedback += `<br><br>継続的なトレーニングにより、心血管系とエネルギー代謝の適応が進み、パフォーマンス向上につながります。`;
-            
-            return feedback;
-        }
-        
-        // 基本アクティビティ詳細表示（フォールバック）
-        function displayBasicActivityDetail(activity) {
-            const container = document.getElementById('activityDetail');
-            const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
-            const duration = formatDuration(activity.moving_time || activity.elapsed_time);
-            const avgSpeed = activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '0';
-            const avgHR = activity.average_heartrate ? Math.round(activity.average_heartrate) : '-';
-            
-            const html = `
-                <div class="activity-detail">
-                    <h2>${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</h2>
-                    <p style="color: #666; margin-bottom: 20px;">${new Date(activity.start_date).toLocaleString('ja-JP')}</p>
-                    
-                    <div class="detail-stats">
-                        <div class="detail-stat">
-                            <div class="detail-stat-value">${distance}</div>
-                            <div class="detail-stat-label">距離 (km)</div>
-                        </div>
-                        <div class="detail-stat">
-                            <div class="detail-stat-value">${duration}</div>
-                            <div class="detail-stat-label">時間</div>
-                        </div>
-                        <div class="detail-stat">
-                            <div class="detail-stat-value">${avgSpeed}</div>
-                            <div class="detail-stat-label">平均速度 (km/h)</div>
-                        </div>
-                        <div class="detail-stat">
-                            <div class="detail-stat-value">${avgHR}</div>
-                            <div class="detail-stat-label">平均心拍</div>
-                        </div>
-                    </div>
-                    
-                    <div class="ai-feedback">
-                        <h3>🤖 AIコーチからの分析</h3>
-                        <div class="feedback-content">
-                            詳細データの取得に失敗しましたが、基本的な分析をお伝えします。<br><br>
-                            ${generateDetailedFallbackFeedback(activity, {
-                                sportType: activity.sport_type || activity.type,
-                                distance: activity.distance,
-                                movingTime: activity.moving_time,
-                                avgHeartRate: activity.average_heartrate
-                            }, null)}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -788,6 +625,9 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
                     </div>
                 `;
             } else if (sportType === 'Run') {
+                const strideLength = (metrics.avgSpeed && metrics.avgCadence) ? 
+                    ((parseFloat(metrics.avgSpeed) * 1000 / 3.6) / (metrics.avgCadence * 2)).toFixed(2) : '-';
+                
                 return `
                     <div class="detail-stats">
                         <div class="detail-stat">
@@ -803,12 +643,12 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
                             <div class="detail-stat-label">ペース (分:秒/km)</div>
                         </div>
                         <div class="detail-stat">
-                            <div class="detail-stat-value">${metrics.avgCadence ? Math.round(metrics.avgCadence) : '-'}</div>
-                            <div class="detail-stat-label">ピッチ (steps/min)</div>
+                            <div class="detail-stat-value">${metrics.avgCadence ? Math.round(metrics.avgCadence * 2) : '-'}</div>
+                            <div class="detail-stat-label">ピッチ (spm)</div>
                         </div>
                         <div class="detail-stat">
-                            <div class="detail-stat-value">${metrics.avgStride || '-'}</div>
-                            <div class="detail-stat-label">ストライド (cm)</div>
+                            <div class="detail-stat-value">${strideLength}m</div>
+                            <div class="detail-stat-label">ストライド</div>
                         </div>
                         <div class="detail-stat">
                             <div class="detail-stat-value">${metrics.avgHeartRate ? Math.round(metrics.avgHeartRate) : '-'}</div>
@@ -840,7 +680,7 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
             let zonesHTML = '';
             
             // 心拍ゾーン表
-            if (zoneAnalysis.heartRateZones) {
+            if (zoneAnalysis.heartRateZones && zoneAnalysis.heartRateZones.length > 0) {
                 zonesHTML += `
                     <div class="zone-analysis">
                         <h3>💓 心拍ゾーン分析</h3>
@@ -857,7 +697,7 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
                                 ${zoneAnalysis.heartRateZones.map(zone => `
                                     <tr>
                                         <td><strong>${zone.name}</strong></td>
-                                        <td>${zone.min}-${zone.max}</td>
+                                        <td>${zone.range}</td>
                                         <td>${zone.timeFormatted}</td>
                                         <td>${zone.percentage}%</td>
                                     </tr>
@@ -869,7 +709,7 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
             }
             
             // パワーゾーン表（バイクの場合）
-            if (zoneAnalysis.powerZones && sportType === 'Ride') {
+            if (zoneAnalysis.powerZones && zoneAnalysis.powerZones.length > 0 && sportType === 'Ride') {
                 zonesHTML += `
                     <div class="zone-analysis">
                         <h3>⚡ パワーゾーン分析</h3>
@@ -886,7 +726,7 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
                                 ${zoneAnalysis.powerZones.map(zone => `
                                     <tr>
                                         <td><strong>${zone.name}</strong></td>
-                                        <td>${zone.min}-${zone.max === 9999 ? '∞' : zone.max}</td>
+                                        <td>${zone.range}</td>
                                         <td>${zone.timeFormatted}</td>
                                         <td>${zone.percentage}%</td>
                                     </tr>
@@ -898,6 +738,171 @@ ${zoneAnalysis && zoneAnalysis.powerZones ?
             }
             
             return zonesHTML;
+        }
+        
+        // 高度なAIフィードバック生成
+        async function generateAdvancedAIFeedback(activity, metrics, zoneAnalysis) {
+            try {
+                const systemPrompt = `あなたは運動生理学の博士号を持つトライアスロンコーチです。以下のアクティビティデータを詳細に分析して、運動生理学的観点から包括的なフィードバックを500字程度で提供してください。
+
+【アクティビティ詳細】
+種目: ${metrics.sportType}
+距離: ${metrics.distance ? (metrics.distance / 1000).toFixed(2) : '不明'}km
+時間: ${formatDuration(metrics.movingTime)}
+${metrics.pace ? 'ペース: ' + metrics.pace : ''}
+${metrics.avgSpeed ? '平均速度: ' + metrics.avgSpeed + 'km/h' : ''}
+${metrics.avgHeartRate ? '平均心拍: ' + Math.round(metrics.avgHeartRate) + 'bpm' : ''}
+${metrics.avgPower ? '平均パワー: ' + Math.round(metrics.avgPower) + 'W' : ''}
+${metrics.normalizedPower ? 'NP: ' + Math.round(metrics.normalizedPower) + 'W' : ''}
+${metrics.avgCadence ? 'ケイデンス/ピッチ: ' + Math.round(metrics.avgCadence) : ''}
+
+【心拍ゾーン分析】
+${zoneAnalysis && zoneAnalysis.heartRateZones ? 
+  zoneAnalysis.heartRateZones.map(z => `${z.name}: ${z.percentage}% (${z.timeFormatted})`).join('\n') : 
+  '心拍データなし'}
+
+【パワーゾーン分析】（バイクの場合）
+${zoneAnalysis && zoneAnalysis.powerZones ? 
+  zoneAnalysis.powerZones.map(z => `${z.name}: ${z.percentage}% (${z.timeFormatted})`).join('\n') : 
+  'パワーデータなし'}
+
+【分析の観点】
+1. このトレーニングの運動生理学的効果（VO2max、LT、ランニングエコノミーへの影響）
+2. 心拍・パワーゾーン分布から見たトレーニング強度の適切性
+3. 持久力・筋力・神経系への具体的な適応効果
+4. トレーニング負荷と回復の観点
+5. パフォーマンス向上への寄与度
+6. 今後の改善提案
+
+専門的でありながら分かりやすく、励ましの要素も含めてください。`;
+
+                const response = await fetch('/.netlify/functions/openai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `このアクティビティについて詳細な運動生理学的分析をしてください: ${activity.name}`,
+                        apiKey: localStorage.getItem('triathlon_coach_api_key'),
+                        systemPrompt: systemPrompt
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const feedback = data.choices[0].message.content;
+                    document.getElementById('aiFeedback').innerHTML = feedback.replace(/\n/g, '<br>');
+                } else {
+                    throw new Error('AI応答の取得に失敗');
+                }
+                
+            } catch (error) {
+                console.error('❌ Advanced AI feedback error:', error);
+                document.getElementById('aiFeedback').innerHTML = 
+                    generateDetailedFallbackFeedback(activity, metrics, zoneAnalysis);
+            }
+        }
+        
+        // 詳細フォールバックフィードバック
+        function generateDetailedFallbackFeedback(activity, metrics, zoneAnalysis) {
+            const sportType = metrics.sportType;
+            const distance = metrics.distance ? (metrics.distance / 1000).toFixed(1) : '0';
+            const duration = formatDuration(metrics.movingTime);
+            const avgHR = metrics.avgHeartRate ? Math.round(metrics.avgHeartRate) : null;
+            
+            let feedback = `<strong>【運動生理学的分析】</strong><br><br>`;
+            
+            if (sportType === 'Swim') {
+                feedback += `${distance}kmのスイムトレーニング、お疲れさまでした！<br><br>`;
+                if (metrics.pace) {
+                    feedback += `ペース${metrics.pace}/100mでの持続的な泳ぎは、有酸素能力の向上に効果的です。`;
+                }
+            } else if (sportType === 'Ride') {
+                feedback += `${distance}kmのバイクトレーニング、お疲れさまでした！<br><br>`;
+                if (metrics.normalizedPower && metrics.avgPower) {
+                    const intensity = (metrics.normalizedPower / metrics.avgPower).toFixed(2);
+                    feedback += `NP/平均パワー比が${intensity}で、強度変動を含む実践的なトレーニングでした。`;
+                }
+            } else if (sportType === 'Run') {
+                feedback += `${distance}kmのランニング、お疲れさまでした！<br><br>`;
+                if (metrics.pace) {
+                    feedback += `${metrics.pace}/kmペースでの走りは、持久力基盤の構築に貢献します。`;
+                }
+            }
+            
+            if (avgHR) {
+                if (avgHR < 140) {
+                    feedback += `<br><br>平均心拍${avgHR}bpmは有酸素ベースゾーンで、毛細血管密度の向上とミトコンドリアの適応を促進します。`;
+                } else if (avgHR < 160) {
+                    feedback += `<br><br>平均心拍${avgHR}bpmは乳酸閾値周辺での良いトレーニング強度で、持久力の向上に最適です。`;
+                } else {
+                    feedback += `<br><br>平均心拍${avgHR}bpmの高強度トレーニングは、VO2maxの向上と神経筋系の適応を促進します。適切な回復を心がけてください。`;
+                }
+            }
+            
+            // ゾーン分析があれば追加
+            if (zoneAnalysis && zoneAnalysis.heartRateZones) {
+                const zone2_3 = zoneAnalysis.heartRateZones.filter(z => z.name === 'Zone 2' || z.name === 'Zone 3')
+                    .reduce((sum, z) => sum + parseFloat(z.percentage), 0);
+                if (zone2_3 > 70) {
+                    feedback += `<br><br>Zone2-3での時間配分が${zone2_3.toFixed(1)}%と適切で、有酸素基盤の強化に効果的なトレーニングでした。`;
+                }
+            }
+            
+            feedback += `<br><br>継続的なトレーニングにより、心血管系とエネルギー代謝の適応が進み、パフォーマンス向上につながります。`;
+            
+            return feedback;
+        }
+        
+        // 基本アクティビティ詳細表示（フォールバック）
+        function displayBasicActivityDetail(activity) {
+            const container = document.getElementById('activityDetail');
+            const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
+            const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+            const avgSpeed = activity.average_speed ? (activity.average_speed * 3.6).toFixed(1) : '0';
+            const avgHR = activity.average_heartrate ? Math.round(activity.average_heartrate) : '-';
+            
+            const html = `
+                <div class="activity-detail">
+                    <h2>${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</h2>
+                    <p style="color: #666; margin-bottom: 20px;">${new Date(activity.start_date).toLocaleString('ja-JP')}</p>
+                    
+                    <div class="detail-stats">
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${distance}</div>
+                            <div class="detail-stat-label">距離 (km)</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${duration}</div>
+                            <div class="detail-stat-label">時間</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${avgSpeed}</div>
+                            <div class="detail-stat-label">平均速度 (km/h)</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value">${avgHR}</div>
+                            <div class="detail-stat-label">平均心拍</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-feedback">
+                        <h3>🤖 AIコーチからの分析</h3>
+                        <div class="feedback-content">
+                            詳細データの取得に失敗しましたが、基本的な分析をお伝えします。<br><br>
+                            ${generateDetailedFallbackFeedback(activity, {
+                                sportType: activity.sport_type || activity.type,
+                                distance: activity.distance,
+                                movingTime: activity.moving_time,
+                                avgHeartRate: activity.average_heartrate
+                            }, null)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
         }
         
         // ユーティリティ関数

@@ -668,21 +668,24 @@ const TriathlonAICoach = () => {
     return duplicates;
   };
 
-  // 重複を除いた大会リスト
+  // 重複を除いた大会リスト（デバッグ機能付き）
   const uniqueRaces = useMemo(() => {
     const seen = new Set();
-    return allRaces.filter(race => {
+    const filtered = allRaces.filter(race => {
       if (seen.has(race.id)) {
+        console.warn('重複ID検出:', race.id, race.name);
         return false;
       }
       seen.add(race.id);
       return true;
     });
+    console.log('総大会数:', allRaces.length, '重複除去後:', filtered.length);
+    return filtered;
   }, []);
 
-  // フィルタリング機能
+  // フィルタリング機能（デバッグ機能付き）
   const filteredRaces = useMemo(() => {
-    return uniqueRaces.filter(race => {
+    const result = uniqueRaces.filter(race => {
       const matchesSearch = race.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           race.location.toLowerCase().includes(searchTerm.toLowerCase());
       
@@ -703,6 +706,13 @@ const TriathlonAICoach = () => {
 
       return matchesSearch && matchesMonth && matchesDistance && matchesRegion && matchesLevel && matchesCategory;
     });
+    
+    console.log('フィルタリング結果:', result.length, '件');
+    console.log('フィルター条件:', {
+      searchTerm, selectedMonth, selectedDistance, selectedRegion, selectedLevel, selectedCategory
+    });
+    
+    return result;
   }, [searchTerm, selectedMonth, selectedDistance, selectedRegion, selectedLevel, selectedCategory, uniqueRaces]);
 
   // オプション配列
@@ -893,11 +903,14 @@ const TriathlonAICoach = () => {
             </div>
           </div>
 
-          {/* 検索結果数 */}
+          {/* 検索結果数とデバッグ情報 */}
           <div className="mt-4 text-center">
             <span className="text-gray-600 font-medium">
               {filteredRaces.length} 件の大会が見つかりました
             </span>
+            <div className="text-xs text-gray-400 mt-1">
+              （総大会数: {uniqueRaces.length}件 | データ配列: {allRaces.length}件）
+            </div>
           </div>
         </div>
 

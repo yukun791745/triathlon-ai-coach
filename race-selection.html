@@ -16,11 +16,15 @@
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
             padding: 32px 16px;
+            margin: 0;
+            width: 100%;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%;
+            min-height: 100vh;
         }
         
         .header {
@@ -132,15 +136,19 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 24px;
+            background-color: rgba(255, 0, 0, 0.1); /* デバッグ用：薄い赤背景 */
+            min-height: 200px; /* デバッグ用：最小高さ */
+            padding: 20px; /* デバッグ用：パディング追加 */
         }
         
         .race-card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
+            border: 2px solid #e5e7eb; /* デバッグ用：境界線を太く */
             overflow: hidden;
             transition: all 0.3s ease;
+            min-height: 300px; /* デバッグ用：最小高さ */
         }
         
         .race-card:hover {
@@ -569,8 +577,12 @@
 
                 // UI更新
                 if (racesContainer) {
-                    racesContainer.innerHTML = filtered.map(createRaceCard).join('');
-                    console.log('✅ レースカード生成完了');
+                    const htmlContent = filtered.map(createRaceCard).join('');
+                    racesContainer.innerHTML = htmlContent;
+                    console.log('✅ レースカード生成完了:', htmlContent.length, '文字');
+                    console.log('📦 生成されたHTML（最初の200文字）:', htmlContent.substring(0, 200));
+                } else {
+                    console.error('❌ racesContainer が見つかりません');
                 }
                 
                 if (searchResult) {

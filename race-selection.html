@@ -4,1160 +4,539 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Triathlon AI Coach - レース選択</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #4b5563;
+            margin-bottom: 16px;
+        }
+        
+        .version {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .search-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .search-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-result {
+            margin-top: 16px;
+            text-align: center;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        
+        .races-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        
+        .race-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .race-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+        
+        .race-content {
+            padding: 20px;
+        }
+        
+        .race-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .category-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .category-international {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+        
+        .category-championship {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+        
+        .category-major {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #9ca3af;
+        }
+        
+        .category-lumina {
+            background-color: #ede9fe;
+            color: #6b21a8;
+            border: 1px solid #a855f7;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-open {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        
+        .race-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .race-info {
+            margin-bottom: 16px;
+        }
+        
+        .race-info-item {
+            display: flex;
+            align-items: center;
+            color: #4b5563;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        
+        .race-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .race-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .feature-tag {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .race-button {
+            display: block;
+            width: 100%;
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .race-button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useMemo } = React;
-        const { Search, Calendar, MapPin, Trophy, Clock, Users, Filter, ExternalLink, Star, Target, Zap, CheckCircle, AlertTriangle, Award } = lucide;
-
-        const TriathlonAICoach = () => {
-            const [searchTerm, setSearchTerm] = useState('');
-            const [selectedMonth, setSelectedMonth] = useState('');
-            const [selectedDistance, setSelectedDistance] = useState('');
-            const [selectedRegion, setSelectedRegion] = useState('');
-            const [selectedLevel, setSelectedLevel] = useState('');
-            const [selectedCategory, setSelectedCategory] = useState('');
-
-            // 超包括的なトライアスロン大会データベース（JTU + LUMINA + 全国主要大会統合版）
-            const allRaces = [
-                // === JTU 国際大会 ===
-                {
-                    id: 'jtu_yokohama_wts_2025',
-                    name: 'ワールドトライアスロンシリーズ横浜大会',
-                    date: '2025-05-17',
-                    location: '神奈川県横浜市',
-                    distance: 'スタンダード',
-                    level: 'エリート・エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://yokohamatriathlon.jp/',
-                    description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催',
-                    features: ['世界選手権シリーズ', 'パラシリーズ併催', 'TV中継あり'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_osaka_atc_2025',
-                    name: 'アジアトライアスロンカップ大阪城大会',
-                    date: '2025-05-25',
-                    location: '大阪府大阪市',
-                    distance: 'スタンダード',
-                    level: 'エリート・エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'アジア最高峰のカップ戦。大阪城を舞台にした美しいコース',
-                    features: ['アジアカップ', '大阪城コース', '国際レベル'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_ironman_minamihokkaido_2025',
-                    name: 'アイアンマンジャパンみなみ北海道',
-                    date: '2025-09-14',
-                    location: '北海道北斗市・木古内町',
-                    distance: 'アイアンマン',
-                    level: 'エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://www.ironman.com/ja-jp/japan',
-                    description: '日本初のアイアンマン正式大会。3.8km スイム、180km バイク、42.195km ラン',
-                    features: ['アイアンマン', '北海道の大自然', '世界選手権獲得'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_gamagori_atc_2025',
-                    name: 'アジアトライアスロンカップ蒲郡大会',
-                    date: '2025-09-21',
-                    location: '愛知県蒲郡市',
-                    distance: 'スタンダード',
-                    level: 'エリート・エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://gama-triathlon.jp/',
-                    description: 'アジア競技大会テストイベント併催。国際レベルの大会',
-                    features: ['アジアカップ', 'テストイベント', '蒲郡の美しい海'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_chiba_para_2025',
-                    name: 'アジアトライアスロンパラ選手権千葉大会',
-                    date: '2025-10-12',
-                    location: '千葉県千葉市',
-                    distance: 'スタンダード',
-                    level: 'パラエリート・エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'アジア最高峰のパラトライアスロン選手権。千葉シティ大会併催',
-                    features: ['パラ選手権', 'バリアフリー', '2日間開催'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_miyazaki_wtc_2025',
-                    name: 'ワールドトライアスロンカップ宮崎大会',
-                    date: '2025-11-08',
-                    location: '宮崎県宮崎市',
-                    distance: 'スタンダード',
-                    level: 'エリート・エイジ',
-                    category: 'JTU国際大会',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'ワールドカップ＆アジアカップのダブル開催（調整中）',
-                    features: ['ワールドカップ', '温暖な気候', '調整中'],
-                    entryStatus: '調整中'
-                },
-
-                // === JTU 国内選手権 ===
-                {
-                    id: 'jtu_gamagori_supersprint_2025',
-                    name: '日本スーパースプリントトライアスロン選手権',
-                    date: '2025-06-22',
-                    location: '愛知県蒲郡市',
-                    distance: 'スーパースプリント',
-                    level: 'エリート',
-                    category: 'JTU選手権',
-                    url: 'https://gama-triathlon.jp/',
-                    description: '日本最高峰のスーパースプリント選手権。短距離での頂上決戦',
-                    features: ['日本選手権', 'スーパースプリント', 'TV中継'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_tokyo_aquathlon_2025',
-                    name: '第3回日本アクアスロン選手権',
-                    date: '2025-07-13',
-                    location: '東京都江東区（海の森）',
-                    distance: 'アクアスロン',
-                    level: 'エリート・エイジ・U15',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '東京2020レガシー施設での日本アクアスロン選手権',
-                    features: ['オリンピック会場', '3つのカテゴリー', 'レガシー施設'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_nagaragawa_u23_junior_2025',
-                    name: '日本U23スプリント・ジュニアトライアスロン選手権',
-                    date: '2025-07-27',
-                    location: '岐阜県海津市',
-                    distance: 'スプリント',
-                    level: 'U23・ジュニア',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'U23・ジュニア世代の日本一決定戦。長良川国際大会併催',
-                    features: ['若手世代', '長良川', '全国中学生大会併催'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_tokyo_highschool_2025',
-                    name: '第8回全国高等学校トライアスロン選手権',
-                    date: '2025-08-31',
-                    location: '東京都江東区（海の森）',
-                    distance: 'スプリント',
-                    level: '高校生',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '全国の高校生トップアスリートが集結する頂上決戦',
-                    features: ['高校生日本一', 'オリンピック会場', '次世代育成'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_sado_longdistance_2025',
-                    name: '第29回日本ロングディスタンストライアスロン選手権',
-                    date: '2025-09-07',
-                    location: '新潟県佐渡市',
-                    distance: 'ロング',
-                    level: 'エリート・エイジ',
-                    category: 'JTU選手権',
-                    url: 'https://www.scsf.jp/triathlon/',
-                    description: '日本最高峰のロングディスタンス選手権。佐渡国際大会Aタイプ併催',
-                    features: ['ロング日本選手権', '佐渡の大自然', '30年の歴史'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_student_kannonji_2025',
-                    name: '日本学生トライアスロン選手権',
-                    date: '2025-09-07',
-                    location: '香川県観音寺市',
-                    distance: 'スタンダード',
-                    level: '大学生',
-                    category: 'JTU選手権',
-                    url: 'https://jutu.jimdofree.com/',
-                    description: '全国の大学生トップアスリートによる学生日本一決定戦',
-                    features: ['学生日本一', '観音寺', 'インカレ'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_aomori_sprint_2025',
-                    name: '第16回日本スプリントトライアスロン選手権',
-                    date: '2025-09-14',
-                    location: '青森県青森市',
-                    distance: 'スプリント',
-                    level: 'エリート',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '日本スプリント種目の最高峰選手権',
-                    features: ['スプリント日本選手権', '青森', '北の頂上決戦'],
-                    entryStatus: 'エントリー中'
-                },
-                {
-                    id: 'jtu_shiga_kokutai_2025',
-                    name: 'わたSHIGA輝く国民スポーツ大会2025',
-                    date: '2025-09-28',
-                    location: '滋賀県近江八幡市',
-                    distance: 'スタンダード',
-                    level: '成年・少年',
-                    category: 'JTU国体',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '国民スポーツ大会トライアスロン競技',
-                    features: ['国体', '滋賀', '都道府県対抗'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_tokyo_championship_2025',
-                    name: '第31回日本トライアスロン選手権',
-                    date: '2025-10-26',
-                    location: '東京都港区（台場）',
-                    distance: 'スタンダード',
-                    level: 'エリート・U23',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '日本トライアスロン界の最高峰。日本選手権とU23選手権を同時開催',
-                    features: ['日本選手権', 'U23併催', '東京台場'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_miyazaki_agegroup_2025',
-                    name: '第6回日本エイジグループトライアスロン選手権',
-                    date: '2025-11-09',
-                    location: '宮崎県宮崎市',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'エイジグループの日本一決定戦。スプリント選手権も同時開催',
-                    features: ['エイジ日本選手権', 'スプリント併催', '宮崎'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'jtu_okinawa_long_agegroup_2025',
-                    name: '第1回日本エイジグループロングトライアスロン選手権',
-                    date: '2025-11-16',
-                    location: '沖縄県金武町',
-                    distance: 'ロング',
-                    level: 'エイジ',
-                    category: 'JTU選手権',
-                    url: 'https://www.jtu.or.jp/',
-                    description: '記念すべき第1回エイジグループロング選手権。おきなわKIN大会併催',
-                    features: ['第1回開催', 'ロング距離', '沖縄'],
-                    entryStatus: '調整中'
-                },
-
-                // === 主要トライアスロン大会 ===
-                {
-                    id: 'miyakojima_2025',
-                    name: '第39回全日本トライアスロン宮古島大会',
-                    date: '2025-04-20',
-                    location: '沖縄県宮古島市',
-                    distance: 'ロング',
-                    level: 'エイジ',
-                    category: '主要大会',
-                    url: 'https://tri-miyako.com/',
-                    description: '39年の歴史を誇る国内最高峰のロングディスタンス大会',
-                    features: ['39年の歴史', '美しい宮古ブルー', 'ロングディスタンス'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'ishigaki_2025',
-                    name: '石垣島トライアスロン大会',
-                    date: '2025-04-13',
-                    location: '沖縄県石垣市',
-                    distance: 'ロング',
-                    level: 'エイジ',
-                    category: '主要大会',
-                    url: 'https://ishigaki-triathlon.jp/',
-                    description: '石垣島の美しい自然の中で行われる人気のロング大会',
-                    features: ['石垣島', '美しい海', 'エイジグループメイン'],
-                    entryStatus: 'エントリー中'
-                },
-                {
-                    id: 'gunma_yusui_2025',
-                    name: '第32回遊水地ふれあいトライアスロン群馬大会',
-                    date: '2025-06-08',
-                    location: '群馬県板倉町',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: '主要大会',
-                    url: 'https://www.gunma-triathlon.com/',
-                    description: 'NTTエイジグループ・ナショナルチャンピオンシップシリーズ第2戦',
-                    features: ['NCS第2戦', '遊水地コース', '群馬'],
-                    entryStatus: 'エントリー中'
-                },
-                {
-                    id: 'shirahama_2025',
-                    name: '第10回南紀白浜トライアスロン大会',
-                    date: '2025-06-29',
-                    location: '和歌山県白浜町',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: '主要大会',
-                    url: 'https://www.jtu.or.jp/',
-                    description: 'NTTエイジグループ・ナショナルチャンピオンシップシリーズ第4戦',
-                    features: ['NCS第4戦', '南紀白浜', '美しいリゾート'],
-                    entryStatus: '要確認'
-                },
-
-                // === LUMINA統合大会 ===
-                {
-                    id: 'aquafield_kisosansen_2025',
-                    name: 'アクアフィールドトライアスロンフェスティバル',
-                    date: '2025-06-01',
-                    location: '岐阜県海津市（木曽三川公園）',
-                    distance: 'スプリント',
-                    level: 'エイジ・ジュニア',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: '木曽三川ジュニアトライアスロン併催。ファミリーで楽しめる大会',
-                    features: ['ジュニア併催', '木曽三川', 'ファミリー向け'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'hamana_murakushi_2025',
-                    name: 'レイクハマナ・トライアスロンin村櫛大会',
-                    date: '2025-06-15',
-                    location: '静岡県浜松市',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: '浜松市民スポーツ祭トライアスロン大会。浜名湖の美しい環境',
-                    features: ['浜名湖', '市民スポーツ祭', '湖畔コース'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'teamkenz_aquathlon_2025',
-                    name: 'チームケンズカップアクアスロンin西武園ゆうえんち',
-                    date: '2025-07-20',
-                    location: '埼玉県西武園',
-                    distance: 'アクアスロン',
-                    level: 'エイジ・キッズ',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: '遊園地で開催されるユニークなアクアスロン大会',
-                    features: ['遊園地開催', 'キッズフレンドリー', 'アクアスロン'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'shimotsuke_bg_mini_2025',
-                    name: 'B&Gウォータースポーツプロジェクトinしもつけ',
-                    date: '2025-08-03',
-                    location: '栃木県下野市',
-                    distance: 'ミニトライアスロン',
-                    level: 'キッズ・ビギナー',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: 'B&G財団主催のミニトライアスロン。初心者・キッズ向け',
-                    features: ['初心者向け', 'キッズレース', 'B&G財団'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'fukuoka_festa_ekiden_2025',
-                    name: '福岡トライアスロンフェスタ／ジャパントライアスロンEKIDEN',
-                    date: '2025-09-21',
-                    location: '福岡県福岡市',
-                    distance: 'スーパースプリント・EKIDEN',
-                    level: 'エイジ・チーム',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: 'スーパースプリント九州選手権大会併催。EKIDEN形式も',
-                    features: ['EKIDEN形式', '九州選手権', 'チーム戦'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'odaiba_ocean_swim_2025',
-                    name: 'EARTHトライアスロンチャレンジシリーズ お台場',
-                    date: '2025-08-10',
-                    location: '東京都港区（お台場）',
-                    distance: 'スプリント',
-                    level: 'エイジ',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: 'お台場オーシャンスイムフェスティバル。東京湾でのレース',
-                    features: ['お台場', '東京湾', 'オーシャンスイム'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'student_spring_championship_2025',
-                    name: '日本学生スプリングトライアスロン選手権',
-                    date: '2025-04-27',
-                    location: '調整中',
-                    distance: 'スプリント',
-                    level: '大学生',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: '日本学生トライアスロン選抜併催。春の学生レース',
-                    features: ['学生選抜', '春季大会', '大学生'],
-                    entryStatus: '調整中'
-                },
-                {
-                    id: 'wakasa_takahama_2025',
-                    name: '若狭高浜トライアスロン大会',
-                    date: '2025-05-04',
-                    location: '福井県高浜町',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: 'LUMINA大会',
-                    url: 'https://lumina-magazine.com/',
-                    description: '福井しあわせ元気国体トライアスロン競技プレ大会',
-                    features: ['国体プレ大会', '若狭湾', '福井'],
-                    entryStatus: '要確認'
-                },
-
-                // === 地域・特色のある大会 ===
-                {
-                    id: 'sagishima_shin_2025',
-                    name: 'シン・さぎしまトライアスロン',
-                    date: '2025-05-11',
-                    location: '広島県三原市鷺浦町',
-                    distance: 'スプリント',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '瀬戸内海の美しい島で開催される地域密着型大会',
-                    features: ['瀬戸内海', '島開催', '地域密着'],
-                    entryStatus: 'エントリー中'
-                },
-                {
-                    id: 'aoshima_aquathlon_2025',
-                    name: '第16回青島鬼の洗濯板アクアスロン大会',
-                    date: '2025-03-16',
-                    location: '宮崎県宮崎市（青島ビーチ）',
-                    distance: 'アクアスロン',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '青島の鬼の洗濯板で有名な美しいビーチでのアクアスロン',
-                    features: ['鬼の洗濯板', '青島ビーチ', '宮崎'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'osaka_duathlon_banpaku_2025',
-                    name: 'OSAKAデュアスロン2025 IN 万博記念公園',
-                    date: '2025-03-30',
-                    location: '大阪府吹田市（万博記念公園）',
-                    distance: 'デュアスロン',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '万博記念公園の広大な敷地を活用したデュアスロン大会',
-                    features: ['万博記念公園', 'デュアスロン', '関西'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'expo70_banpaku_2025',
-                    name: '第3回EXPO\'70万博記念公園トライアスロン大会',
-                    date: '2025-05-18',
-                    location: '大阪府吹田市（万博記念公園）',
-                    distance: 'スプリント',
-                    level: 'エイジ・高校生',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: 'JTUエイジグループナショナルチャンピオンシップシリーズ・高校生ランキング対象大会',
-                    features: ['NCSシリーズ', '高校生ランキング', '万博公園'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'hasaki_2025',
-                    name: '波崎トライアスロン2025',
-                    date: '2025-07-06',
-                    location: '茨城県神栖市',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '太平洋に面した美しい海岸線でのトライアスロン',
-                    features: ['太平洋', '茨城', '海岸線'],
-                    entryStatus: '2025年更新なし'
-                },
-                {
-                    id: 'osakikami_happy_2025',
-                    name: '大崎上島HAPPYトライアスロン2025',
-                    date: '2025-06-22',
-                    location: '広島県大崎上島',
-                    distance: 'スプリント',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '瀬戸内海の穏やかな島でのハッピーな大会',
-                    features: ['瀬戸内海', '島大会', 'ハッピー'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'yokosuka_nissan_2025',
-                    name: '横須賀トライアスロン大会',
-                    date: '2025-05-25',
-                    location: '神奈川県横須賀市',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '浦郷沖水域と日産自動車追浜工場内特設会場での開催',
-                    features: ['横須賀', '日産工場', '企業コラボ'],
-                    entryStatus: 'エントリー中'
-                },
-                {
-                    id: 'sennan_ladies_beginners_2025',
-                    name: 'せんなん里海公園レディース＆ビギナーズトライアスロン',
-                    date: '2025-05-04',
-                    location: '大阪府泉南市',
-                    distance: 'スプリント・デュアスロン',
-                    level: 'レディース・ビギナー',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '女性・初心者向けの優しい大会。リレーやデュアスロンも',
-                    features: ['レディース', 'ビギナー向け', 'リレー有'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'harajuku_onsen_2025',
-                    name: '原鶴温泉トライアスロン大会',
-                    date: '2025-07-13',
-                    location: '福岡県朝倉市',
-                    distance: 'スタンダード',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '筑後川と筑後川サイクリングロードを使用した温泉地大会',
-                    features: ['温泉地', '筑後川', '福岡'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'suwa_8peaks_2025',
-                    name: 'スワコエイトピークスミドルトライアスロン',
-                    date: '2025-08-31',
-                    location: '長野県下諏訪町',
-                    distance: 'ミドル',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: '諏訪湖を舞台にした山岳地帯のミドルディスタンス大会',
-                    features: ['諏訪湖', 'ミドル距離', '山岳'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'fukuyama_efpico_2025',
-                    name: '福山かわまちトライアスロン',
-                    date: '2025-09-07',
-                    location: '広島県福山市',
-                    distance: 'スプリント',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://triathlon-style.com/',
-                    description: 'エフピコアリーナ周辺特設コースでの都市型大会',
-                    features: ['都市型', 'エフピコアリーナ', '広島'],
-                    entryStatus: '要確認'
-                },
-                {
-                    id: 'tokunoshima_2025',
-                    name: '第38回トライアスロンIN徳之島大会',
-                    date: '2025-06-29',
-                    location: '鹿児島県天城町',
-                    distance: 'ロング',
-                    level: 'エイジ',
-                    category: '地域大会',
-                    url: 'https://www.town.amagi.lg.jp/',
-                    description: '38年の歴史を持つ徳之島の伝統的なロング大会',
-                    features: ['徳之島', '38年の歴史', 'ロング距離'],
-                    entryStatus: '要確認'
-                },
-
-                // === スポーツエントリー統合大会 ===
-                {
-                    id: 'yokohama_wts_agegroup_sportsentry_2025',
-                    name: '2025ワールドトライアスロン・パラトライアスロンシリーズ横浜大会',
-                    date: '2025-05-18',
-                    location: '神奈川県横浜市（山下公園周辺）',
-                    distance: 'スタンダード・スプリント',
-                    level: 'エイジ・パラ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/event/t/98020',
-                    description: 'エイジグループ・パラトライアスロン部門。JTUナショナルチャンピオンシップシリーズ対象',
-                    features: ['WTSシリーズ', 'エイジ部門', 'パラ部門', 'NCSポイント'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'kuroshishi_nagai_2025',
-                    name: '2025黒獅子トライアスロンin長井',
-                    date: '2025-08-17',
-                    location: '山形県長井市',
-                    distance: 'スタンダード・スプリント・スーパースプリント・アクアスロン',
-                    level: 'エイジ・キッズ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/event/t/99065',
-                    description: '東北最古のトライアスロン大会がリニューアル。初心者から上級者まで楽しめる',
-                    features: ['東北最古', 'リニューアル', '多種目', 'キッズ対応'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'tokyo_5ku_triathlon_2025',
-                    name: '東京5区アクアスロン・トライアスロンシリーズ',
-                    date: '2025-06-21',
-                    location: '東京都（港区・目黒区・渋谷区・世田谷区・大田区）',
-                    distance: 'アクアスロン・スプリント',
-                    level: 'エイジ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: '東京5区で開催される都市型シリーズ戦。各区で異なる特色のコース',
-                    features: ['都市型', 'シリーズ戦', '5区開催', '都心アクセス'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'kumamoto_kosa_aquathlon_2025',
-                    name: '熊本甲佐アクアスロン大会',
-                    date: '2025-08-24',
-                    location: '熊本県甲佐町（緑川リバーサイドパーク）',
-                    distance: 'アクアスロン',
-                    level: 'エイジ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: '緑川を舞台にした美しい自然環境でのアクアスロン大会',
-                    features: ['緑川', '自然環境', 'アクアスロン専門'],
-                    entryStatus: 'エントリー6月1日開始'
-                },
-                {
-                    id: 'awaji_keino_aquathlon_2025',
-                    name: '南あわじ慶野松原アクアスロン大会',
-                    date: '2025-06-14',
-                    location: '兵庫県南あわじ市（慶野松原海水浴場）',
-                    distance: 'アクアスロン',
-                    level: 'エイジ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: '美しい慶野松原海水浴場でのアクアスロン。関西屈指の景観',
-                    features: ['慶野松原', '海水浴場', '関西', '景観美'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'fukuoka_marina_aquathlon_2025',
-                    name: '福岡マリナタウンアクアスロン大会',
-                    date: '2025-06-29',
-                    location: '福岡県福岡市（マリナタウン海浜公園）',
-                    distance: 'アクアスロン',
-                    level: 'エイジ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: 'マリナタウン海浜公園での都市型アクアスロン大会',
-                    features: ['都市型', 'マリナタウン', '九州', '海浜公園'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'snow_duathlon_hokkaido_2025',
-                    name: 'スノーデュアスロン北海道2025',
-                    date: '2025-02-15',
-                    location: '北海道札幌市・旭川市',
-                    distance: 'スノーデュアスロン',
-                    level: 'エイジ',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: '雪上サイクリングとクロスカントリースキーの冬季デュアスロン',
-                    features: ['ウィンター', '雪上サイクリング', 'クロカン', '北海道'],
-                    entryStatus: 'エントリー受付中'
-                },
-                {
-                    id: 'triathlon_support_program_2025',
-                    name: '2025年トライアスロン選手サポートプログラム',
-                    date: '2025-01-01',
-                    location: '全国（プール練習）',
-                    distance: 'トレーニング',
-                    level: 'エイジ・エリート',
-                    category: 'スポーツエントリー',
-                    url: 'https://www.sportsentry.ne.jp/',
-                    description: '1年間のトライアスロン選手向けプール練習メニュー作成プログラム',
-                    features: ['年間サポート', 'プール練習', 'メニュー作成', '専門指導'],
-                    entryStatus: 'エントリー受付中'
-                }
-            ];
-
-            // 重複を除いた大会リスト（デバッグ機能付き）
-            const uniqueRaces = useMemo(() => {
-                const seen = new Set();
-                const filtered = allRaces.filter(race => {
-                    if (seen.has(race.id)) {
-                        console.warn('重複ID検出:', race.id, race.name);
-                        return false;
-                    }
-                    seen.add(race.id);
-                    return true;
-                });
-                console.log('総大会数:', allRaces.length, '重複除去後:', filtered.length);
-                return filtered;
-            }, []);
-
-            // フィルタリング機能（デバッグ機能付き）
-            const filteredRaces = useMemo(() => {
-                const result = uniqueRaces.filter(race => {
-                    const matchesSearch = race.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        race.location.toLowerCase().includes(searchTerm.toLowerCase());
-                    
-                    const matchesMonth = !selectedMonth || 
-                                        race.date.substring(5, 7) === selectedMonth;
-                    
-                    const matchesDistance = !selectedDistance || 
-                                          race.distance === selectedDistance;
-                    
-                    const matchesRegion = !selectedRegion || 
-                                        race.location.includes(selectedRegion);
-                    
-                    const matchesLevel = !selectedLevel || 
-                                       race.level.includes(selectedLevel);
-                    
-                    const matchesCategory = !selectedCategory || 
-                                          race.category === selectedCategory;
-
-                    return matchesSearch && matchesMonth && matchesDistance && matchesRegion && matchesLevel && matchesCategory;
-                });
+    <div class="container">
+        <!-- ヘッダー -->
+        <div class="header">
+            <h1 class="title">🏊‍♂️🚴‍♂️🏃‍♂️ Triathlon AI Coach</h1>
+            <p class="subtitle">トライアスロン大会データベース</p>
+            <p class="version">VanillaJS版 - 5大会収録</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-count">5</div>
+                    <div class="stat-label">総大会数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="filtered-count">5</div>
+                    <div class="stat-label">表示中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">国際大会</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">日本選手権</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 検索・フィルター -->
+        <div class="search-panel">
+            <h2 class="search-title">🔍 検索・フィルター</h2>
+            
+            <div class="search-grid">
+                <div class="form-group">
+                    <label class="form-label">大会名・開催地</label>
+                    <input type="text" class="form-input" id="search-input" placeholder="検索...">
+                </div>
                 
-                console.log('フィルタリング結果:', result.length, '件');
-                console.log('フィルター条件:', {
-                    searchTerm, selectedMonth, selectedDistance, selectedRegion, selectedLevel, selectedCategory
-                });
+                <div class="form-group">
+                    <label class="form-label">開催月</label>
+                    <select class="form-select" id="month-select">
+                        <option value="">全ての月</option>
+                        <option value="01">1月</option>
+                        <option value="02">2月</option>
+                        <option value="03">3月</option>
+                        <option value="04">4月</option>
+                        <option value="05">5月</option>
+                        <option value="06">6月</option>
+                        <option value="07">7月</option>
+                        <option value="08">8月</option>
+                        <option value="09">9月</option>
+                        <option value="10">10月</option>
+                        <option value="11">11月</option>
+                        <option value="12">12月</option>
+                    </select>
+                </div>
                 
-                return result;
-            }, [searchTerm, selectedMonth, selectedDistance, selectedRegion, selectedLevel, selectedCategory, uniqueRaces]);
+                <div class="form-group">
+                    <label class="form-label">カテゴリー</label>
+                    <select class="form-select" id="category-select">
+                        <option value="">全カテゴリー</option>
+                        <option value="JTU国際大会">JTU国際大会</option>
+                        <option value="JTU選手権">JTU選手権</option>
+                        <option value="主要大会">主要大会</option>
+                        <option value="LUMINA大会">LUMINA大会</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="search-result" id="search-result">5 件の大会</div>
+        </div>
+        
+        <!-- 大会一覧 -->
+        <div class="races-grid" id="races-container">
+            <!-- JavaScript で動的に生成 -->
+        </div>
+        
+        <!-- フッター -->
+        <div class="footer">
+            <p>🚀 VanillaJS版テスト - 正常動作確認</p>
+            <p style="margin-top: 8px;">React版で問題が解決したら完全版51大会を収録</p>
+        </div>
+    </div>
 
-            // オプション配列
-            const regions = ['北海道', '東北', '関東', '中部', '関西', '中国', '四国', '九州・沖縄'];
-            const distances = ['スーパースプリント', 'スプリント', 'スタンダード', 'ミドル', 'ロング', 'アイアンマン', 'アクアスロン', 'デュアスロン', 'ミニトライアスロン'];
-            const levels = ['エリート', 'エイジ', 'パラエリート', 'U23', 'ジュニア', '高校生', '大学生', 'キッズ', 'レディース', 'ビギナー'];
-            const categories = ['JTU国際大会', 'JTU選手権', 'JTU国体', '主要大会', 'LUMINA大会', '地域大会', 'スポーツエントリー'];
+    <script>
+        // 大会データ
+        const races = [
+            {
+                id: 'jtu_yokohama_wts_2025',
+                name: 'ワールドトライアスロンシリーズ横浜大会',
+                date: '2025-05-17',
+                location: '神奈川県横浜市',
+                distance: 'スタンダード',
+                level: 'エリート・エイジ',
+                category: 'JTU国際大会',
+                url: 'https://yokohamatriathlon.jp/',
+                description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催',
+                features: ['世界選手権', 'TV中継', 'パラ併催'],
+                entryStatus: '要確認'
+            },
+            {
+                id: 'jtu_osaka_atc_2025',
+                name: 'アジアトライアスロンカップ大阪城大会',
+                date: '2025-05-25',
+                location: '大阪府大阪市',
+                distance: 'スタンダード',
+                level: 'エリート・エイジ',
+                category: 'JTU国際大会',
+                url: 'https://www.jtu.or.jp/',
+                description: 'アジア最高峰のカップ戦。大阪城を舞台にした美しいコース',
+                features: ['アジアカップ', '大阪城', '国際レベル'],
+                entryStatus: '要確認'
+            },
+            {
+                id: 'miyakojima_2025',
+                name: '第39回全日本トライアスロン宮古島大会',
+                date: '2025-04-20',
+                location: '沖縄県宮古島市',
+                distance: 'ロング',
+                level: 'エイジ',
+                category: '主要大会',
+                url: 'https://tri-miyako.com/',
+                description: '39年の歴史を誇る国内最高峰のロングディスタンス大会',
+                features: ['39年の歴史', '宮古ブルー', 'ロング'],
+                entryStatus: '要確認'
+            },
+            {
+                id: 'ishigaki_2025',
+                name: '石垣島トライアスロン大会',
+                date: '2025-04-13',
+                location: '沖縄県石垣市',
+                distance: 'ロング',
+                level: 'エイジ',
+                category: '主要大会',
+                url: 'https://ishigaki-triathlon.jp/',
+                description: '石垣島の美しい自然の中で行われる人気のロング大会',
+                features: ['石垣島', '美しい海', 'エイジ'],
+                entryStatus: 'エントリー中'
+            },
+            {
+                id: 'jtu_supersprint_2025',
+                name: '日本スーパースプリントトライアスロン選手権',
+                date: '2025-06-22',
+                location: '愛知県蒲郡市',
+                distance: 'スーパースプリント',
+                level: 'エリート',
+                category: 'JTU選手権',
+                url: 'https://gama-triathlon.jp/',
+                description: '日本最高峰のスーパースプリント選手権。短距離での頂上決戦',
+                features: ['日本選手権', 'TV中継', '短距離'],
+                entryStatus: '要確認'
+            }
+        ];
 
-            // 月の配列
-            const months = [
-                { value: '01', label: '1月' }, { value: '02', label: '2月' }, { value: '03', label: '3月' },
-                { value: '04', label: '4月' }, { value: '05', label: '5月' }, { value: '06', label: '6月' },
-                { value: '07', label: '7月' }, { value: '08', label: '8月' }, { value: '09', label: '9月' },
-                { value: '10', label: '10月' }, { value: '11', label: '11月' }, { value: '12', label: '12月' }
-            ];
+        // DOM要素
+        const searchInput = document.getElementById('search-input');
+        const monthSelect = document.getElementById('month-select');
+        const categorySelect = document.getElementById('category-select');
+        const searchResult = document.getElementById('search-result');
+        const racesContainer = document.getElementById('races-container');
+        const filteredCount = document.getElementById('filtered-count');
 
-            // 統計情報
-            const stats = {
-                total: uniqueRaces.length,
-                jtuRaces: uniqueRaces.filter(race => race.category.includes('JTU')).length,
-                championships: uniqueRaces.filter(race => race.category === 'JTU選手権').length,
-                international: uniqueRaces.filter(race => race.category === 'JTU国際大会').length,
-                lumina: uniqueRaces.filter(race => race.category === 'LUMINA大会').length,
-                regional: uniqueRaces.filter(race => race.category === '地域大会').length,
-                sportsentry: uniqueRaces.filter(race => race.category === 'スポーツエントリー').length
-            };
+        // カテゴリーのCSSクラス取得
+        function getCategoryClass(category) {
+            switch (category) {
+                case 'JTU国際大会': return 'category-international';
+                case 'JTU選手権': return 'category-championship';
+                case 'LUMINA大会': return 'category-lumina';
+                default: return 'category-major';
+            }
+        }
 
-            const getRaceIcon = (category) => {
-                switch (category) {
-                    case 'JTU国際大会': return React.createElement(Star, { className: "w-5 h-5 text-yellow-500" });
-                    case 'JTU選手権': return React.createElement(Trophy, { className: "w-5 h-5 text-red-500" });
-                    case 'JTU国体': return React.createElement(Target, { className: "w-5 h-5 text-blue-500" });
-                    case 'LUMINA大会': return React.createElement(Award, { className: "w-5 h-5 text-purple-500" });
-                    case 'スポーツエントリー': return React.createElement(CheckCircle, { className: "w-5 h-5 text-orange-500" });
-                    case '地域大会': return React.createElement(Zap, { className: "w-5 h-5 text-green-500" });
-                    default: return React.createElement(CheckCircle, { className: "w-5 h-5 text-gray-500" });
-                }
-            };
+        // ステータスのCSSクラス取得
+        function getStatusClass(status) {
+            return status === 'エントリー中' ? 'status-open' : 'status-pending';
+        }
 
-            const getCategoryColor = (category) => {
-                switch (category) {
-                    case 'JTU国際大会': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                    case 'JTU選手権': return 'bg-red-100 text-red-800 border-red-200';
-                    case 'JTU国体': return 'bg-blue-100 text-blue-800 border-blue-200';
-                    case 'LUMINA大会': return 'bg-purple-100 text-purple-800 border-purple-200';
-                    case 'スポーツエントリー': return 'bg-orange-100 text-orange-800 border-orange-200';
-                    case '地域大会': return 'bg-green-100 text-green-800 border-green-200';
-                    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-                }
-            };
+        // 日付フォーマット
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'short'
+            });
+        }
 
-            return React.createElement('div', {
-                className: "min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50"
-            }, 
-                React.createElement('div', {
-                    className: "container mx-auto px-4 py-8"
-                },
-                    // ヘッダー
-                    React.createElement('div', {
-                        className: "text-center mb-8"
-                    },
-                        React.createElement('h1', {
-                            className: "text-4xl font-bold text-gray-800 mb-2"
-                        }, '🏊‍♂️🚴‍♂️🏃‍♂️ Triathlon AI Coach'),
-                        React.createElement('p', {
-                            className: "text-xl text-gray-600 mb-4"
-                        }, '超包括的トライアスロン大会データベース'),
-                        React.createElement('p', {
-                            className: "text-sm text-gray-500 mb-6"
-                        }, 'JTU公式 + LUMINA + 地域大会 + スポーツエントリー統合版'),
+        // 大会カード生成
+        function createRaceCard(race) {
+            return `
+                <div class="race-card" data-id="${race.id}">
+                    <div class="race-content">
+                        <div class="race-header">
+                            <span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span>
+                            <span class="status-badge ${getStatusClass(race.entryStatus)}">${race.entryStatus}</span>
+                        </div>
                         
-                        // 統計情報
-                        React.createElement('div', {
-                            className: "flex justify-center flex-wrap gap-4 mb-6"
-                        },
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-blue-600"
-                                }, stats.total),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, '総大会数')
-                            ),
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-yellow-600"
-                                }, stats.international),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, '国際大会')
-                            ),
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-red-600"
-                                }, stats.championships),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, '日本選手権')
-                            ),
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-purple-600"
-                                }, stats.lumina),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, 'LUMINA大会')
-                            ),
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-green-600"
-                                }, stats.regional),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, '地域大会')
-                            ),
-                            React.createElement('div', {
-                                className: "bg-white rounded-lg p-4 shadow-md min-w-24"
-                            },
-                                React.createElement('div', {
-                                    className: "text-2xl font-bold text-orange-600"
-                                }, stats.sportsentry),
-                                React.createElement('div', {
-                                    className: "text-xs text-gray-600"
-                                }, 'スポエン大会')
-                            )
-                        )
-                    ),
-
-                    // 検索・フィルター
-                    React.createElement('div', {
-                        className: "bg-white rounded-xl shadow-lg p-6 mb-8"
-                    },
-                        React.createElement('h2', {
-                            className: "text-xl font-semibold mb-4 flex items-center"
-                        },
-                            React.createElement(Filter, { className: "w-5 h-5 mr-2" }),
-                            '大会検索・フィルター'
-                        ),
+                        <h3 class="race-title">${race.name}</h3>
                         
-                        React.createElement('div', {
-                            className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
-                        },
-                            // 検索ボックス
-                            React.createElement('div', {
-                                className: "xl:col-span-2"
-                            },
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '大会名・開催地'),
-                                React.createElement('div', {
-                                    className: "relative"
-                                },
-                                    React.createElement(Search, { className: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" }),
-                                    React.createElement('input', {
-                                        type: "text",
-                                        placeholder: "大会名や開催地で検索...",
-                                        value: searchTerm,
-                                        onChange: (e) => setSearchTerm(e.target.value),
-                                        className: "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    })
-                                )
-                            ),
+                        <div class="race-info">
+                            <div class="race-info-item">📅 ${formatDate(race.date)}</div>
+                            <div class="race-info-item">📍 ${race.location}</div>
+                            <div class="race-info-item">⏱️ ${race.distance}</div>
+                            <div class="race-info-item">👥 ${race.level}</div>
+                        </div>
+                        
+                        <p class="race-description">${race.description}</p>
+                        
+                        <div class="race-features">
+                            ${race.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
+                        </div>
+                        
+                        <a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">
+                            🔗 公式サイト
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
 
-                            // 月フィルター
-                            React.createElement('div', null,
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '開催月'),
-                                React.createElement('select', {
-                                    value: selectedMonth,
-                                    onChange: (e) => setSelectedMonth(e.target.value),
-                                    className: "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                },
-                                    React.createElement('option', { value: "" }, '全ての月'),
-                                    months.map(month => 
-                                        React.createElement('option', { key: month.value, value: month.value }, month.label)
-                                    )
-                                )
-                            ),
+        // フィルタリング実行
+        function filterRaces() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedMonth = monthSelect.value;
+            const selectedCategory = categorySelect.value;
 
-                            // 距離フィルター
-                            React.createElement('div', null,
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '競技距離'),
-                                React.createElement('select', {
-                                    value: selectedDistance,
-                                    onChange: (e) => setSelectedDistance(e.target.value),
-                                    className: "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                },
-                                    React.createElement('option', { value: "" }, '全ての距離'),
-                                    distances.map(distance => 
-                                        React.createElement('option', { key: distance, value: distance }, distance)
-                                    )
-                                )
-                            ),
+            const filtered = races.filter(race => {
+                const matchesSearch = !searchTerm || 
+                    race.name.toLowerCase().includes(searchTerm) ||
+                    race.location.toLowerCase().includes(searchTerm);
+                
+                const matchesMonth = !selectedMonth || 
+                    race.date.substring(5, 7) === selectedMonth;
+                
+                const matchesCategory = !selectedCategory || 
+                    race.category === selectedCategory;
 
-                            // 地域フィルター
-                            React.createElement('div', null,
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '地域'),
-                                React.createElement('select', {
-                                    value: selectedRegion,
-                                    onChange: (e) => setSelectedRegion(e.target.value),
-                                    className: "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                },
-                                    React.createElement('option', { value: "" }, '全ての地域'),
-                                    regions.map(region => 
-                                        React.createElement('option', { key: region, value: region }, region)
-                                    )
-                                )
-                            ),
+                return matchesSearch && matchesMonth && matchesCategory;
+            });
 
-                            // レベルフィルター
-                            React.createElement('div', null,
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '参加レベル'),
-                                React.createElement('select', {
-                                    value: selectedLevel,
-                                    onChange: (e) => setSelectedLevel(e.target.value),
-                                    className: "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                },
-                                    React.createElement('option', { value: "" }, '全てのレベル'),
-                                    levels.map(level => 
-                                        React.createElement('option', { key: level, value: level }, level)
-                                    )
-                                )
-                            ),
+            // UI更新
+            racesContainer.innerHTML = filtered.map(createRaceCard).join('');
+            searchResult.textContent = `${filtered.length} 件の大会`;
+            filteredCount.textContent = filtered.length;
+        }
 
-                            // カテゴリーフィルター
-                            React.createElement('div', null,
-                                React.createElement('label', {
-                                    className: "block text-sm font-medium text-gray-700 mb-1"
-                                }, '大会カテゴリー'),
-                                React.createElement('select', {
-                                    value: selectedCategory,
-                                    onChange: (e) => setSelectedCategory(e.target.value),
-                                    className: "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                },
-                                    React.createElement('option', { value: "" }, '全てのカテゴリー'),
-                                    categories.map(category => 
-                                        React.createElement('option', { key: category, value: category }, category)
-                                    )
-                                )
-                            )
-                        ),
+        // イベントリスナー設定
+        searchInput.addEventListener('input', filterRaces);
+        monthSelect.addEventListener('change', filterRaces);
+        categorySelect.addEventListener('change', filterRaces);
 
-                        // 検索結果数とデバッグ情報
-                        React.createElement('div', {
-                            className: "mt-4 text-center"
-                        },
-                            React.createElement('span', {
-                                className: "text-gray-600 font-medium"
-                            }, `${filteredRaces.length} 件の大会が見つかりました`),
-                            React.createElement('div', {
-                                className: "text-xs text-gray-400 mt-1"
-                            }, `（総大会数: ${uniqueRaces.length}件 | データ配列: ${allRaces.length}件）`)
-                        )
-                    ),
+        // 初期表示
+        filterRaces();
 
-                    // 大会一覧
-                    React.createElement('div', {
-                        className: "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-                    },
-                        filteredRaces.map((race) => 
-                            React.createElement('div', {
-                                key: race.id,
-                                className: "bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                            },
-                                React.createElement('div', {
-                                    className: "p-4 pb-0"
-                                },
-                                    React.createElement('div', {
-                                        className: "flex items-center justify-between mb-3"
-                                    },
-                                        React.createElement('span', {
-                                            className: "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border " + getCategoryColor(race.category)
-                                        },
-                                            getRaceIcon(race.category),
-                                            React.createElement('span', { className: "ml-1" }, race.category)
-                                        ),
-                                        React.createElement('span', {
-                                            className: `px-2 py-1 rounded text-xs font-medium ${
-                                                race.entryStatus === 'エントリー中' || race.entryStatus === 'エントリー受付中' ? 'bg-green-100 text-green-800' :
-                                                race.entryStatus === '調整中' ? 'bg-yellow-100 text-yellow-800' :
-                                                race.entryStatus === '2025年更新なし' ? 'bg-red-100 text-red-800' :
-                                                'bg-gray-100 text-gray-800'
-                                            }`
-                                        }, race.entryStatus)
-                                    ),
-
-                                    React.createElement('h3', {
-                                        className: "text-lg font-bold text-gray-800 mb-2 line-clamp-2"
-                                    }, race.name)
-                                ),
-
-                                React.createElement('div', {
-                                    className: "px-4 pb-4"
-                                },
-                                    // 基本情報
-                                    React.createElement('div', {
-                                        className: "space-y-2 mb-4"
-                                    },
-                                        React.createElement('div', {
-                                            className: "flex items-center text-gray-600"
-                                        },
-                                            React.createElement(Calendar, { className: "w-4 h-4 mr-2 text-blue-500" }),
-                                            React.createElement('span', {
-                                                className: "text-sm"
-                                            }, new Date(race.date).toLocaleDateString('ja-JP', { 
-                                                year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
-                                            }))
-                                        ),
-                                        React.createElement('div', {
-                                            className: "flex items-center text-gray-600"
-                                        },
-                                            React.createElement(MapPin, { className: "w-4 h-4 mr-2 text-red-500" }),
-                                            React.createElement('span', {
-                                                className: "text-sm"
-                                            }, race.location)
-                                        ),
-                                        React.createElement('div', {
-                                            className: "flex items-center text-gray-600"
-                                        },
-                                            React.createElement(Clock, { className: "w-4 h-4 mr-2 text-green-500" }),
-                                            React.createElement('span', {
-                                                className: "text-sm font-medium"
-                                            }, race.distance)
-                                        ),
-                                        React.createElement('div', {
-                                            className: "flex items-center text-gray-600"
-                                        },
-                                            React.createElement(Users, { className: "w-4 h-4 mr-2 text-purple-500" }),
-                                            React.createElement('span', {
-                                                className: "text-sm"
-                                            }, race.level)
-                                        )
-                                    ),
-
-                                    // 説明
-                                    React.createElement('p', {
-                                        className: "text-gray-600 text-sm mb-4 line-clamp-3"
-                                    }, race.description),
-
-                                    // 特徴
-                                    React.createElement('div', {
-                                        className: "flex flex-wrap gap-1 mb-4"
-                                    },
-                                        race.features.map((feature, index) =>
-                                            React.createElement('span', {
-                                                key: index,
-                                                className: "inline-block bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
-                                            }, feature)
-                                        )
-                                    ),
-
-                                    // アクションボタン
-                                    React.createElement('div', {
-                                        className: "flex space-x-2"
-                                    },
-                                        React.createElement('a', {
-                                            href: race.url,
-                                            target: "_blank",
-                                            rel: "noopener noreferrer",
-                                            className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
-                                        },
-                                            React.createElement(ExternalLink, { className: "w-4 h-4 mr-1" }),
-                                            '公式サイト'
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // 大会が見つからない場合
-                    filteredRaces.length === 0 && React.createElement('div', {
-                        className: "text-center py-12"
-                    },
-                        React.createElement('div', {
-                            className: "text-gray-400 mb-4"
-                        },
-                            React.createElement(Search, { className: "w-16 h-16 mx-auto" })
-                        ),
-                        React.createElement('h3', {
-                            className: "text-xl font-semibold text-gray-600 mb-2"
-                        }, '該当する大会が見つかりません'),
-                        React.createElement('p', {
-                            className: "text-gray-500"
-                        }, '検索条件を変更してお試しください')
-                    ),
-
-                    // フッター
-                    React.createElement('div', {
-                        className: "mt-12 text-center text-gray-500 text-sm"
-                    },
-                        React.createElement('p', null, `🚀 **最終統合完了** - 総計${stats.total}大会を収録`),
-                        React.createElement('p', {
-                            className: "mt-2"
-                        }, 'JTU公式 + LUMINA + 地域大会 + スポーツエントリー統合版'),
-                        React.createElement('p', {
-                            className: "mt-2"
-                        }, '※重複除去システム搭載 | リアルタイムエントリー情報対応')
-                    )
-                )
-            );
-        };
-
-        // アプリケーションをレンダリング
-        ReactDOM.render(React.createElement(TriathlonAICoach), document.getElementById('root'));
+        console.log('✅ VanillaJS版 Triathlon AI Coach 初期化完了');
+        console.log('📊 大会数:', races.length);
     </script>
 </body>
 </html>

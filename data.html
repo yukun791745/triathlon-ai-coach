@@ -882,9 +882,7 @@
                 
                 return `
                     <div class="activity-item" 
-                         data-activity-id="${activity.id}"
-                         onclick="showActivityDetail('${activity.id}')"
-                         ondblclick="showActivityDetailInPanel('${activity.id}')">
+                         data-activity-id="${activity.id}">
                         <div class="activity-header">
                             <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
                             <span class="activity-date">${date}</span>
@@ -908,6 +906,28 @@
             }).join('');
             
             container.innerHTML = html;
+            
+            // イベントリスナーを追加
+            document.querySelectorAll('.activity-item').forEach(item => {
+                const activityId = item.getAttribute('data-activity-id');
+                
+                // ダブルクリックイベント
+                item.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    console.log('🔍 Double click detected for activity:', activityId);
+                    showActivityDetailInPanel(activityId);
+                });
+                
+                // シングルクリックイベント（一時的に無効化）
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔍 Single click detected for activity:', activityId);
+                    // 一時的にコメントアウト
+                    // showActivityDetail(activityId);
+                });
+            });
+            
+            console.log('📊 Activities displayed with event listeners attached');
         }
         
         function formatDuration(seconds) {

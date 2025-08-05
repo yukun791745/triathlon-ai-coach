@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triathlon AI Coach</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root">読み込み中...</div>
+    
+    <script>
+        // テスト用のシンプルなコード
+        const { useState } = React;
+        
+        function SimpleApp() {
+            const [count, setCount] = useState(0);
+            
+            return React.createElement('div', {
+                style: { padding: '20px', textAlign: 'center' }
+            },
+                React.createElement('h1', null, 'Triathlon AI Coach テスト'),
+                React.createElement('p', null, `カウント: ${count}`),
+                React.createElement('button', {
+                    onClick: () => setCount(count + 1),
+                    style: { 
+                        padding: '10px 20px', 
+                        backgroundColor: '#blue', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '5px',
+                        cursor: 'pointer'
+                    }
+                }, 'クリック')
+            );
+        }
+        
+        ReactDOM.render(React.createElement(SimpleApp), document.getElementById('root'));
+    </script>
+</body>
+</html>

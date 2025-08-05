@@ -502,8 +502,8 @@
                     <span id="raceCount">0</span> 件の大会が見つかりました
                 </div>
                 <div class="view-toggle">
-                    <button class="active" onclick="setView('card', this)">カード表示</button>
-                    <button onclick="setView('list', this)">リスト表示</button>
+                    <button class="active" onclick="setView('card', event)">カード表示</button>
+                    <button onclick="setView('list', event)">リスト表示</button>
                 </div>
             </div>
         </div>
@@ -921,22 +921,22 @@
         }
 
         // ビュー切り替え
-        function setView(view, buttonElement) {
+        function setView(view, event) {
             currentView = view;
+            
+            // 全てのボタンからactiveクラスを削除
             document.querySelectorAll('.view-toggle button').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            // クリックされたボタンをアクティブにする
-            buttonElement.classList.add('active');
+            // クリックされたボタンにactiveクラスを追加
+            event.target.classList.add('active');
             
-            // ビュー切り替えのロジック（現在はカード表示のみ実装）
+            // ビュー切り替えのロジック
             if (view === 'list') {
-                // リスト表示の実装（将来的に）
                 console.log('リスト表示に切り替え');
-                alert('リスト表示機能は今後実装予定です');
+                alert('リスト表示機能は今後実装予定です。現在はカード表示のみ対応しています。');
             } else {
-                // カード表示（現在の表示）
                 console.log('カード表示に切り替え');
             }
         }

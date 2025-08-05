@@ -305,18 +305,39 @@
         // URLパラメータからアクティビティIDを取得
         function getActivityId() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+            const id = urlParams.get('id');
+            
+            console.log('🔍 Current URL:', window.location.href);
+            console.log('🔍 Search params:', window.location.search);
+            console.log('🔍 Activity ID:', id);
+            
+            return id;
         }
         
         // アクティビティ詳細データを取得
         async function fetchActivityDetail(activityId) {
             try {
-                // Stravaトークンを取得（親ウィンドウまたはlocalStorageから）
+                // Stravaトークンを複数の方法で取得を試行
                 let stravaToken = localStorage.getItem('strava_access_token');
                 
-                if (!stravaToken) {
-                    throw new Error('Stravaトークンが見つかりません');
+                // localStorage にない場合、親ウィンドウから取得を試行
+                if (!stravaToken && window.opener) {
+                    try {
+                        stravaToken = window.opener.stravaToken;
+                        if (stravaToken) {
+                            localStorage.setItem('strava_access_token', stravaToken);
+                            console.log('✅ Token obtained from parent window');
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Cannot access parent window token');
+                    }
                 }
+                
+                if (!stravaToken) {
+                    throw new Error('Stravaトークンが見つかりません。data.htmlで先にStravaに接続してください。');
+                }
+                
+                console.log('🔗 Using Strava token for API call');
                 
                 const response = await fetch('/.netlify/functions/strava-activities', {
                     method: 'POST',
@@ -327,6 +348,10 @@
                         activityId: activityId
                     })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`API呼び出しが失敗しました: ${response.status} ${response.statusText}`);
+                }
                 
                 const data = await response.json();
                 console.log('📊 Detailed data received:', data);
@@ -648,9 +673,23 @@ ${metrics.avgCadence || metrics.average_cadence ? 'ケイデンス/ピッチ: ' 
         }
         
         // エラー表示
-        function showError() {
+        function showError(message = 'データの取得に失敗しました') {
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('errorSection').style.display = 'block';
+            
+            // カスタムエラーメッセージ
+            const errorContainer = document.getElementById('errorSection');
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    <h3>❌ ${message}</h3>
+                    <p><strong>現在のURL:</strong> ${window.location.href}</p>
+                    <p><strong>アクティビティID:</strong> ${getActivityId() || '見つかりません'}</p>
+                    <p>data.htmlからアクティビティをクリックして再度お試しください。</p>
+                    <button onclick="window.close()" style="margin-top: 15px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        閉じる
+                    </button>
+                </div>
+            `;
         }
         
         // ユーティリティ関数
@@ -702,7 +741,11 @@ ${metrics.avgCadence || metrics.average_cadence ? 'ケイデンス/ピッチ: ' 
             
             if (!activityId) {
                 console.error('❌ No activity ID provided');
-                showError();
+                console.log('📝 URL analysis:');
+                console.log('  - href:', window.location.href);
+                console.log('  - search:', window.location.search);
+                console.log('  - pathname:', window.location.pathname);
+                showError('アクティビティIDが見つかりません');
                 return;
             }
             

@@ -921,13 +921,61 @@
         
         // 種目詳細サマリー生成
         function generateSportDetails(sportBreakdown) {
-            return Object.entries(sportBreakdown).map(([sport, data]) => {
+            // 表示順序を定義
+            const sportOrder = ['Swim', 'Ride', 'Run'];
+            const orderedSports = [];
+            const otherSports = [];
+            
+            // 定義された順序でスポーツを並べる
+            sportOrder.forEach(sport => {
+                if (sportBreakdown[sport]) {
+                    orderedSports.push([sport, sportBreakdown[sport]]);
+                }
+            });
+            
+            // その他のスポーツを統合
+            let otherData = {
+                time: 0,
+                distance: 0,
+                count: 0,
+                totalHeartRate: 0,
+                heartRateCount: 0,
+                speeds: [],
+                paces: [],
+                powers: [],
+                cadences: []
+            };
+            
+            Object.entries(sportBreakdown).forEach(([sport, data]) => {
+                if (!sportOrder.includes(sport)) {
+                    otherData.time += data.time;
+                    otherData.distance += data.distance;
+                    otherData.count += data.count;
+                    otherData.totalHeartRate += data.totalHeartRate;
+                    otherData.heartRateCount += data.heartRateCount;
+                    otherData.speeds = otherData.speeds.concat(data.speeds);
+                    otherData.paces = otherData.paces.concat(data.paces);
+                    otherData.powers = otherData.powers.concat(data.powers);
+                    otherData.cadences = otherData.cadences.concat(data.cadences);
+                }
+            });
+            
+            // その他にデータがある場合は追加
+            if (otherData.count > 0) {
+                orderedSports.push(['Other', otherData]);
+            }
+            
+            return orderedSports.map(([sport, data]) => {
                 const avgHeartRate = data.heartRateCount > 0 ? 
                     Math.round(data.totalHeartRate / data.heartRateCount) : null;
                 
                 let details = '';
+                let sportDisplayName = '';
+                let sportIcon = '';
                 
                 if (sport === 'Swim') {
+                    sportDisplayName = 'スイム';
+                    sportIcon = '🏊‍♂️';
                     const avgPace = calculateSwimPace(data.distance, data.time);
                     details = `
                         <div class="detail-grid">
@@ -950,6 +998,8 @@
                         </div>
                     `;
                 } else if (sport === 'Ride') {
+                    sportDisplayName = 'バイク';
+                    sportIcon = '🚴‍♂️';
                     const avgSpeed = data.speeds.length > 0 ? 
                         (data.speeds.reduce((a, b) => a + b, 0) / data.speeds.length * 3.6).toFixed(1) : '-';
                     const avgPower = data.powers.length > 0 ? 
@@ -986,6 +1036,8 @@
                         </div>
                     `;
                 } else if (sport === 'Run') {
+                    sportDisplayName = 'ランニング';
+                    sportIcon = '🏃‍♂️';
                     const avgSpeed = data.speeds.length > 0 ? 
                         (data.speeds.reduce((a, b) => a + b, 0) / data.speeds.length * 3.6) : 0;
                     const avgPace = avgSpeed > 0 ? calculateRunPace(avgSpeed) : '-';
@@ -1017,6 +1069,9 @@
                         </div>
                     `;
                 } else {
+                    // その他のスポーツ（統合）
+                    sportDisplayName = 'その他';
+                    sportIcon = '💪';
                     details = `
                         <div class="detail-grid">
                             <div class="detail-item">
@@ -1033,7 +1088,7 @@
                 
                 return `
                     <div class="summary-section">
-                        <h3>${getActivityIcon(sport)} ${getSportName(sport)}</h3>
+                        <h3>${sportIcon} ${sportDisplayName}</h3>
                         <div class="sport-details">
                             <h4>詳細サマリー</h4>
                             ${details}

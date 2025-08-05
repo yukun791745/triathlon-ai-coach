@@ -95,7 +95,7 @@
         
         .search-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px;
         }
         
@@ -198,6 +198,64 @@
             border: 1px solid #a855f7;
         }
         
+        .multiselect-container {
+            position: relative;
+        }
+
+        .multiselect-dropdown {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .multiselect-dropdown:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .multiselect-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .multiselect-options.show {
+            display: block;
+        }
+
+        .multiselect-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .multiselect-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            margin: 0;
+        }
+
         .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
@@ -205,14 +263,46 @@
             font-weight: 500;
         }
         
-        .status-open {
+        .status-entry-open {
             background-color: #dcfce7;
             color: #166534;
         }
         
-        .status-pending {
+        .status-entry-soon {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-entry-closed {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-event-finished {
             background-color: #f3f4f6;
             color: #374151;
+        }
+        
+        .status-selection-only {
+            background-color: #ede9fe;
+            color: #6b21a8;
+        }
+
+        .distance-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .distance-badge {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
         }
         
         .race-title {
@@ -327,21 +417,166 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">開催月</label>
-                    <select class="form-select" id="month-select">
-                        <option value="">全ての月</option>
-                        <option value="01">1月</option>
-                        <option value="02">2月</option>
-                        <option value="03">3月</option>
-                        <option value="04">4月</option>
-                        <option value="05">5月</option>
-                        <option value="06">6月</option>
-                        <option value="07">7月</option>
-                        <option value="08">8月</option>
-                        <option value="09">9月</option>
-                        <option value="10">10月</option>
-                        <option value="11">11月</option>
-                        <option value="12">12月</option>
+                    <label class="form-label">開催月（複数選択可）</label>
+                    <div class="multiselect-container">
+                        <div class="multiselect-dropdown" id="month-dropdown" tabindex="0">
+                            <span id="month-display">全ての月</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="multiselect-options" id="month-options">
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-04" value="04">
+                                <label for="month-04">4月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-05" value="05">
+                                <label for="month-05">5月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-06" value="06">
+                                <label for="month-06">6月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-07" value="07">
+                                <label for="month-07">7月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-08" value="08">
+                                <label for="month-08">8月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-09" value="09">
+                                <label for="month-09">9月</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="month-10" value="10">
+                                <label for="month-10">10月</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">都道府県（複数選択可）</label>
+                    <div class="multiselect-container">
+                        <div class="multiselect-dropdown" id="prefecture-dropdown" tabindex="0">
+                            <span id="prefecture-display">全ての都道府県</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="multiselect-options" id="prefecture-options">
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-hokkaido" value="北海道">
+                                <label for="pref-hokkaido">北海道</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-aomori" value="青森県">
+                                <label for="pref-aomori">青森県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-iwate" value="岩手県">
+                                <label for="pref-iwate">岩手県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-miyagi" value="宮城県">
+                                <label for="pref-miyagi">宮城県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-fukushima" value="福島県">
+                                <label for="pref-fukushima">福島県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-yamagata" value="山形県">
+                                <label for="pref-yamagata">山形県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-chiba" value="千葉県">
+                                <label for="pref-chiba">千葉県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-tokyo" value="東京都">
+                                <label for="pref-tokyo">東京都</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-kanagawa" value="神奈川県">
+                                <label for="pref-kanagawa">神奈川県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-shizuoka" value="静岡県">
+                                <label for="pref-shizuoka">静岡県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-aichi" value="愛知県">
+                                <label for="pref-aichi">愛知県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-gifu" value="岐阜県">
+                                <label for="pref-gifu">岐阜県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-toyama" value="富山県">
+                                <label for="pref-toyama">富山県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-niigata" value="新潟県">
+                                <label for="pref-niigata">新潟県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-shiga" value="滋賀県">
+                                <label for="pref-shiga">滋賀県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-osaka" value="大阪府">
+                                <label for="pref-osaka">大阪府</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-hyogo" value="兵庫県">
+                                <label for="pref-hyogo">兵庫県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-wakayama" value="和歌山県">
+                                <label for="pref-wakayama">和歌山県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-tottori" value="鳥取県">
+                                <label for="pref-tottori">鳥取県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-hiroshima" value="広島県">
+                                <label for="pref-hiroshima">広島県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-yamaguchi" value="山口県">
+                                <label for="pref-yamaguchi">山口県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-ehime" value="愛媛県">
+                                <label for="pref-ehime">愛媛県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-kumamoto" value="熊本県">
+                                <label for="pref-kumamoto">熊本県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-nagasaki" value="長崎県">
+                                <label for="pref-nagasaki">長崎県</label>
+                            </div>
+                            <div class="multiselect-option">
+                                <input type="checkbox" id="pref-okinawa" value="沖縄県">
+                                <label for="pref-okinawa">沖縄県</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">エントリー状況</label>
+                    <select class="form-select" id="status-select">
+                        <option value="">すべての状況</option>
+                        <option value="エントリー期間中">エントリー期間中</option>
+                        <option value="エントリー開始前">エントリー開始前</option>
+                        <option value="エントリー期間終了">エントリー期間終了</option>
+                        <option value="開催終了">開催終了</option>
+                        <option value="選考制">選考制</option>
                     </select>
                 </div>
                 
@@ -390,7 +625,7 @@
         // デバッグログ
         console.log('🚀 スクリプト開始');
         
-        // 大会データ（51大会完全版）
+        // 大会データ（51大会完全版・エントリー期間対応）
         const races = [
             // 4月開催
             {
@@ -398,65 +633,75 @@
                 name: '第39回全日本トライアスロン宮古島大会',
                 date: '2025-04-13',
                 location: '沖縄県宮古島市',
+                prefecture: '沖縄県',
                 distance: 'ロング',
                 level: 'エイジ',
                 category: '主要大会',
                 url: 'https://tri-miyako.com/',
                 description: '39年の歴史を誇る国内最高峰のロングディスタンス大会',
                 features: ['39年の歴史', '宮古ブルー', 'ロング'],
-                entryStatus: 'エントリー中'
+                entryStartDate: '2024-10-01',
+                entryEndDate: '2025-01-31'
             },
             {
                 id: 'ishigaki_2025',
                 name: '石垣島トライアスロン大会',
                 date: '2025-04-20',
                 location: '沖縄県石垣市',
+                prefecture: '沖縄県',
                 distance: 'ロング',
                 level: 'エイジ',
                 category: '主要大会',
                 url: 'https://ishigaki-triathlon.jp/',
                 description: '石垣島の美しい自然の中で行われる人気のロング大会',
                 features: ['石垣島', '美しい海', 'エイジ'],
-                entryStatus: 'エントリー中'
+                entryStartDate: '2024-11-01',
+                entryEndDate: '2024-12-05'
             },
             {
                 id: 'tateyama_2025',
                 name: '館山わかしおトライアスロン',
                 date: '2025-04-27',
                 location: '千葉県館山市',
+                prefecture: '千葉県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '房総半島の美しい海岸線を舞台にした大会',
                 features: ['房総半島', '海岸線', 'GW'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-01-15',
+                entryEndDate: '2025-03-15'
             },
             {
                 id: 'kunigami_2025',
                 name: 'くにがみトライアスロン',
                 date: '2025-04-06',
                 location: '沖縄県国頭村',
+                prefecture: '沖縄県',
                 distance: 'スプリント',
                 level: 'エイジ',
                 category: 'LUMINA大会',
                 url: '#',
                 description: 'やんばるの大自然を満喫できる大会',
                 features: ['やんばる', '自然', 'スプリント'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-01-10',
+                entryEndDate: '2025-03-10'
             },
             {
                 id: 'boso_shirahama_2025',
                 name: '房総白浜トライアスロン',
                 date: '2025-04-29',
                 location: '千葉県南房総市',
+                prefecture: '千葉県',
                 distance: 'ミドル',
                 level: 'エイジ',
                 category: 'LUMINA大会',
                 url: '#',
                 description: '白砂のビーチが美しいGW大会',
                 features: ['白砂ビーチ', 'GW', 'ミドル'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-01-20',
+                entryEndDate: '2025-03-20'
             },
 
             // 5月開催
@@ -465,104 +710,120 @@
                 name: 'ワールドトライアスロンシリーズ横浜大会',
                 date: '2025-05-17',
                 location: '神奈川県横浜市',
-                distance: 'スタンダード',
+                prefecture: '神奈川県',
+                distance: ['スタンダード', 'スプリント', 'パラ'],
                 level: 'エリート・エイジ',
                 category: 'JTU国際大会',
                 url: 'https://yokohamatriathlon.jp/',
                 description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催',
                 features: ['世界選手権', 'TV中継', 'パラ併催'],
-                entryStatus: '受付中'
+                entryStartDate: '2024-10-24',
+                entryEndDate: '2025-03-10'
             },
             {
                 id: 'shonan_2025',
                 name: '湘南国際トライアスロン大会',
                 date: '2025-05-18',
                 location: '神奈川県藤沢市',
+                prefecture: '神奈川県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '関東最大級のトライアスロン大会',
                 features: ['関東最大級', '湘南', '国際大会'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-01-15',
+                entryEndDate: '2025-03-31'
             },
             {
                 id: 'gamagori_2025',
                 name: '蒲郡オレンジトライアスロン',
                 date: '2025-05-11',
                 location: '愛知県蒲郡市',
+                prefecture: '愛知県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '三河湾の美しい景色を楽しめる大会',
                 features: ['三河湾', '景色', 'オレンジ'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-01',
+                entryEndDate: '2025-04-10'
             },
             {
                 id: 'tokyo_festa_2025',
                 name: '東京トライアスロンフェスタ',
                 date: '2025-05-25',
                 location: '東京都お台場',
+                prefecture: '東京都',
                 distance: 'スプリント',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '都心で開催される人気大会',
                 features: ['都心', 'お台場', 'アクセス良好'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-15',
+                entryEndDate: '2025-04-25'
             },
             {
                 id: 'jtu_osaka_atc_2025',
                 name: 'アジアトライアスロンカップ大阪城大会',
                 date: '2025-05-25',
                 location: '大阪府大阪市',
+                prefecture: '大阪府',
                 distance: 'スタンダード',
                 level: 'エリート・エイジ',
                 category: 'JTU国際大会',
                 url: 'https://www.jtu.or.jp/',
                 description: 'アジア最高峰のカップ戦。大阪城を舞台にした美しいコース',
                 features: ['アジアカップ', '大阪城', '国際レベル'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-01',
+                entryEndDate: '2025-04-20'
             },
             {
                 id: 'yokohama_seaside_2025',
                 name: '横浜シーサイドトライアスロン',
                 date: '2025-05-04',
                 location: '神奈川県横浜市',
+                prefecture: '神奈川県',
                 distance: 'スプリント',
                 level: 'エイジ',
                 category: 'LUMINA大会',
                 url: '#',
                 description: 'みなとみらいの景色が楽しめる都市型大会',
                 features: ['みなとみらい', '都市型', 'GW'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-01',
+                entryEndDate: '2025-04-01'
             },
             {
                 id: 'shizuoka_2025',
                 name: '静岡トライアスロン',
                 date: '2025-05-25',
                 location: '静岡県静岡市',
+                prefecture: '静岡県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: 'LUMINA大会',
                 url: '#',
                 description: '駿河湾と富士山の絶景コース',
                 features: ['富士山', '駿河湾', '絶景'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-15',
+                entryEndDate: '2025-04-15'
             },
             {
                 id: 'ibaraki_2025',
                 name: '茨城トライアスロン',
                 date: '2025-05-18',
                 location: '茨城県ひたちなか市',
+                prefecture: '茨城県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: 'LUMINA大会',
                 url: '#',
                 description: '太平洋を望む爽快なコース',
                 features: ['太平洋', '爽快', 'ひたちなか'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-10',
+                entryEndDate: '2025-04-10'
             },
 
             // 6月開催
@@ -571,445 +832,248 @@
                 name: '長良川国際トライアスロン大会',
                 date: '2025-06-08',
                 location: '岐阜県海津市',
-                distance: 'スタンダード',
+                prefecture: '岐阜県',
+                distance: ['スタンダード', 'スプリント', '中学生'],
                 level: 'エイジ',
                 category: 'JTU選手権',
                 url: '#',
                 description: '清流長良川での川泳ぎが特徴的な大会',
                 features: ['清流', '川泳ぎ', '国際大会'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-02-10',
+                entryEndDate: '2025-04-30'
             },
             {
                 id: 'biwako_2025',
                 name: 'びわ湖トライアスロン',
                 date: '2025-06-15',
                 location: '滋賀県大津市',
+                prefecture: '滋賀県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '日本最大の湖、琵琶湖での美しい大会',
                 features: ['琵琶湖', '日本最大', '美しい'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-03-01',
+                entryEndDate: '2025-04-30'
             },
             {
                 id: 'murakami_sasagawa_2025',
                 name: '村上・笹川流れ国際トライアスロン',
                 date: '2025-06-22',
                 location: '新潟県村上市',
+                prefecture: '新潟県',
                 distance: 'スタンダード',
                 level: 'エイジ',
                 category: '主要大会',
                 url: '#',
                 description: '美しい海岸線「笹川流れ」での絶景大会',
                 features: ['笹川流れ', '絶景', '海岸線'],
-                entryStatus: '受付中'
+                entryStartDate: '2025-03-15',
+                entryEndDate: '2025-05-15'
             },
             {
                 id: 'jtu_supersprint_2025',
                 name: '日本スーパースプリントトライアスロン選手権',
                 date: '2025-06-22',
                 location: '愛知県蒲郡市',
+                prefecture: '愛知県',
                 distance: 'スーパースプリント',
                 level: 'エリート',
                 category: 'JTU選手権',
                 url: 'https://gama-triathlon.jp/',
                 description: '日本最高峰のスーパースプリント選手権。短距離での頂上決戦',
                 features: ['日本選手権', 'TV中継', '短距離'],
-                entryStatus: '選考制'
+                entryStartDate: '2025-04-01',
+                entryEndDate: '2025-05-31',
+                isSelectionOnly: true
+            }
+                category: 'JTU選手権',
+                url: 'https://www.jtu.or.jp/',
+                description: '日本最高峰の選手権大会',
+                features: ['日本選手権', '最高峰', 'TV中継'],
+                entryStartDate: '2025-07-01',
+                entryEndDate: '2025-08-31',
+                isSelectionOnly: true
             },
             {
-                id: 'osaka_castle_2025',
-                name: '大阪城トライアスロン',
-                date: '2025-06-01',
-                location: '大阪府大阪市',
+                id: 'amakusa_2025',
+                name: '天草国際トライアスロン',
+                date: '2025-10-12',
+                location: '熊本県天草市',
+                prefecture: '熊本県',
+                distance: 'スタンダード',
+                level: 'エイジ',
+                category: 'JTU国際大会',
+                url: '#',
+                description: '美しい天草の海での大会',
+                features: ['天草', '国際大会', '熊本'],
+                entryStartDate: '2025-06-01',
+                entryEndDate: '2025-08-31'
+            },
+            {
+                id: 'expo_banpaku_2025',
+                name: 'EXPO70万博記念公園トライアスロン',
+                date: '2025-10-19',
+                location: '大阪府吹田市',
+                prefecture: '大阪府',
                 distance: 'スプリント',
                 level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '大阪城を背景にした都市型大会',
-                features: ['大阪城', '都市型', '歴史'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'kobe_port_2025',
-                name: '神戸ポートアイランドトライアスロン',
-                date: '2025-06-08',
-                location: '兵庫県神戸市',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '港町神戸の美しい景色を楽しむ大会',
-                features: ['港町', '神戸', '景色'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'toyama_bayside_2025',
-                name: '富山ベイサイドトライアスロン',
-                date: '2025-06-29',
-                location: '富山県富山市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '立山連峰を望む富山湾での大会',
-                features: ['立山連峰', '富山湾', '山と海'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'niigata_2025',
-                name: '新潟トライアスロン',
-                date: '2025-06-15',
-                location: '新潟県新潟市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '信濃川河口での大会',
-                features: ['信濃川', '河口', '新潟'],
-                entryStatus: '受付中'
-            },
-
-            // 7月開催
-            {
-                id: 'kaiki_2025',
-                name: '皆生トライアスロン',
-                date: '2025-07-13',
-                location: '鳥取県米子市',
-                distance: 'ロング',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '日本トライアスロン発祥の地での歴史ある大会',
-                features: ['発祥の地', '歴史', 'ロング'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'atami_2025',
-                name: '熱海こがしトライアスロン',
-                date: '2025-07-20',
-                location: '静岡県熱海市',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '温泉リゾート熱海での夏の大会',
-                features: ['温泉', 'リゾート', '夏'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'kisarazu_2025',
-                name: '木更津トライアスロン',
-                date: '2025-07-27',
-                location: '千葉県木更津市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '東京湾アクアラインからアクセス良好な大会',
-                features: ['アクアライン', 'アクセス良好', '東京湾'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'iwate_yakibashiri_2025',
-                name: '岩手山焼走りトライアスロン',
-                date: '2025-07-06',
-                location: '岩手県八幡平市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '岩手山の雄大な景色を楽しむ大会',
-                features: ['岩手山', '雄大', '東北'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'fukushima_2025',
-                name: '福島トライアスロン',
-                date: '2025-07-13',
-                location: '福島県いわき市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '復興を支援する大会',
-                features: ['復興支援', 'いわき', '東北'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'sendai_bay_2025',
-                name: '宮城トライアスロン仙台ベイ',
-                date: '2025-07-20',
-                location: '宮城県仙台市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '仙台湾での東北最大級の大会',
-                features: ['仙台湾', '東北最大級', '仙台'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'aomori_2025',
-                name: '青森トライアスロン',
-                date: '2025-07-27',
-                location: '青森県青森市',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '本州最北端での夏の大会',
-                features: ['本州最北端', '夏', '青森'],
-                entryStatus: '受付中'
-            },
-            {
-                id: 'aquathlon_uminomori_2025',
-                name: '第3回日本アクアスロン選手権',
-                date: '2025-07-13',
-                location: '東京都江東区・海の森',
-                distance: 'アクアスロン',
-                level: 'エリート・エイジ',
                 category: 'JTU選手権',
                 url: '#',
-                description: '東京2020レガシー施設でのアクアスロン選手権',
-                features: ['日本選手権', 'レガシー', 'アクアスロン'],
-                entryStatus: '受付中'
+                description: '万博記念公園でのスプリント選手権',
+                features: ['万博公園', 'スプリント', '大阪'],
+                entryStartDate: '2025-06-15',
+                entryEndDate: '2025-09-15'
             },
-
-            // 8月開催
             {
-                id: 'hokkaido_date_2025',
-                name: '北海道トライアスロン伊達大会',
-                date: '2025-08-03',
-                location: '北海道伊達市',
+                id: 'nanki_shirahama_2025',
+                name: '南紀白浜トライアスロン',
+                date: '2025-10-26',
+                location: '和歌山県白浜町',
+                prefecture: '和歌山県',
                 distance: 'スタンダード',
                 level: 'エイジ',
-                category: 'LUMINA大会',
+                category: 'JTU選手権',
                 url: '#',
-                description: '涼しい北海道での夏の大会',
-                features: ['涼しい', '北海道', '夏'],
-                entryStatus: '受付予定'
+                description: '美しい白砂のビーチでの大会',
+                features: ['白砂ビーチ', '南紀', '和歌山'],
+                entryStartDate: '2025-06-20',
+                entryEndDate: '2025-09-20'
             },
             {
-                id: 'kujukuri_2025',
-                name: '九十九里トライアスロン',
-                date: '2025-08-10',
-                location: '千葉県九十九里町',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '千葉県の美しい海岸線での大会',
-                features: ['海岸線', '九十九里', '千葉'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'toyako_2025',
-                name: '洞爺湖トライアスロン国際大会',
-                date: '2025-08-17',
-                location: '北海道洞爺湖町',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'JTU国際大会',
-                url: '#',
-                description: '美しいカルデラ湖、洞爺湖での大会',
-                features: ['カルデラ湖', '洞爺湖', '国際大会'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'shikotsu_2025',
-                name: '支笏湖トライアスロン',
-                date: '2025-08-24',
-                location: '北海道千歳市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '透明度抜群の支笏湖での大会',
-                features: ['透明度抜群', '支笏湖', '千歳'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'hakodate_2025',
-                name: '函館トライアスロン',
-                date: '2025-08-31',
-                location: '北海道函館市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '異国情緒あふれる函館での大会',
-                features: ['異国情緒', '函館', '北海道'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'towada_2025',
-                name: '十和田湖トライアスロン',
-                date: '2025-08-10',
-                location: '青森県十和田市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '美しいカルデラ湖での涼しい大会',
-                features: ['カルデラ湖', '涼しい', '十和田'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'yamagata_2025',
-                name: '山形トライアスロン',
-                date: '2025-08-17',
-                location: '山形県酒田市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '日本海と鳥海山を望む大会',
-                features: ['日本海', '鳥海山', '山形'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'akita_2025',
-                name: '秋田トライアスロン',
-                date: '2025-08-24',
-                location: '秋田県秋田市',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '男鹿半島の美しい海岸での大会',
-                features: ['男鹿半島', '海岸', '秋田'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'kawasaki_higashiogishima_2025',
-                name: '第18回川崎港トライアスロンin東扇島',
-                date: '2025-08-10',
-                location: '神奈川県川崎市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '東京湾を望む都市型トライアスロン',
-                features: ['東京湾', '都市型', '川崎'],
-                entryStatus: '受付開始'
-            },
-            {
-                id: 'tomakomai_2025',
-                name: '第37回苫小牧ハスカップトライアスロン大会',
-                date: '2025-07-20',
-                location: '北海道苫小牧市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '北海道の夏を満喫する大会',
-                features: ['ハスカップ', '苫小牧', '北海道'],
-                entryStatus: '受付中'
-            },
-
-            // 9月開催
-            {
-                id: 'sado_2025',
-                name: '佐渡国際トライアスロン',
-                date: '2025-09-07',
-                location: '新潟県佐渡市',
-                distance: 'ロング',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '日本最高峰のロングディスタンス',
-                features: ['最高峰', 'ロング', '佐渡'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'goto_2025',
-                name: '五島長崎国際トライアスロン',
-                date: '2025-09-14',
-                location: '長崎県五島市',
-                distance: 'ロング',
-                level: 'エイジ',
-                category: 'JTU国際大会',
-                url: '#',
-                description: '美しい島々を舞台にした西日本最大の大会',
-                features: ['島々', '西日本最大', '国際大会'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'irago_2025',
-                name: '伊良湖トライアスロン',
-                date: '2025-09-21',
-                location: '愛知県田原市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '渥美半島の美しい海岸での大会',
-                features: ['渥美半島', '海岸', '伊良湖'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'setouchi_2025',
-                name: '瀬戸内海トライアスロン',
-                date: '2025-09-07',
-                location: '広島県尾道市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '多島美が美しい瀬戸内海での大会',
-                features: ['多島美', '瀬戸内海', '尾道'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'shimanami_2025',
-                name: 'しまなみ海道トライアスロン',
-                date: '2025-09-14',
-                location: '愛媛県今治市',
-                distance: 'ミドル',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: 'サイクリストの聖地での大会',
-                features: ['サイクリスト聖地', 'しまなみ', 'ミドル'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'hiroshima_2025',
-                name: '広島トライアスロン',
-                date: '2025-09-21',
-                location: '広島県広島市',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '平和記念公園をスタートする大会',
-                features: ['平和記念公園', '広島', '平和'],
-                entryStatus: '受付予定'
-            },
-            {
-                id: 'yamaguchi_2025',
-                name: '山口トライアスロン',
-                date: '2025-09-28',
-                location: '山口県下関市',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '関門海峡を望む本州最西端の大会',
-                features: ['関門海峡', '本州最西端', '下関'],
-                entryStatus: '受付予定'
-            },
-
-            // 10月開催
-            {
-                id: 'jtu_championship_2025',
-                name: '日本トライアスロン選手権',
+                id: 'yokosuka_2025',
+                name: '横須賀トライアスロン',
                 date: '2025-10-05',
-                location: '神奈川県横浜市',
+                location: '神奈川県横須賀市',
+                prefecture: '神奈川県',
                 distance: 'スタンダード',
-                level: 'エリート',
+                level: 'エイジ',
+                category: '主要大会',
+                url: '#',
+                description: '三浦半島での海軍カレーの街の大会',
+                features: ['三浦半島', '海軍カレー', '横須賀'],
+                entryStartDate: '2025-06-01',
+                entryEndDate: '2025-08-31'
+            }
+        ];
+
+        console.log('📊 大会データ読み込み完了:', races.length, '件');
+
+        // エントリー状況の自動判定関数
+        function calculateEntryStatus(race) {
+            const today = new Date();
+            const eventDate = new Date(race.date);
+            const entryStartDate = race.entryStartDate ? new Date(race.entryStartDate) : null;
+            const entryEndDate = race.entryEndDate ? new Date(race.entryEndDate) : null;
+
+            // 選考制の場合
+            if (race.isSelectionOnly) {
+                return '選考制';
+            }
+
+            // 開催が終了している場合
+            if (eventDate < today) {
+                return '開催終了';
+            }
+
+            // エントリー期間の判定
+            if (entryStartDate && entryEndDate) {
+                if (today < entryStartDate) {
+                    return 'エントリー開始前';
+                } else if (today >= entryStartDate && today <= entryEndDate) {
+                    return 'エントリー期間中';
+                } else if (today > entryEndDate) {
+                    return 'エントリー期間終了';
+                }
+            }
+
+            return 'エントリー期間中'; // デフォルト
+        }
+
+        // エントリー状況に応じたCSSクラス取得
+        function getStatusClass(status) {
+            switch (status) {
+                case 'エントリー期間中': return 'status-entry-open';
+                case 'エントリー開始前': return 'status-entry-soon';
+                case 'エントリー期間終了': return 'status-entry-closed';
+                case '開催終了': return 'status-event-finished';
+                case '選考制': return 'status-selection-only';
+                default: return 'status-entry-open';
+            }
+        }
+
+        // マルチセレクト機能
+        class MultiSelect {
+            constructor(dropdownId, optionsId, displayId, onChangeCallback) {
+                this.dropdown = document.getElementById(dropdownId);
+                this.options = document.getElementById(optionsId);
+                this.display = document.getElementById(displayId);
+                this.onChangeCallback = onChangeCallback;
+                this.selectedValues = [];
+                
+                this.init();
+            }
+
+            init() {
+                // ドロップダウンのクリックイベント
+                this.dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggle();
+                });
+
+                // オプションのクリックイベント
+                this.options.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                // チェックボックスの変更イベント
+                this.options.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        this.updateSelection();
+                    });
+                });
+
+                // 外部クリックで閉じる
+                document.addEventListener('click', () => {
+                    this.close();
+                });
+            }
+
+            toggle() {
+                this.options.classList.toggle('show');
+            }
+
+            close() {
+                this.options.classList.remove('show');
+            }
+
+            updateSelection() {
+                const checkboxes = this.options.querySelectorAll('input[type="checkbox"]:checked');
+                this.selectedValues = Array.from(checkboxes).map(cb => cb.value);
+                
+                this.updateDisplay();
+                if (this.onChangeCallback) {
+                    this.onChangeCallback(this.selectedValues);
+                }
+            }
+
+            updateDisplay() {
+                if (this.selectedValues.length === 0) {
+                    this.display.textContent = this.dropdown.id.includes('month') ? '全ての月' : '全ての都道府県';
+                } else if (this.selectedValues.length === 1) {
+                    const checkbox = this.options.querySelector(`input[value="${this.selectedValues[0]}"]`);
+                    const label = checkbox.nextElementSibling.textContent;
+                    this.display.textContent = label;
+                } else {
+                    this.display.textContent = `${this.selectedValues.length}件選択中`;
+                }
+            }
+
+            getSelectedValues() {
+                return this.selectedValues;
+            }
+        }
                 category: 'JTU選手権',
                 url: 'https://www.jtu.or.jp/',
                 description: '日本最高峰の選手権大会',
@@ -1075,19 +1139,22 @@
         // DOM要素
         console.log('🔍 DOM要素取得開始');
         const searchInput = document.getElementById('search-input');
-        const monthSelect = document.getElementById('month-select');
         const categorySelect = document.getElementById('category-select');
         const distanceSelect = document.getElementById('distance-select');
+        const statusSelect = document.getElementById('status-select');
         const searchResult = document.getElementById('search-result');
         const racesContainer = document.getElementById('races-container');
         const filteredCount = document.getElementById('filtered-count');
 
+        // マルチセレクトの初期化
+        let monthMultiSelect, prefectureMultiSelect;
+
         // DOM要素の存在確認
         console.log('✅ DOM要素確認:');
         console.log('  searchInput:', !!searchInput);
-        console.log('  monthSelect:', !!monthSelect);
         console.log('  categorySelect:', !!categorySelect);
         console.log('  distanceSelect:', !!distanceSelect);
+        console.log('  statusSelect:', !!statusSelect);
         console.log('  searchResult:', !!searchResult);
         console.log('  racesContainer:', !!racesContainer);
         console.log('  filteredCount:', !!filteredCount);
@@ -1118,26 +1185,45 @@
             });
         }
 
-        // 大会カード生成
+        // 大会カード生成（複数距離対応）
         function createRaceCard(race) {
+            const raceDate = new Date(race.date);
+            const formattedDate = raceDate.toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'short'
+            });
+
+            const calculatedStatus = calculateEntryStatus(race);
+            const statusClass = getStatusClass(calculatedStatus);
+
+            // 距離バッジの生成（複数距離対応）
+            const distanceBadges = Array.isArray(race.distance) 
+                ? race.distance.map(dist => `<span class="distance-badge">${dist}</span>`).join('')
+                : `<span class="distance-badge">${race.distance}</span>`;
+
             return `
                 <div class="race-card" data-id="${race.id}">
                     <div class="race-content">
                         <div class="race-header">
                             <span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span>
-                            <span class="status-badge ${getStatusClass(race.entryStatus)}">${race.entryStatus}</span>
+                            <span class="status-badge ${statusClass}">${calculatedStatus}</span>
                         </div>
                         
                         <h3 class="race-title">${race.name}</h3>
                         
                         <div class="race-info">
-                            <div class="race-info-item">📅 ${formatDate(race.date)}</div>
+                            <div class="race-info-item">📅 ${formattedDate}</div>
                             <div class="race-info-item">📍 ${race.location}</div>
-                            <div class="race-info-item">⏱️ ${race.distance}</div>
                             <div class="race-info-item">👥 ${race.level}</div>
                         </div>
                         
                         <p class="race-description">${race.description}</p>
+                        
+                        <div class="distance-badges">
+                            ${distanceBadges}
+                        </div>
                         
                         <div class="race-features">
                             ${race.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
@@ -1151,38 +1237,60 @@
             `;
         }
 
-        // フィルタリング実行
+        // フィルタリング実行（マルチセレクト対応）
         function filterRaces() {
             console.log('🔄 フィルタリング実行開始');
             
             try {
                 const searchTerm = searchInput.value.toLowerCase();
-                const selectedMonth = monthSelect.value;
+                const selectedMonths = monthMultiSelect ? monthMultiSelect.getSelectedValues() : [];
+                const selectedPrefectures = prefectureMultiSelect ? prefectureMultiSelect.getSelectedValues() : [];
                 const selectedCategory = categorySelect.value;
                 const selectedDistance = distanceSelect.value;
+                const selectedStatus = statusSelect.value;
 
                 console.log('📝 フィルター条件:', {
                     search: searchTerm,
-                    month: selectedMonth,
+                    months: selectedMonths,
+                    prefectures: selectedPrefectures,
                     category: selectedCategory,
-                    distance: selectedDistance
+                    distance: selectedDistance,
+                    status: selectedStatus
                 });
 
                 const filtered = races.filter(race => {
+                    // 検索フィルター
                     const matchesSearch = !searchTerm || 
                         race.name.toLowerCase().includes(searchTerm) ||
-                        race.location.toLowerCase().includes(searchTerm);
+                        race.location.toLowerCase().includes(searchTerm) ||
+                        race.description.toLowerCase().includes(searchTerm);
                     
-                    const matchesMonth = !selectedMonth || 
-                        race.date.substring(5, 7) === selectedMonth;
+                    // 月フィルター（複数選択対応）
+                    const matchesMonth = selectedMonths.length === 0 || 
+                        selectedMonths.includes(race.date.substring(5, 7));
                     
+                    // 都道府県フィルター（複数選択対応）
+                    const matchesPrefecture = selectedPrefectures.length === 0 ||
+                        selectedPrefectures.includes(race.prefecture);
+                    
+                    // カテゴリーフィルター
                     const matchesCategory = !selectedCategory || 
                         race.category === selectedCategory;
 
-                    const matchesDistance = !selectedDistance || 
-                        race.distance === selectedDistance;
+                    // 距離フィルター（複数距離対応）
+                    const matchesDistance = !selectedDistance || (
+                        Array.isArray(race.distance) 
+                            ? race.distance.includes(selectedDistance)
+                            : race.distance === selectedDistance
+                    );
 
-                    return matchesSearch && matchesMonth && matchesCategory && matchesDistance;
+                    // エントリー状況フィルター
+                    const calculatedStatus = calculateEntryStatus(race);
+                    const matchesStatus = !selectedStatus || 
+                        calculatedStatus === selectedStatus;
+
+                    return matchesSearch && matchesMonth && matchesPrefecture && 
+                           matchesCategory && matchesDistance && matchesStatus;
                 });
 
                 console.log('✅ フィルタリング結果:', filtered.length, '件');
@@ -1192,7 +1300,6 @@
                     const htmlContent = filtered.map(createRaceCard).join('');
                     racesContainer.innerHTML = htmlContent;
                     console.log('✅ レースカード生成完了:', htmlContent.length, '文字');
-                    console.log('📦 生成されたHTML（最初の200文字）:', htmlContent.substring(0, 200));
                 } else {
                     console.error('❌ racesContainer が見つかりません');
                 }
@@ -1219,14 +1326,26 @@
         console.log('🔗 イベントリスナー設定開始');
         
         try {
+            // マルチセレクトの初期化
+            monthMultiSelect = new MultiSelect(
+                'month-dropdown', 
+                'month-options', 
+                'month-display',
+                () => filterRaces()
+            );
+
+            prefectureMultiSelect = new MultiSelect(
+                'prefecture-dropdown', 
+                'prefecture-options', 
+                'prefecture-display',
+                () => filterRaces()
+            );
+
+            console.log('✅ マルチセレクト初期化完了');
+
             if (searchInput) {
                 searchInput.addEventListener('input', filterRaces);
                 console.log('✅ searchInput イベントリスナー設定完了');
-            }
-            
-            if (monthSelect) {
-                monthSelect.addEventListener('change', filterRaces);
-                console.log('✅ monthSelect イベントリスナー設定完了');
             }
             
             if (categorySelect) {
@@ -1237,6 +1356,11 @@
             if (distanceSelect) {
                 distanceSelect.addEventListener('change', filterRaces);
                 console.log('✅ distanceSelect イベントリスナー設定完了');
+            }
+
+            if (statusSelect) {
+                statusSelect.addEventListener('change', filterRaces);
+                console.log('✅ statusSelect イベントリスナー設定完了');
             }
             
             console.log('✅ 全イベントリスナー設定完了');

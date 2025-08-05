@@ -439,6 +439,12 @@
         // アクティビティ詳細表示（別タブ）
         function showActivityDetail(activityId) {
             console.log('🔍 Redirecting to activity detail:', activityId);
+            
+            // StravaトークンをlocalStorageに保存
+            if (stravaToken) {
+                localStorage.setItem('strava_access_token', stravaToken);
+            }
+            
             window.open(`activity-detail.html?id=${activityId}`, '_blank');
         }
         
@@ -968,6 +974,7 @@
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     console.log('🔍 Click detected for activity:', activityId);
+                    console.log('🔗 Opening URL:', `activity-detail.html?id=${activityId}`);
                     showActivityDetail(activityId);
                 });
             });

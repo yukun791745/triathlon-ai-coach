@@ -262,42 +262,58 @@
             opacity: 0.9;
         }
         
-        .training-table-container {
-            overflow-x: auto;
+        /* 棒グラフスタイル */
+        .chart-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
             margin-bottom: 24px;
         }
         
-        .training-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .training-table th {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            padding: 8px;
-            text-align: center;
+        .chart-title {
+            font-size: 16px;
             font-weight: 600;
             color: #374151;
-        }
-        
-        .training-table td {
-            border: 1px solid #e5e7eb;
-            padding: 6px 8px;
+            margin-bottom: 16px;
             text-align: center;
         }
         
-        .training-table .phase-header {
-            background: #dbeafe;
-            font-weight: 600;
-            color: #1e40af;
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin-bottom: 16px;
         }
         
-        .training-table .total-row {
-            background: #fef3c7;
-            font-weight: 600;
+        .chart-svg {
+            width: 100%;
+            height: 100%;
         }
+        
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        .color-swim { background: #0891b2; }
+        .color-bike { background: #dc2626; }
+        .color-run { background: #059669; }
+        .color-strength { background: #7c3aed; }
         
         .discipline-swim {
             color: #0891b2;
@@ -450,15 +466,11 @@
                     </div>
                     
                     <div class="form-field">
-                        <label class="form-label">週間利用可能時間</label>
-                        <select class="form-select" id="weekly-hours">
-                            <option value="6">6時間/週（平日1h×4日 + 週末1h×2日）</option>
-                            <option value="8">8時間/週（平日1h×4日 + 週末2h×2日）</option>
-                            <option value="10">10時間/週（平日1.5h×4日 + 週末2h×2日）</option>
-                            <option value="12">12時間/週（平日1.5h×4日 + 週末3h×2日）</option>
-                            <option value="15">15時間/週（平日2h×5日 + 週末2.5h×2日）</option>
-                            <option value="20">20時間/週（平日2.5h×5日 + 週末3.75h×2日）</option>
-                        </select>
+                        <label class="form-label">週間利用可能時間（時間）</label>
+                        <input type="number" class="form-input" id="weekly-hours" min="3" max="30" step="1" placeholder="8" value="8">
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            目安：初心者 6-8時間、中級者 10-15時間、上級者 15-20時間以上
+                        </div>
                     </div>
                 </div>
 
@@ -596,11 +608,59 @@
                 <!-- JavaScript で動的に生成 -->
             </div>
 
-            <!-- 週別トレーニング計画表 -->
-            <div class="training-table-container">
-                <table class="training-table" id="training-table">
-                    <!-- JavaScript で動的に生成 -->
-                </table>
+            <!-- 週別トレーニングチャート -->
+            <div class="chart-container">
+                <div class="chart-title">📊 週別トレーニング時間</div>
+                <div class="chart-wrapper">
+                    <svg class="chart-svg" id="hours-chart">
+                        <!-- JavaScript で動的に生成 -->
+                    </svg>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color color-swim"></div>
+                        <span>スイム</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-bike"></div>
+                        <span>バイク</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-run"></div>
+                        <span>ラン</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-strength"></div>
+                        <span>筋トレ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">📈 週別TSS</div>
+                <div class="chart-wrapper">
+                    <svg class="chart-svg" id="tss-chart">
+                        <!-- JavaScript で動的に生成 -->
+                    </svg>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color color-swim"></div>
+                        <span>スイム</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-bike"></div>
+                        <span>バイク</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-run"></div>
+                        <span>ラン</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-strength"></div>
+                        <span>筋トレ</span>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -716,7 +776,12 @@
 
         // ピリオダイゼーション計算
         function calculatePeriodization(formData) {
-            const totalWeeks = Math.ceil((formData.mainRaceDate - formData.startDate) / (7 * 24 * 60 * 60 * 1000));
+            // 日数計算を修正
+            const timeDiff = formData.mainRaceDate.getTime() - formData.startDate.getTime();
+            const totalDays = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
+            const totalWeeks = Math.ceil(totalDays / 7);
+            
+            console.log(`📅 期間計算: ${totalDays}日 = ${totalWeeks}週`);
             
             let phases = {};
             if (totalWeeks >= 16) {
@@ -887,41 +952,42 @@
 
         // 改善予測計算
         function calculateImprovements(formData, totalWeeks) {
-            // トレーニング強度係数（週あたりの改善率）
+            // トレーニング強度係数（週あたりの改善率） - 修正版
             const weeklyImprovementRate = {
-                beginner: 0.015,    // 1.5%/週
-                intermediate: 0.010, // 1.0%/週
-                advanced: 0.007,    // 0.7%/週
-                elite: 0.005        // 0.5%/週
+                beginner: 0.008,    // 0.8%/週
+                intermediate: 0.005, // 0.5%/週
+                advanced: 0.003,    // 0.3%/週
+                elite: 0.002        // 0.2%/週
             };
             
-            const rate = weeklyImprovementRate[formData.currentFrequency];
-            const maxImprovement = totalWeeks * rate;
+            const rate = weeklyImprovementRate[formData.currentFrequency] || 0.005;
+            const totalImprovementRatio = rate * totalWeeks;
             
             // 改善上限（現実的な範囲）
             const maxLimits = {
-                vdot: 0.25,    // 最大25%改善
-                ftp: 0.30,     // 最大30%改善
-                swim: 0.15     // 最大15%改善
+                vdot: 0.20,    // 最大20%改善
+                ftp: 0.25,     // 最大25%改善
+                swim: 0.10     // 最大10%改善
             };
             
-            const vdotImprovement = Math.min(maxImprovement, maxLimits.vdot);
-            const ftpImprovement = Math.min(maxImprovement * 1.2, maxLimits.ftp); // バイクは少し改善しやすい
-            const swimImprovement = Math.min(maxImprovement * 0.8, maxLimits.swim); // スイムは技術要素で改善限定
+            // 実際の改善率計算（上限適用）
+            const vdotImprovementRatio = Math.min(totalImprovementRatio, maxLimits.vdot);
+            const ftpImprovementRatio = Math.min(totalImprovementRatio * 1.1, maxLimits.ftp); // バイクは少し改善しやすい
+            const swimImprovementRatio = Math.min(totalImprovementRatio * 0.7, maxLimits.swim); // スイムは技術要素で改善限定
             
             // 改善後の値
-            const improvedVDOT = formData.currentVDOT * (1 + vdotImprovement);
-            const improvedFTP = formData.currentFTP * (1 + ftpImprovement);
-            const improvedSwimPace = formData.currentSwimPace * (1 - swimImprovement); // ペースは小さいほうが良い
+            const improvedVDOT = formData.currentVDOT * (1 + vdotImprovementRatio);
+            const improvedFTP = formData.currentFTP * (1 + ftpImprovementRatio);
+            const improvedSwimPace = formData.currentSwimPace * (1 - swimImprovementRatio); // ペースは小さいほうが良い
             
-            // タイム改善計算（仮のアルゴリズム）
+            // タイム改善計算
             const runTimeImprovement = calculateRunTimeImprovement(formData.currentVDOT, improvedVDOT, formData.mainRace.distance.run);
             const bikeTimeImprovement = calculateBikeTimeImprovement(formData.currentFTP, improvedFTP, formData.mainRace.distance.bike);
             
             return {
-                vdot: { current: formData.currentVDOT, improved: improvedVDOT, gain: vdotImprovement * 100 },
-                ftp: { current: formData.currentFTP, improved: improvedFTP, gain: ftpImprovement * 100 },
-                swimPace: { current: formData.currentSwimPace, improved: improvedSwimPace, gain: swimImprovement * 100 },
+                vdot: { current: formData.currentVDOT, improved: improvedVDOT, gain: vdotImprovementRatio * 100 },
+                ftp: { current: formData.currentFTP, improved: improvedFTP, gain: ftpImprovementRatio * 100 },
+                swimPace: { current: formData.currentSwimPace, improved: improvedSwimPace, gain: swimImprovementRatio * 100 },
                 runTime: runTimeImprovement,
                 bikeTime: bikeTimeImprovement
             };
@@ -970,8 +1036,8 @@
             // Zone分布チャート更新
             updateZoneDistribution(weeklyPlans);
             
-            // 週別計画表更新
-            updateTrainingTable(weeklyPlans, periodization);
+            // 週別チャート更新
+            updateWeeklyCharts(weeklyPlans, periodization);
         }
 
         // 統計情報更新
@@ -1081,149 +1147,141 @@
             document.getElementById('zone-distribution').innerHTML = chartsHtml;
         }
 
-        // 週別計画表更新
-        function updateTrainingTable(weeklyPlans, periodization) {
-            let tableHtml = `
-                <thead>
-                    <tr>
-                        <th rowspan="2">週</th>
-                        <th rowspan="2">フェーズ</th>
-                        <th colspan="4">トレーニング時間 (h)</th>
-                        <th colspan="4">TSS</th>
-                        <th rowspan="2">週合計<br>時間</th>
-                        <th rowspan="2">週合計<br>TSS</th>
-                    </tr>
-                    <tr>
-                        <th class="discipline-swim">スイム</th>
-                        <th class="discipline-bike">バイク</th>
-                        <th class="discipline-run">ラン</th>
-                        <th class="discipline-strength">筋トレ</th>
-                        <th class="discipline-swim">スイム</th>
-                        <th class="discipline-bike">バイク</th>
-                        <th class="discipline-run">ラン</th>
-                        <th class="discipline-strength">筋トレ</th>
-                    </tr>
-                </thead>
-                <tbody>
-            `;
+        // 週別チャート更新
+        function updateWeeklyCharts(weeklyPlans, periodization) {
+            updateStackedBarChart('hours-chart', weeklyPlans, 'hours', 'h');
+            updateStackedBarChart('tss-chart', weeklyPlans, 'tss', '');
+        }
+
+        // 積み上げ棒グラフ更新
+        function updateStackedBarChart(chartId, weeklyPlans, dataType, unit) {
+            const svg = document.getElementById(chartId);
+            const svgRect = svg.getBoundingClientRect();
+            const width = svgRect.width || 800;
+            const height = svgRect.height || 300;
             
-            // 週別データ
-            let currentPhase = '';
-            let phaseTotals = {
-                hours: { swim: 0, bike: 0, run: 0, strength: 0 },
-                tss: { swim: 0, bike: 0, run: 0, strength: 0 }
-            };
-            let grandTotals = {
-                hours: { swim: 0, bike: 0, run: 0, strength: 0 },
-                tss: { swim: 0, bike: 0, run: 0, strength: 0 }
+            const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+            
+            // データ準備
+            const disciplines = ['swim', 'bike', 'run', 'strength'];
+            const colors = {
+                swim: '#0891b2',
+                bike: '#dc2626', 
+                run: '#059669',
+                strength: '#7c3aed'
             };
             
-            weeklyPlans.forEach((week, index) => {
-                // フェーズヘッダー
-                if (week.phase !== currentPhase) {
-                    if (currentPhase !== '') {
-                        // 前フェーズの合計行
-                        const phaseHourTotal = Object.values(phaseTotals.hours).reduce((sum, val) => sum + val, 0);
-                        const phaseTssTotal = Object.values(phaseTotals.tss).reduce((sum, val) => sum + val, 0);
-                        
-                        tableHtml += `
-                            <tr class="phase-header">
-                                <td colspan="2">${currentPhase.toUpperCase()} 小計</td>
-                                <td>${phaseTotals.hours.swim.toFixed(1)}</td>
-                                <td>${phaseTotals.hours.bike.toFixed(1)}</td>
-                                <td>${phaseTotals.hours.run.toFixed(1)}</td>
-                                <td>${phaseTotals.hours.strength.toFixed(1)}</td>
-                                <td>${phaseTotals.tss.swim}</td>
-                                <td>${phaseTotals.tss.bike}</td>
-                                <td>${phaseTotals.tss.run}</td>
-                                <td>${phaseTotals.tss.strength}</td>
-                                <td><strong>${phaseHourTotal.toFixed(1)}</strong></td>
-                                <td><strong>${phaseTssTotal}</strong></td>
-                            </tr>
-                        `;
-                        
-                        // リセット
-                        phaseTotals = {
-                            hours: { swim: 0, bike: 0, run: 0, strength: 0 },
-                            tss: { swim: 0, bike: 0, run: 0, strength: 0 }
-                        };
-                    }
-                    currentPhase = week.phase;
-                }
-                
-                const weekHourTotal = Object.values(week.hours).reduce((sum, val) => sum + val, 0);
-                const weekTssTotal = Object.values(week.tss).reduce((sum, val) => sum + val, 0);
-                
-                tableHtml += `
-                    <tr>
-                        <td>${week.week}</td>
-                        <td>${week.phase.toUpperCase()}</td>
-                        <td>${week.hours.swim.toFixed(1)}</td>
-                        <td>${week.hours.bike.toFixed(1)}</td>
-                        <td>${week.hours.run.toFixed(1)}</td>
-                        <td>${week.hours.strength.toFixed(1)}</td>
-                        <td>${week.tss.swim}</td>
-                        <td>${week.tss.bike}</td>
-                        <td>${week.tss.run}</td>
-                        <td>${week.tss.strength}</td>
-                        <td><strong>${weekHourTotal.toFixed(1)}</strong></td>
-                        <td><strong>${weekTssTotal}</strong></td>
-                    </tr>
-                `;
-                
-                // 累積
-                Object.keys(week.hours).forEach(discipline => {
-                    phaseTotals.hours[discipline] += week.hours[discipline];
-                    phaseTotals.tss[discipline] += week.tss[discipline];
-                    grandTotals.hours[discipline] += week.hours[discipline];
-                    grandTotals.tss[discipline] += week.tss[discipline];
-                });
-            });
+            const maxValue = Math.max(...weeklyPlans.map(week => 
+                disciplines.reduce((sum, d) => sum + (week[dataType][d] || 0), 0)
+            ));
             
-            // 最後のフェーズの合計
-            if (currentPhase !== '') {
-                const phaseHourTotal = Object.values(phaseTotals.hours).reduce((sum, val) => sum + val, 0);
-                const phaseTssTotal = Object.values(phaseTotals.tss).reduce((sum, val) => sum + val, 0);
+            // 軸スケール
+            const barWidth = Math.max(20, chartWidth / weeklyPlans.length * 0.8);
+            const barSpacing = chartWidth / weeklyPlans.length;
+            
+            // SVG初期化
+            svg.innerHTML = '';
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // Y軸目盛り
+            const yTicks = 5;
+            for (let i = 0; i <= yTicks; i++) {
+                const y = margin.top + (chartHeight * i / yTicks);
+                const value = maxValue * (yTicks - i) / yTicks;
                 
-                tableHtml += `
-                    <tr class="phase-header">
-                        <td colspan="2">${currentPhase.toUpperCase()} 小計</td>
-                        <td>${phaseTotals.hours.swim.toFixed(1)}</td>
-                        <td>${phaseTotals.hours.bike.toFixed(1)}</td>
-                        <td>${phaseTotals.hours.run.toFixed(1)}</td>
-                        <td>${phaseTotals.hours.strength.toFixed(1)}</td>
-                        <td>${phaseTotals.tss.swim}</td>
-                        <td>${phaseTotals.tss.bike}</td>
-                        <td>${phaseTotals.tss.run}</td>
-                        <td>${phaseTotals.tss.strength}</td>
-                        <td><strong>${phaseHourTotal.toFixed(1)}</strong></td>
-                        <td><strong>${phaseTssTotal}</strong></td>
-                    </tr>
-                `;
+                // 格子線
+                const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                gridLine.setAttribute('x1', margin.left);
+                gridLine.setAttribute('y1', y);
+                gridLine.setAttribute('x2', margin.left + chartWidth);
+                gridLine.setAttribute('y2', y);
+                gridLine.setAttribute('stroke', '#e5e7eb');
+                gridLine.setAttribute('stroke-width', '1');
+                svg.appendChild(gridLine);
+                
+                // Y軸ラベル
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', margin.left - 10);
+                label.setAttribute('y', y + 4);
+                label.setAttribute('text-anchor', 'end');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('fill', '#6b7280');
+                label.textContent = Math.round(value * 10) / 10;
+                svg.appendChild(label);
             }
             
-            // 総合計
-            const grandHourTotal = Object.values(grandTotals.hours).reduce((sum, val) => sum + val, 0);
-            const grandTssTotal = Object.values(grandTotals.tss).reduce((sum, val) => sum + val, 0);
+            // 棒グラフ描画
+            weeklyPlans.forEach((week, index) => {
+                const x = margin.left + (index * barSpacing) + (barSpacing - barWidth) / 2;
+                let currentY = margin.top + chartHeight;
+                
+                disciplines.forEach(discipline => {
+                    const value = week[dataType][discipline] || 0;
+                    if (value > 0) {
+                        const barHeight = (value / maxValue) * chartHeight;
+                        
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', currentY - barHeight);
+                        rect.setAttribute('width', barWidth);
+                        rect.setAttribute('height', barHeight);
+                        rect.setAttribute('fill', colors[discipline]);
+                        
+                        // ツールチップ（簡易版）
+                        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                        title.textContent = `W${week.week} ${discipline}: ${value.toFixed(1)}${unit}`;
+                        rect.appendChild(title);
+                        
+                        svg.appendChild(rect);
+                        currentY -= barHeight;
+                    }
+                });
+                
+                // X軸ラベル（週番号）
+                const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                xLabel.setAttribute('x', x + barWidth / 2);
+                xLabel.setAttribute('y', margin.top + chartHeight + 20);
+                xLabel.setAttribute('text-anchor', 'middle');
+                xLabel.setAttribute('font-size', '11');
+                xLabel.setAttribute('fill', '#374151');
+                xLabel.textContent = `W${week.week}`;
+                svg.appendChild(xLabel);
+                
+                // フェーズ区切り線
+                if (index > 0 && week.phase !== weeklyPlans[index - 1].phase) {
+                    const phaseLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    phaseLine.setAttribute('x1', x - barSpacing / 2);
+                    phaseLine.setAttribute('y1', margin.top);
+                    phaseLine.setAttribute('x2', x - barSpacing / 2);
+                    phaseLine.setAttribute('y2', margin.top + chartHeight);
+                    phaseLine.setAttribute('stroke', '#f59e0b');
+                    phaseLine.setAttribute('stroke-width', '2');
+                    phaseLine.setAttribute('stroke-dasharray', '4,4');
+                    svg.appendChild(phaseLine);
+                }
+            });
             
-            tableHtml += `
-                    <tr class="total-row">
-                        <td colspan="2"><strong>総合計</strong></td>
-                        <td><strong>${grandTotals.hours.swim.toFixed(1)}</strong></td>
-                        <td><strong>${grandTotals.hours.bike.toFixed(1)}</strong></td>
-                        <td><strong>${grandTotals.hours.run.toFixed(1)}</strong></td>
-                        <td><strong>${grandTotals.hours.strength.toFixed(1)}</strong></td>
-                        <td><strong>${grandTotals.tss.swim}</strong></td>
-                        <td><strong>${grandTotals.tss.bike}</strong></td>
-                        <td><strong>${grandTotals.tss.run}</strong></td>
-                        <td><strong>${grandTotals.tss.strength}</strong></td>
-                        <td><strong>${grandHourTotal.toFixed(1)}</strong></td>
-                        <td><strong>${grandTssTotal}</strong></td>
-                    </tr>
-                </tbody>
-            `;
+            // Y軸線
+            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            yAxis.setAttribute('x1', margin.left);
+            yAxis.setAttribute('y1', margin.top);
+            yAxis.setAttribute('x2', margin.left);
+            yAxis.setAttribute('y2', margin.top + chartHeight);
+            yAxis.setAttribute('stroke', '#374151');
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
             
-            document.getElementById('training-table').innerHTML = tableHtml;
+            // X軸線
+            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            xAxis.setAttribute('x1', margin.left);
+            xAxis.setAttribute('y1', margin.top + chartHeight);
+            xAxis.setAttribute('x2', margin.left + chartWidth);
+            xAxis.setAttribute('y2', margin.top + chartHeight);
+            xAxis.setAttribute('stroke', '#374151');
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
         }
 
         // ページ読み込み時の初期化

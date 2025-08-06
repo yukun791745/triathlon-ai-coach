@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triathlon AI Coach - 目標設定</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #4b5563;
+            margin-bottom: 16px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .breadcrumb-current {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* 段階表示 */
+        .step-indicator {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .step-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* 未選択時の案内 */
+        .no-selection-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 48px 24px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .no-selection-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+        
+        .no-selection-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        
+        .back-to-selection-button {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-to-selection-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        /* 大会選択パネル */
+        .race-selection-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .races-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .race-selection-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .race-selection-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.2);
+        }
+        
+        .race-selection-card.selected {
+            border-color: #059669;
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+        }
+        
+        .race-selection-card.a-race {
+            border-left: 4px solid #dc2626;
+        }
+        
+        .race-selection-card.other-race {
+            border-left: 4px solid #2563eb;
+        }
+        
+        .race-type-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .race-type-badge.a-race {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .race-type-badge.other-race {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .race-selection-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            margin-right: 80px;
+        }
+        
+        .race-selection-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .selected-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #059669;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* 目標設定フォーム */
+        .goal-form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 32px;
+        }
+        
+        .goal-form-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+        
+        .goal-form-header.a-race {
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+            border-left: 4px solid #dc2626;
+        }
+        
+        .goal-form-header.other-race {
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+            border-left: 4px solid #2563eb;
+        }
+        
+        .goal-form-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .goal-form-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .goal-form-content {
+            padding: 24px;
+        }
+        
+        .distance-info {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .distance-info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .distance-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        
+        .distance-item {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .distance-discipline {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        
+        .distance-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .goal-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .goal-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .goal-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .time-input {
+            width: 60px;
+            padding: 8px 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .time-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .pace-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .pace-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .input-unit {
+            font-size: 12px;
+            color: #6b7280;
+            min-width: 40px;
+        }
+        
+        .input-separator {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .calculated-display {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #374151;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .calculated-display.updated {
+            background: #dcfce7;
+            color: #166534;
+            animation: highlight 0.5s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background: #fef3c7; }
+            100% { background: #dcfce7; }
+        }
+        
+        .total-time-section {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            margin-top: 24px;
+        }
+        
+        .total-time-display {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+        
+        .action-button.primary {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+        }
+        
+        .action-button.secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .action-button.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* 完了時のパネル */
+        .completion-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 32px 24px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .completion-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 16px;
+        }
+        
+        .completion-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .completion-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .completion-stat {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .completion-stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 4px;
+        }
+        
+        .completion-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .goal-input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-button {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .goal-form-subtitle {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <div class="header">
+            <h1 class="title">🎯 目標設定</h1>
+            <p class="subtitle">参加大会の目標タイムを設定しましょう</p>
+            
+            <div class="breadcrumb">
+                <div class="breadcrumb-item">
+                    <span>📋 大会選択</span>
+                </div>
+                <span>→</span>
+                <div class="breadcrumb-item breadcrumb-current">
+                    <span>🎯 目標設定</span>
+                </div>
+                <span>→</span>
+                <div class="breadcrumb-item">
+                    <span>🤖 AIコーチ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 段階表示 -->
+        <div class="step-indicator" id="step-indicator">
+            <div class="step-title">ステップ 1: 目標設定する大会を選択</div>
+            <div class="step-description">参加予定の大会から、目標タイムを設定したい大会を選んでください</div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div id="main-content">
+            <!-- 未選択時の案内 -->
+            <div class="no-selection-panel" id="no-selection-panel" style="display: none;">
+                <h2 class="no-selection-title">⚠️ 参加大会が選択されていません</h2>
+                <p class="no-selection-description">
+                    目標設定を行うには、まず参加予定の大会を選択してください。<br>
+                    大会一覧ページでAレース・その他レースを選択してから戻ってきてください。
+                </p>
+                <a href="race-selection.html" class="back-to-selection-button">
+                    📋 大会選択ページに戻る
+                </a>
+            </div>
+
+            <!-- 大会選択パネル -->
+            <div class="race-selection-panel" id="race-selection-panel">
+                <h2 class="panel-title">
+                    📊 参加予定の大会
+                    <span style="font-size: 14px; font-weight: 400; color: #6b7280;">- 目標設定したい大会をクリックしてください</span>
+                </h2>
+                
+                <div class="races-grid" id="races-grid">
+                    <!-- JavaScript で動的に生成 -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button primary" id="proceed-to-goal-button" onclick="proceedToGoalSetting()" disabled>
+                        🎯 選択した大会の目標設定を開始
+                    </button>
+                    <a href="race-selection.html" class="action-button secondary">
+                        📋 参加大会を変更
+                    </a>
+                </div>
+            </div>
+
+            <!-- 目標設定フォーム -->
+            <div id="goal-form-section" style="display: none;">
+                <!-- JavaScript で動的に生成 -->
+            </div>
+
+            <!-- 完了パネル -->
+            <div class="completion-panel" id="completion-panel" style="display: none;">
+                <h2 class="completion-title">🎉 目標設定完了！</h2>
+                <p class="completion-description">
+                    素晴らしい目標が設定されました！<br>
+                    次は他の大会の目標設定を行うか、トレーニング計画の策定に進みましょう。
+                </p>
+                
+                <div class="completion-stats" id="completion-stats">
+                    <!-- JavaScript で動的に生成 -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button primary" id="continue-goal-button" onclick="continueGoalSetting()" style="display: none;">
+                        🎯 他の大会も目標設定する
+                    </button>
+                    <button class="action-button warning" onclick="proceedToTraining()">
+                        🚀 トレーニング計画に進む
+                    </button>
+                    <button class="action-button secondary" onclick="backToSelection()">
+                        📋 大会選択に戻る
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- フッター -->
+        <div class="footer">
+            <p>🤖 次は AIコーチがあなたの目標達成をサポートします</p>
+        </div>
+    </div>
+
+    <script>
+        // 大会データ（簡略版）
+        const raceDatabase = {
+            'miyakojima_2025': {
+                name: '第39回全日本トライアスロン宮古島大会',
+                date: '2025-04-13',
+                location: '沖縄県宮古島市',
+                distance: { swim: 3.0, bike: 155, run: 42.195, type: 'ロング' }
+            },
+            'jtu_yokohama_wts_2025': {
+                name: 'ワールドトライアスロンシリーズ横浜大会',
+                date: '2025-05-17',
+                location: '神奈川県横浜市',
+                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
+            },
+            'sado_2025': {
+                name: '佐渡国際トライアスロン',
+                date: '2025-09-07',
+                location: '新潟県佐渡市',
+                distance: { swim: 3.8, bike: 190, run: 42.195, type: 'ロング' }
+            },
+            'shonan_2025': {
+                name: '湘南国際トライアスロン大会',
+                date: '2025-05-18',
+                location: '神奈川県藤沢市',
+                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
+            },
+            'tokyo_festa_2025': {
+                name: '東京トライアスロンフェスタ',
+                date: '2025-05-25',
+                location: '東京都お台場',
+                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
+            }
+        };
+
+        // 状態管理
+        let selectedRacesData = { aRaces: [], otherRaces: [] };
+        let racesForGoalSetting = new Set();
+        let currentGoalRace = null;
+        let completedGoals = new Set();
+        let goalData = {};
+
+        // 初期化
+        function init() {
+            console.log('🚀 目標設定ページ初期化開始');
+            
+            // URLパラメータから選択データを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const racesParam = urlParams.get('races');
+            
+            if (racesParam) {
+                try {
+                    selectedRacesData = JSON.parse(racesParam);
+                    console.log('✅ 選択データ取得:', selectedRacesData);
+                } catch (error) {
+                    console.error('❌ 選択データ解析エラー:', error);
+                }
+            }
+            
+            // デモ用のサンプルデータ（URLパラメータがない場合）
+            if (selectedRacesData.aRaces.length === 0 && selectedRacesData.otherRaces.length === 0) {
+                console.log('📝 デモ用サンプルデータを使用');
+                selectedRacesData = {
+                    aRaces: ['miyakojima_2025', 'sado_2025'],
+                    otherRaces: ['shonan_2025', 'tokyo_festa_2025']
+                };
+            }
+            
+            // 選択された大会があるかチェック
+            const totalSelected = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
+            
+            if (totalSelected === 0) {
+                showNoSelectionPanel();
+            } else {
+                showRaceSelectionPanel();
+            }
+        }
+
+        // 未選択パネル表示
+        function showNoSelectionPanel() {
+            document.getElementById('no-selection-panel').style.display = 'block';
+            document.getElementById('race-selection-panel').style.display = 'none';
+        }
+
+        // 大会選択パネル表示
+        function showRaceSelectionPanel() {
+            document.getElementById('no-selection-panel').style.display = 'none';
+            document.getElementById('race-selection-panel').style.display = 'block';
+            document.getElementById('goal-form-section').style.display = 'none';
+            document.getElementById('completion-panel').style.display = 'none';
+            
+            updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を選んでください');
+            renderRaceSelectionGrid();
+        }
+
+        // ステップ表示更新
+        function updateStepIndicator(title, description) {
+            document.querySelector('.step-title').textContent = title;
+            document.querySelector('.step-description').textContent = description;
+        }
+
+        // 大会選択グリッド表示
+        function renderRaceSelectionGrid() {
+            const racesGrid = document.getElementById('races-grid');
+            let html = '';
+            
+            // Aレース
+            selectedRacesData.aRaces.forEach(raceId => {
+                const race = raceDatabase[raceId];
+                if (race) {
+                    html += createRaceSelectionCard(raceId, race, 'a-race');
+                }
+            });
+            
+            // その他レース
+            selectedRacesData.otherRaces.forEach(raceId => {
+                const race = raceDatabase[raceId];
+                if (race) {
+                    html += createRaceSelectionCard(raceId, race, 'other-race');
+                }
+            });
+            
+            racesGrid.innerHTML = html;
+            updateProceedButton();
+        }
+
+        // 大会選択カード生成
+        function createRaceSelectionCard(raceId, race, type) {
+            const typeLabel = type === 'a-race' ? '🏆 Aレース' : '🎪 その他';
+            const isSelected = racesForGoalSetting.has(raceId);
+            const isCompleted = completedGoals.has(raceId);
+            
+            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            let cardClass = `race-selection-card ${type}`;
+            if (isSelected) cardClass += ' selected';
+            
+            let statusIndicator = '';
+            if (isCompleted) {
+                statusIndicator = '<div class="selected-indicator">✓</div>';
+            } else if (isSelected) {
+                statusIndicator = '<div class="selected-indicator">●</div>';
+            }
+            
+            return `
+                <div class="${cardClass}" onclick="toggleRaceSelection('${raceId}')" data-race-id="${raceId}">
+                    <div class="race-type-badge ${type}">${typeLabel}</div>
+                    ${statusIndicator}
+                    <div class="race-selection-title">${race.name}</div>
+                    <div class="race-selection-info">📅 ${formattedDate}</div>
+                    <div class="race-selection-info">📍 ${race.location}</div>
+                    <div class="race-selection-info">🏊‍♂️ ${race.distance.type}ディスタンス</div>
+                    ${isCompleted ? '<div class="race-selection-info" style="color: #059669; font-weight: 600;">✅ 目標設定済み</div>' : ''}
+                </div>
+            `;
+        }
+
+        // 大会選択切り替え
+        function toggleRaceSelection(raceId) {
+            if (completedGoals.has(raceId)) {
+                // 既に完了している場合は編集モードに
+                currentGoalRace = raceId;
+                showGoalForm();
+                return;
+            }
+            
+            if (racesForGoalSetting.has(raceId)) {
+                racesForGoalSetting.delete(raceId);
+            } else {
+                racesForGoalSetting.add(raceId);
+            }
+            
+            renderRaceSelectionGrid();
+        }
+
+        // 進行ボタン更新
+        function updateProceedButton() {
+            const button = document.getElementById('proceed-to-goal-button');
+            const selectedCount = racesForGoalSetting.size;
+            
+            if (selectedCount > 0) {
+                button.disabled = false;
+                button.textContent = `🎯 選択した${selectedCount}大会の目標設定を開始`;
+            } else {
+                button.disabled = true;
+                button.textContent = '🎯 大会を選択してください';
+            }
+        }
+
+        // 目標設定開始
+        function proceedToGoalSetting() {
+            if (racesForGoalSetting.size === 0) return;
+            
+            // 最初の大会を選択
+            currentGoalRace = [...racesForGoalSetting][0];
+            showGoalForm();
+        }
+
+        // 目標フォーム表示
+        function showGoalForm() {
+            if (!currentGoalRace) return;
+            
+            const race = raceDatabase[currentGoalRace];
+            const raceType = selectedRacesData.aRaces.includes(currentGoalRace) ? 'a-race' : 'other-race';
+            
+            document.getElementById('race-selection-panel').style.display = 'none';
+            document.getElementById('goal-form-section').style.display = 'block';
+            document.getElementById('completion-panel').style.display = 'none';
+            
+            updateStepIndicator(
+                `ステップ 2: ${race.name} の目標設定`,
+                'タイムまたはペースを入力してください。片方を入力すると自動的に計算されます'
+            );
+            
+            renderGoalForm(currentGoalRace, race, raceType);
+        }
+
+        // 目標フォーム生成
+        function renderGoalForm(raceId, race, type) {
+            const typeLabel = type === 'a-race' ? '🏆 Aレース' : '🎪 その他レース';
+            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const html = `
+                <div class="goal-form-card" id="form-${raceId}">
+                    <div class="goal-form-header ${type}">
+                        <div class="goal-form-title">${race.name}</div>
+                        <div class="goal-form-subtitle">
+                            <span>${typeLabel}</span>
+                            <span>📅 ${formattedDate}</span>
+                            <span>📍 ${race.location}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-form-content">
+                        <!-- 距離情報 -->
+                        <div class="distance-info">
+                            <div class="distance-info-title">📏 競技距離 - ${race.distance.type}ディスタンス</div>
+                            <div class="distance-breakdown">
+                                <div class="distance-item">
+                                    <div class="distance-discipline">🏊‍♂️ スイム</div>
+                                    <div class="distance-value">${race.distance.swim}km</div>
+                                </div>
+                                <div class="distance-item">
+                                    <div class="distance-discipline">🚴‍♂️ バイク</div>
+                                    <div class="distance-value">${race.distance.bike}km</div>
+                                </div>
+                                <div class="distance-item">
+                                    <div class="distance-discipline">🏃‍♂️ ラン</div>
+                                    <div class="distance-value">${race.distance.run}km</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 目標入力 -->
+                        <div class="goal-input-grid">
+                            <!-- スイム目標 -->
+                            <div class="goal-section">
+                                <div class="goal-section-title">
+                                    🏊‍♂️ スイム目標 (${race.distance.swim}km)
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">目標タイム</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="swim-hours-${raceId}" min="0" max="9" placeholder="0" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <span class="input-unit">時間</span>
+                                        <input type="number" class="time-input" id="swim-minutes-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <span class="input-unit">分</span>
+                                        <input type="number" class="time-input" id="swim-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <span class="input-unit">秒</span>
+                                    </div>
+                                    <div class="calculated-display" id="swim-pace-display-${raceId}">
+                                        ペース: --:-- /100m
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、ペース(/100m)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="swim-pace-minutes-${raceId}" min="0" max="9" placeholder="2" oninput="calculateFromPace('swim', '${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="swim-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromPace('swim', '${raceId}')">
+                                        <span class="input-unit">/100m</span>
+                                    </div>
+                                    <div class="calculated-display" id="swim-time-display-${raceId}">
+                                        合計タイム: --:--:--
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- バイク目標 -->
+                            <div class="goal-section">
+                                <div class="goal-section-title">
+                                    🚴‍♂️ バイク目標 (${race.distance.bike}km)
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">目標タイム</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="bike-hours-${raceId}" min="0" max="12" placeholder="0" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <span class="input-unit">時間</span>
+                                        <input type="number" class="time-input" id="bike-minutes-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <span class="input-unit">分</span>
+                                        <input type="number" class="time-input" id="bike-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <span class="input-unit">秒</span>
+                                    </div>
+                                    <div class="calculated-display" id="bike-speed-display-${raceId}">
+                                        平均スピード: -- km/h
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、平均スピード(km/h)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="pace-input" id="bike-speed-${raceId}" min="10" max="60" step="0.1" placeholder="25.0" oninput="calculateFromSpeed('bike', '${raceId}')">
+                                        <span class="input-unit">km/h</span>
+                                    </div>
+                                    <div class="calculated-display" id="bike-time-display-${raceId}">
+                                        合計タイム: --:--:--
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ラン目標 -->
+                            <div class="goal-section">
+                                <div class="goal-section-title">
+                                    🏃‍♂️ ラン目標 (${race.distance.run}km)
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">目標タイム</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="run-hours-${raceId}" min="0" max="6" placeholder="0" oninput="calculateFromTime('run', '${raceId}')">
+                                        <span class="input-unit">時間</span>
+                                        <input type="number" class="time-input" id="run-minutes-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('run', '${raceId}')">
+                                        <span class="input-unit">分</span>
+                                        <input type="number" class="time-input" id="run-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('run', '${raceId}')">
+                                        <span class="input-unit">秒</span>
+                                    </div>
+                                    <div class="calculated-display" id="run-pace-display-${raceId}">
+                                        平均ペース: --:-- /km
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、平均ペース(/km)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="run-pace-minutes-${raceId}" min="3" max="10" placeholder="5" oninput="calculateFromPace('run', '${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="run-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromPace('run', '${raceId}')">
+                                        <span class="input-unit">/km</span>
+                                    </div>
+                                    <div class="calculated-display" id="run-time-display-${raceId}">
+                                        合計タイム: --:--:--
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- トランジション -->
+                            <div class="goal-section">
+                                <div class="goal-section-title">
+                                    ⚡ トランジション
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">T1 (スイム→バイク)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="t1-minutes-${raceId}" min="0" max="10" placeholder="3" oninput="calculateTotal('${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="t1-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateTotal('${raceId}')">
+                                        <span class="input-unit">分:秒</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">T2 (バイク→ラン)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="t2-minutes-${raceId}" min="0" max="10" placeholder="2" oninput="calculateTotal('${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="t2-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateTotal('${raceId}')">
+                                        <span class="input-unit">分:秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 合計タイム表示 -->
+                        <div class="goal-section total-time-section">
+                            <div class="goal-section-title">
+                                🏁 合計目標タイム
+                            </div>
+                            <div class="total-time-display" id="total-time-${raceId}">
+                                --:--:--
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button primary" onclick="saveCurrentGoal()">
+                        💾 この大会の目標を保存
+                    </button>
+                    <button class="action-button secondary" onclick="backToRaceSelection()">
+                        ← 大会選択に戻る
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('goal-form-section').innerHTML = html;
+            
+            // 既存のデータがあれば復元
+            if (goalData[raceId]) {
+                restoreGoalData(raceId);
+            }
+        }
+
+        // タイムからペース/スピード計算
+        function calculateFromTime(discipline, raceId) {
+            const race = raceDatabase[raceId];
+            const hours = parseInt(document.getElementById(`${discipline}-hours-${raceId}`).value) || 0;
+            const minutes = parseInt(document.getElementById(`${discipline}-minutes-${raceId}`).value) || 0;
+            const seconds = parseInt(document.getElementById(`${discipline}-seconds-${raceId}`).value) || 0;
+            
+            const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+            if (totalSeconds === 0) return;
+            
+            if (discipline === 'swim') {
+                // スイム: ペース(/100m)計算
+                const distance = race.distance.swim * 1000; // m
+                const pacePerHundred = (totalSeconds / distance) * 100;
+                const paceMinutes = Math.floor(pacePerHundred / 60);
+                const paceSecs = Math.floor(pacePerHundred % 60);
+                
+                const display = document.getElementById(`swim-pace-display-${raceId}`);
+                display.textContent = `ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /100m`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+                
+            } else if (discipline === 'bike') {
+                // バイク: スピード(km/h)計算
+                const distance = race.distance.bike;
+                const speed = (distance / (totalSeconds / 3600)).toFixed(1);
+                
+                const display = document.getElementById(`bike-speed-display-${raceId}`);
+                display.textContent = `平均スピード: ${speed} km/h`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+                
+            } else if (discipline === 'run') {
+                // ラン: ペース(/km)計算
+                const distance = race.distance.run;
+                const pacePerKm = totalSeconds / distance;
+                const paceMinutes = Math.floor(pacePerKm / 60);
+                const paceSecs = Math.floor(pacePerKm % 60);
+                
+                const display = document.getElementById(`run-pace-display-${raceId}`);
+                display.textContent = `平均ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /km`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+            }
+            
+            calculateTotal(raceId);
+        }
+
+        // ペースからタイム計算
+        function calculateFromPace(discipline, raceId) {
+            const race = raceDatabase[raceId];
+            const paceMinutes = parseInt(document.getElementById(`${discipline}-pace-minutes-${raceId}`).value) || 0;
+            const paceSeconds = parseInt(document.getElementById(`${discipline}-pace-seconds-${raceId}`).value) || 0;
+            
+            const pacePerUnit = paceMinutes * 60 + paceSeconds;
+            if (pacePerUnit === 0) return;
+            
+            let totalSeconds;
+            if (discipline === 'swim') {
+                // スイム: /100m → 総タイム
+                const distance = race.distance.swim * 1000; // m
+                totalSeconds = (pacePerUnit / 100) * distance;
+            } else if (discipline === 'run') {
+                // ラン: /km → 総タイム
+                const distance = race.distance.run;
+                totalSeconds = pacePerUnit * distance;
+            }
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            
+            // タイム入力欄を更新
+            document.getElementById(`${discipline}-hours-${raceId}`).value = hours;
+            document.getElementById(`${discipline}-minutes-${raceId}`).value = minutes;
+            document.getElementById(`${discipline}-seconds-${raceId}`).value = seconds;
+            
+            const display = document.getElementById(`${discipline}-time-display-${raceId}`);
+            display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            display.classList.add('updated');
+            setTimeout(() => display.classList.remove('updated'), 500);
+            
+            calculateTotal(raceId);
+        }
+
+        // スピードからタイム計算
+        function calculateFromSpeed(discipline, raceId) {
+            const race = raceDatabase[raceId];
+            const speed = parseFloat(document.getElementById(`${discipline}-speed-${raceId}`).value) || 0;
+            
+            if (speed === 0) return;
+            
+            const distance = race.distance.bike;
+            const totalSeconds = (distance / speed) * 3600;
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            
+            // タイム入力欄を更新
+            document.getElementById(`${discipline}-hours-${raceId}`).value = hours;
+            document.getElementById(`${discipline}-minutes-${raceId}`).value = minutes;
+            document.getElementById(`${discipline}-seconds-${raceId}`).value = seconds;
+            
+            const display = document.getElementById(`${discipline}-time-display-${raceId}`);
+            display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            display.classList.add('updated');
+            setTimeout(() => display.classList.remove('updated'), 500);
+            
+            calculateTotal(raceId);
+        }
+
+        // 合計タイム計算
+        function calculateTotal(raceId) {
+            const disciplines = ['swim', 'bike', 'run'];
+            let totalSeconds = 0;
+            
+            disciplines.forEach(discipline => {
+                const hours = parseInt(document.getElementById(`${discipline}-hours-${raceId}`).value) || 0;
+                const minutes = parseInt(document.getElementById(`${discipline}-minutes-${raceId}`).value) || 0;
+                const seconds = parseInt(document.getElementById(`${discipline}-seconds-${raceId}`).value) || 0;
+                totalSeconds += hours * 3600 + minutes * 60 + seconds;
+            });
+            
+            // トランジション追加
+            const t1Minutes = parseInt(document.getElementById(`t1-minutes-${raceId}`).value) || 0;
+            const t1Seconds = parseInt(document.getElementById(`t1-seconds-${raceId}`).value) || 0;
+            const t2Minutes = parseInt(document.getElementById(`t2-minutes-${raceId}`).value) || 0;
+            const t2Seconds = parseInt(document.getElementById(`t2-seconds-${raceId}`).value) || 0;
+            
+            totalSeconds += (t1Minutes * 60 + t1Seconds) + (t2Minutes * 60 + t2Seconds);
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = Math.floor(totalSeconds % 60);
+            
+            document.getElementById(`total-time-${raceId}`).textContent = 
+                `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 目標データ復元
+        function restoreGoalData(raceId) {
+            const data = goalData[raceId];
+            if (!data) return;
+            
+            // 各discipline の値を復元
+            Object.keys(data).forEach(key => {
+                const element = document.getElementById(`${key}-${raceId}`);
+                if (element) {
+                    element.value = data[key];
+                }
+            });
+            
+            // 計算を実行
+            calculateFromTime('swim', raceId);
+            calculateFromTime('bike', raceId);
+            calculateFromTime('run', raceId);
+        }
+
+        // 現在の目標保存
+        function saveCurrentGoal() {
+            if (!currentGoalRace) return;
+            
+            // フォームデータを収集
+            const formData = {};
+            const inputs = document.querySelectorAll(`[id$="-${currentGoalRace}"]`);
+            inputs.forEach(input => {
+                const key = input.id.replace(`-${currentGoalRace}`, '');
+                formData[key] = input.value;
+            });
+            
+            goalData[currentGoalRace] = formData;
+            completedGoals.add(currentGoalRace);
+            racesForGoalSetting.delete(currentGoalRace);
+            
+            console.log('✅ 目標保存:', currentGoalRace, formData);
+            
+            showCompletionPanel();
+        }
+
+        // 完了パネル表示
+        function showCompletionPanel() {
+            document.getElementById('goal-form-section').style.display = 'none';
+            document.getElementById('completion-panel').style.display = 'block';
+            
+            updateStepIndicator('🎉 目標設定完了！', '素晴らしい目標が設定されました');
+            
+            // 統計更新
+            const race = raceDatabase[currentGoalRace];
+            const totalTime = document.getElementById(`total-time-${currentGoalRace}`).textContent;
+            
+            document.getElementById('completion-stats').innerHTML = `
+                <div class="completion-stat">
+                    <div class="completion-stat-number">${race.name}</div>
+                    <div class="completion-stat-label">設定完了</div>
+                </div>
+                <div class="completion-stat">
+                    <div class="completion-stat-number">${totalTime}</div>
+                    <div class="completion-stat-label">目標タイム</div>
+                </div>
+                <div class="completion-stat">
+                    <div class="completion-stat-number">${race.distance.type}</div>
+                    <div class="completion-stat-label">ディスタンス</div>
+                </div>
+            `;
+            
+            // 継続ボタンの表示制御
+            const hasMoreRaces = racesForGoalSetting.size > 0;
+            const continueButton = document.getElementById('continue-goal-button');
+            if (hasMoreRaces) {
+                continueButton.style.display = 'inline-block';
+                continueButton.textContent = `🎯 残り${racesForGoalSetting.size}大会も目標設定する`;
+            } else {
+                continueButton.style.display = 'none';
+            }
+        }
+
+        // 他の大会も目標設定
+        function continueGoalSetting() {
+            if (racesForGoalSetting.size > 0) {
+                currentGoalRace = [...racesForGoalSetting][0];
+                showGoalForm();
+            } else {
+                showRaceSelectionPanel();
+            }
+        }
+
+        // トレーニング計画に進む
+        function proceedToTraining() {
+            alert('🚀 トレーニング計画策定に進みます！\n\n設定された目標:\n' + 
+                  [...completedGoals].map(raceId => `• ${raceDatabase[raceId].name}: ${goalData[raceId] ? 'タイム設定済み' : '設定中'}`).join('\n'));
+        }
+
+        // 大会選択に戻る
+        function backToRaceSelection() {
+            showRaceSelectionPanel();
+        }
+
+        function backToSelection() {
+            window.location.href = 'race-selection.html';
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', init);
+
+        console.log('✅ 目標設定ページスクリプト読み込み完了');
+    </script>
+</body>
+</html>

@@ -574,11 +574,227 @@
             color: #6b7280;
         }
         
-        .footer {
-            margin-top: 48px;
-            text-align: center;
-            color: #6b7280;
+        /* 目標設定済み大会サマリー */
+        .goals-summary-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-top: 32px;
+        }
+        
+        .goals-summary-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .goals-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .goal-summary-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .goal-summary-card.a-race {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(135deg, #fef2f2 0%, #f9fafb 100%);
+        }
+        
+        .goal-summary-card.other-race {
+            border-left: 4px solid #2563eb;
+            background: linear-gradient(135deg, #eff6ff 0%, #f9fafb 100%);
+        }
+        
+        .goal-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .goal-summary-race-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.3;
+            flex: 1;
+            margin-right: 12px;
+        }
+        
+        .goal-race-type-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .goal-race-type-badge.a-race {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .goal-race-type-badge.other-race {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .goal-summary-info {
+            margin-bottom: 16px;
+        }
+        
+        .goal-summary-info-item {
             font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .goal-distances {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .goal-distances-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .goal-distances-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .goal-distance-item {
+            text-align: center;
+            padding: 6px;
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        
+        .goal-distance-discipline {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        
+        .goal-distance-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .goal-times {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .goal-times-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .goal-times-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .goal-time-item {
+            text-align: center;
+            padding: 4px;
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        
+        .goal-time-discipline {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 1px;
+        }
+        
+        .goal-time-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .goal-total-time {
+            text-align: center;
+            padding: 8px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .goal-ai-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .goal-ai-item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 6px;
+        }
+        
+        .goal-ai-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        
+        .goal-ai-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7c3aed;
+        }
+        
+        .goal-edit-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .goal-edit-button:hover {
+            background: #d1d5db;
+            color: #374151;
         }
 
         @media (max-width: 768px) {
@@ -600,6 +816,22 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 4px;
+            }
+            
+            .goals-summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .goal-distances-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .goal-times-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .goal-ai-summary {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -661,6 +893,18 @@
                     <a href="race-selection.html" class="action-button secondary">
                         📋 参加大会を変更
                     </a>
+                </div>
+            </div>
+
+            <!-- 目標設定済み大会サマリー -->
+            <div class="goals-summary-section" id="goals-summary-section" style="display: none;">
+                <h2 class="goals-summary-title">
+                    📊 設定済み目標サマリー
+                    <span style="font-size: 14px; font-weight: 400; color: #6b7280;">- 設定した大会の目標一覧</span>
+                </h2>
+                
+                <div class="goals-summary-grid" id="goals-summary-grid">
+                    <!-- JavaScript で動的に生成 -->
                 </div>
             </div>
 
@@ -845,6 +1089,8 @@
             let percentileInfo = "";
             let comparisonInfo = "";
             let recommendations = "";
+            let performanceAnalysis = "";
+            let trainingFocus = "";
 
             // 年代グループ取得
             const ageGroup = getAgeGroup(userPerformanceData.age);
@@ -859,14 +1105,19 @@
                 
                 if (percentile <= 10) {
                     challengeLevel = "🏆 エリートレベル";
+                    performanceAnalysis = "非常に高いパフォーマンスを要求される目標です。継続的な高強度トレーニングと戦略的なピーキングが必要です。";
                 } else if (percentile <= 25) {
                     challengeLevel = "🔥 非常にチャレンジング";
+                    performanceAnalysis = "かなり意欲的な目標設定です。現在の能力を大幅に向上させる必要があります。";
                 } else if (percentile <= 50) {
                     challengeLevel = "💪 適度にチャレンジング";
+                    performanceAnalysis = "バランスの取れた挑戦的目標です。計画的なトレーニングで達成可能です。";
                 } else if (percentile <= 75) {
                     challengeLevel = "📈 現実的で達成可能";
+                    performanceAnalysis = "現実的な目標設定です。着実なトレーニングで確実に達成できるでしょう。";
                 } else {
                     challengeLevel = "🎯 安全で確実";
+                    performanceAnalysis = "安全性を重視した目標です。完走を最優先とした戦略が適しています。";
                 }
             }
 
@@ -882,46 +1133,76 @@
                 const improvementStr = formatTime(improvement);
                 
                 if (timeDiff > 0) {
-                    comparisonInfo = `昨年より${improvementStr}の向上を目指す意欲的な目標です。`;
+                    comparisonInfo = `昨年より${improvementStr}の向上を目指す意欲的な目標です。継続的な改善により達成可能です。`;
+                } else if (timeDiff < 0) {
+                    comparisonInfo = `昨年より${improvementStr}余裕を持った安全な目標設定です。確実な完走と楽しむことを重視した戦略です。`;
                 } else {
-                    comparisonInfo = `昨年より${improvementStr}余裕を持った安全な目標設定です。`;
+                    comparisonInfo = `昨年と同等のタイムを目指す安定した目標です。`;
                 }
             }
 
-            // 距離別の分析とアドバイス
+            // 距離別の詳細分析とアドバイス
             if (race.distance.type === 'ロング') {
-                recommendations = raceType === 'a-race' ? 
-                    "メイン目標として、12-16週間の本格的な準備期間を確保し、ロングライド・LSD中心のベース作りから始めましょう。" :
-                    "経験積み重ねとして、完走を第一目標に設定し、無理のないペース配分を心がけましょう。";
+                if (raceType === 'a-race') {
+                    recommendations = "メイン目標として16-20週間の本格的な準備期間を確保してください。";
+                    trainingFocus = "週末のロングライド（4-6時間）とLSD（2-3時間）を中心に、月間走行距離200km以上、月間泳距離15km以上を目標とし、栄養補給とペース配分の練習も重要です。";
+                } else {
+                    recommendations = "経験積み重ねとして、完走を第一目標に無理のないペース配分を心がけましょう。";
+                    trainingFocus = "ベースとなる有酸素能力の向上に集中し、週4-5回の定期的なトレーニングでフィニッシュラインを目指しましょう。";
+                }
             } else if (race.distance.type === 'スタンダード') {
-                recommendations = raceType === 'a-race' ?
-                    "バランスの取れた3種目強化が重要です。週4-5回のトレーニングで各種目の質を高めていきましょう。" :
-                    "レーステンポでの練習を取り入れ、レース感覚を養う良い機会として活用しましょう。";
+                if (raceType === 'a-race') {
+                    recommendations = "バランスの取れた3種目強化が重要です。12-16週間の計画的なトレーニングが必要です。";
+                    trainingFocus = "週4-6回のトレーニングで各種目の質を高め、スイム週3回（技術重視）、バイク週2-3回（FTP向上）、ラン週3-4回（スピード＋持久力）の組み合わせが効果的です。";
+                } else {
+                    recommendations = "レーステンポでの練習を取り入れ、レース感覚を養う良い機会として活用しましょう。";
+                    trainingFocus = "週3-4回の効率的なトレーニングで、各種目のレースペース練習を重視し、トランジション練習も取り入れてください。";
+                }
             } else {
-                recommendations = "スピード重視の大会です。高強度インターバルとレースペース練習を中心に準備しましょう。";
+                if (raceType === 'a-race') {
+                    recommendations = "スピード重視の大会です。高強度インターバルとレースペース練習が中核となります。";
+                    trainingFocus = "週5-6回の質の高いトレーニングで、VO2max向上を重視し、短時間高強度の練習とレースシミュレーションが重要です。";
+                } else {
+                    recommendations = "スピード体験の良い機会です。普段より高いペースでのチャレンジを楽しみましょう。";
+                    trainingFocus = "週3-4回のトレーニングで、普段より少し高めの強度に慣れ、短時間でのパフォーマンス向上を図りましょう。";
+                }
             }
 
             // 現在のパフォーマンスとの整合性チェック
             let consistencyNote = "";
             if (race.distance.type === 'スタンダード' && userPerformanceData.currentVDOT) {
                 const expectedTime = estimateTimeFromVDOT(userPerformanceData.currentVDOT, race.distance);
-                const goalDiff = Math.abs(expectedTime - goalTimeSeconds);
+                const goalDiff = expectedTime - goalTimeSeconds;
                 
-                if (goalDiff < 300) { // 5分以内
-                    consistencyNote = "現在の走力に適した現実的な目標です。";
-                } else if (goalTimeSeconds < expectedTime) {
-                    consistencyNote = "現在の走力を上回る挑戦的な目標設定です。";
+                if (Math.abs(goalDiff) < 300) { // 5分以内
+                    consistencyNote = "現在の走力レベルに適した現実的な目標です。";
+                } else if (goalDiff < 0) {
+                    const improvement = Math.abs(goalDiff);
+                    consistencyNote = `現在の能力を${Math.floor(improvement/60)}分${improvement%60}秒上回る挑戦的な目標設定です。計画的な能力向上が必要です。`;
                 } else {
                     consistencyNote = "現在の走力に余裕を持った安全な目標です。";
                 }
             }
 
-            // コメント組み立て
-            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''}${consistencyNote ? ' ' + consistencyNote : ''} ${recommendations}`;
+            // 季節・時期に応じたアドバイス
+            const raceDate = new Date(race.date);
+            const raceMonth = raceDate.getMonth() + 1;
+            let seasonalAdvice = "";
+            
+            if (raceMonth >= 4 && raceMonth <= 6) {
+                seasonalAdvice = "春シーズンの大会として、冬場のベーストレーニングの成果を発揮する絶好の機会です。";
+            } else if (raceMonth >= 7 && raceMonth <= 8) {
+                seasonalAdvice = "夏場の大会のため、暑熱対策と水分補給戦略が特に重要になります。";
+            } else if (raceMonth >= 9 && raceMonth <= 10) {
+                seasonalAdvice = "シーズン後半の大会として、年間を通じた成長の集大成となる重要なレースです。";
+            }
 
-            // 200文字に調整
-            if (comment.length > 200) {
-                comment = comment.substring(0, 197) + "...";
+            // コメント組み立て（300文字程度に拡張）
+            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''}${consistencyNote ? ' ' + consistencyNote : ''} ${performanceAnalysis} ${recommendations} ${trainingFocus} ${seasonalAdvice}`;
+
+            // 300文字程度に調整
+            if (comment.length > 300) {
+                comment = comment.substring(0, 297) + "...";
             }
 
             return {
@@ -929,7 +1210,10 @@
                 challengeLevel: challengeLevel,
                 percentile: percentileInfo ? calculatePercentile(goalTimeSeconds, historicalData.percentiles.male[ageGroup]) : null,
                 comparison: comparisonInfo,
-                consistency: consistencyNote
+                consistency: consistencyNote,
+                performance: performanceAnalysis,
+                training: trainingFocus,
+                seasonal: seasonalAdvice
             };
         }
 
@@ -1081,6 +1365,184 @@
             });
             
             racesGrid.innerHTML = html;
+            
+            // 目標設定済み大会のサマリーを表示
+            renderGoalsSummary();
+        }
+
+        // 目標設定済み大会サマリー表示
+        function renderGoalsSummary() {
+            const summarySection = document.getElementById('goals-summary-section');
+            const summaryGrid = document.getElementById('goals-summary-grid');
+            
+            if (completedGoals.size === 0) {
+                summarySection.style.display = 'none';
+                return;
+            }
+            
+            summarySection.style.display = 'block';
+            
+            let html = '';
+            [...completedGoals].forEach(raceId => {
+                html += createGoalSummaryCard(raceId);
+            });
+            
+            summaryGrid.innerHTML = html;
+        }
+
+        // 目標サマリーカード生成
+        function createGoalSummaryCard(raceId) {
+            const race = raceDatabase[raceId];
+            const raceType = selectedRacesData.aRaces.includes(raceId) ? 'a-race' : 'other-race';
+            const typeLabel = raceType === 'a-race' ? '🏆 Aレース' : '🎪 その他';
+            const goals = goalData[raceId];
+            
+            if (!race || !goals) return '';
+            
+            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short'
+            });
+            
+            // 各種目のタイム計算
+            const swimTime = calculateSectionTime(goals, 'swim');
+            const bikeTime = calculateSectionTime(goals, 'bike');
+            const runTime = calculateSectionTime(goals, 'run');
+            const t1Time = `${goals['t1-minutes'] || 0}:${(goals['t1-seconds'] || 0).toString().padStart(2, '0')}`;
+            const t2Time = `${goals['t2-minutes'] || 0}:${(goals['t2-seconds'] || 0).toString().padStart(2, '0')}`;
+            
+            // 合計タイム計算
+            const totalSeconds = timeStringToSeconds(swimTime) + timeStringToSeconds(bikeTime) + 
+                               timeStringToSeconds(runTime) + 
+                               (parseInt(goals['t1-minutes'] || 0) * 60 + parseInt(goals['t1-seconds'] || 0)) +
+                               (parseInt(goals['t2-minutes'] || 0) * 60 + parseInt(goals['t2-seconds'] || 0));
+            const totalTime = formatTimeHMS(totalSeconds);
+            
+            // AIコーチ分析データ
+            const aiAnalysis = generateAICoachComment(raceId, totalSeconds);
+            const challengeLevel = aiAnalysis.challengeLevel.replace(/🏆|🔥|💪|📈|🎯/, '').trim();
+            const percentile = aiAnalysis.percentile ? `上位${100-aiAnalysis.percentile}%` : '-';
+            
+            // 同年代平均比計算
+            let ageGroupComparison = '-';
+            const historicalData = raceHistoricalData[raceId];
+            if (historicalData) {
+                const ageGroup = getAgeGroup(userPerformanceData.age);
+                const averageTime = historicalData.averageTime.male[ageGroup];
+                if (averageTime) {
+                    const avgSeconds = timeStringToSeconds(averageTime);
+                    const diff = totalSeconds - avgSeconds;
+                    ageGroupComparison = `${diff > 0 ? '+' : ''}${formatTime(Math.abs(diff))}`;
+                }
+            }
+            
+            return `
+                <div class="goal-summary-card ${raceType}">
+                    <button class="goal-edit-button" onclick="editGoal('${raceId}')">編集</button>
+                    
+                    <div class="goal-summary-header">
+                        <div class="goal-summary-race-name">${race.name}</div>
+                        <div class="goal-race-type-badge ${raceType}">${typeLabel}</div>
+                    </div>
+                    
+                    <div class="goal-summary-info">
+                        <div class="goal-summary-info-item">📅 ${formattedDate}</div>
+                        <div class="goal-summary-info-item">📍 ${race.location}</div>
+                    </div>
+                    
+                    <div class="goal-distances">
+                        <div class="goal-distances-title">📏 競技距離</div>
+                        <div class="goal-distances-grid">
+                            <div class="goal-distance-item">
+                                <div class="goal-distance-discipline">🏊‍♂️ スイム</div>
+                                <div class="goal-distance-value">${race.distance.swim}km</div>
+                            </div>
+                            <div class="goal-distance-item">
+                                <div class="goal-distance-discipline">🚴‍♂️ バイク</div>
+                                <div class="goal-distance-value">${race.distance.bike}km</div>
+                            </div>
+                            <div class="goal-distance-item">
+                                <div class="goal-distance-discipline">🏃‍♂️ ラン</div>
+                                <div class="goal-distance-value">${race.distance.run}km</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-times">
+                        <div class="goal-times-title">⏱️ 目標タイム</div>
+                        <div class="goal-times-grid">
+                            <div class="goal-time-item">
+                                <div class="goal-time-discipline">🏊‍♂️</div>
+                                <div class="goal-time-value">${swimTime}</div>
+                            </div>
+                            <div class="goal-time-item">
+                                <div class="goal-time-discipline">T1</div>
+                                <div class="goal-time-value">${t1Time}</div>
+                            </div>
+                            <div class="goal-time-item">
+                                <div class="goal-time-discipline">🚴‍♂️</div>
+                                <div class="goal-time-value">${bikeTime}</div>
+                            </div>
+                            <div class="goal-time-item">
+                                <div class="goal-time-discipline">T2</div>
+                                <div class="goal-time-value">${t2Time}</div>
+                            </div>
+                            <div class="goal-time-item">
+                                <div class="goal-time-discipline">🏃‍♂️</div>
+                                <div class="goal-time-value">${runTime}</div>
+                            </div>
+                        </div>
+                        <div class="goal-total-time">
+                            🏁 総合: ${totalTime}
+                        </div>
+                    </div>
+                    
+                    <div class="goal-ai-summary">
+                        <div class="goal-ai-item">
+                            <div class="goal-ai-label">チャレンジ度</div>
+                            <div class="goal-ai-value">${challengeLevel}</div>
+                        </div>
+                        <div class="goal-ai-item">
+                            <div class="goal-ai-label">パーセンタイル</div>
+                            <div class="goal-ai-value">${percentile}</div>
+                        </div>
+                        <div class="goal-ai-item">
+                            <div class="goal-ai-label">同年代平均比</div>
+                            <div class="goal-ai-value">${ageGroupComparison}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // セクションタイム計算
+        function calculateSectionTime(goals, section) {
+            const hours = parseInt(goals[`${section}-hours`] || 0);
+            const minutes = parseInt(goals[`${section}-minutes`] || 0);
+            const seconds = parseInt(goals[`${section}-seconds`] || 0);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // 時間フォーマット（時:分:秒）
+        function formatTimeHMS(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 目標編集
+        function editGoal(raceId) {
+            currentGoalRace = raceId;
+            showGoalForm();
         }
 
         // 大会選択カード生成
@@ -1678,11 +2140,11 @@
                 if (averageTime) {
                     const avgSeconds = timeStringToSeconds(averageTime);
                     const goalSeconds = parseTimeString(document.getElementById(`total-time-${raceId}`).textContent);
-                    const diff = avgSeconds - goalSeconds;
+                    const diff = goalSeconds - avgSeconds; // 目標 - 平均（正=遅い、負=早い）
                     
                     insightsHtml += `
                         <div class="ai-insight">
-                            <div class="ai-insight-label">年代平均比</div>
+                            <div class="ai-insight-label">同年代平均比</div>
                             <div class="ai-insight-value">${diff > 0 ? '+' : ''}${formatTime(Math.abs(diff))}</div>
                         </div>
                     `;

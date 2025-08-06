@@ -595,8 +595,8 @@
         
         .goals-summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 20px;
+            grid-template-columns: 1fr;
+            gap: 16px;
         }
         
         .goal-summary-card {
@@ -605,6 +605,7 @@
             border-radius: 8px;
             padding: 20px;
             position: relative;
+            width: 100%;
         }
         
         .goal-summary-card.a-race {
@@ -621,7 +622,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         
         .goal-summary-race-name {
@@ -661,121 +662,72 @@
             margin-bottom: 4px;
         }
         
-        .goal-distances {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .goal-distances-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        
-        .goal-distances-grid {
+        /* 2行レイアウトのグリッド */
+        .goal-data-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             gap: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .goal-distance-item {
-            text-align: center;
-            padding: 6px;
-            background: #f3f4f6;
-            border-radius: 4px;
-        }
-        
-        .goal-distance-discipline {
-            font-size: 11px;
-            color: #6b7280;
-            margin-bottom: 2px;
-        }
-        
-        .goal-distance-value {
-            font-size: 12px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .goal-times {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 12px;
             margin-bottom: 16px;
         }
         
-        .goal-times-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        
-        .goal-times-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .goal-time-item {
+        .goal-data-column {
             text-align: center;
-            padding: 4px;
+        }
+        
+        .goal-data-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            font-weight: 500;
+            padding: 4px 2px;
             background: #f3f4f6;
             border-radius: 4px;
         }
         
-        .goal-time-discipline {
-            font-size: 10px;
-            color: #6b7280;
-            margin-bottom: 1px;
-        }
-        
-        .goal-time-value {
-            font-size: 11px;
+        .goal-data-value {
+            font-size: 13px;
             font-weight: 600;
             color: #1f2937;
+            padding: 6px 2px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
         }
         
-        .goal-total-time {
-            text-align: center;
-            padding: 8px;
+        .goal-data-value.total {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
-            border-radius: 6px;
-            font-weight: 600;
+            font-weight: 700;
         }
         
-        .goal-ai-summary {
+        .goal-ai-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
         
-        .goal-ai-item {
+        .goal-ai-column {
             text-align: center;
-            padding: 8px;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 6px;
         }
         
         .goal-ai-label {
-            font-size: 10px;
-            color: #6b7280;
-            margin-bottom: 2px;
+            font-size: 11px;
+            color: #7c3aed;
+            margin-bottom: 4px;
+            font-weight: 500;
+            padding: 4px 2px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 4px;
         }
         
         .goal-ai-value {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: #7c3aed;
+            padding: 6px 2px;
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 4px;
         }
         
         .goal-edit-button {
@@ -822,15 +774,11 @@
                 grid-template-columns: 1fr;
             }
             
-            .goal-distances-grid {
-                grid-template-columns: 1fr;
+            .goal-data-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
             
-            .goal-times-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .goal-ai-summary {
+            .goal-ai-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -1478,23 +1426,41 @@
                 weekday: 'short'
             });
             
-            // 各種目のタイム計算
-            const swimTime = calculateSectionTime(goals, 'swim');
-            const bikeTime = calculateSectionTime(goals, 'bike');
-            const runTime = calculateSectionTime(goals, 'run');
-            const t1Time = `${goals['t1-minutes'] || 0}:${(goals['t1-seconds'] || 0).toString().padStart(2, '0')}`;
-            const t2Time = `${goals['t2-minutes'] || 0}:${(goals['t2-seconds'] || 0).toString().padStart(2, '0')}`;
+            // 実際に設定されたタイム値を取得
+            const swimHours = parseInt(goals['swim-hours'] || 0);
+            const swimMinutes = parseInt(goals['swim-minutes'] || 0);
+            const swimSeconds = parseInt(goals['swim-seconds'] || 0);
+            const swimTime = formatSectionTime(swimHours, swimMinutes, swimSeconds);
+            
+            const bikeHours = parseInt(goals['bike-hours'] || 0);
+            const bikeMinutes = parseInt(goals['bike-minutes'] || 0);
+            const bikeSecondsVal = parseInt(goals['bike-seconds'] || 0);
+            const bikeTime = formatSectionTime(bikeHours, bikeMinutes, bikeSecondsVal);
+            
+            const runHours = parseInt(goals['run-hours'] || 0);
+            const runMinutes = parseInt(goals['run-minutes'] || 0);
+            const runSecondsVal = parseInt(goals['run-seconds'] || 0);
+            const runTime = formatSectionTime(runHours, runMinutes, runSecondsVal);
+            
+            const t1Minutes = parseInt(goals['t1-minutes'] || 0);
+            const t1Seconds = parseInt(goals['t1-seconds'] || 0);
+            const t1Time = `${t1Minutes}:${t1Seconds.toString().padStart(2, '0')}`;
+            
+            const t2Minutes = parseInt(goals['t2-minutes'] || 0);
+            const t2Seconds = parseInt(goals['t2-seconds'] || 0);
+            const t2Time = `${t2Minutes}:${t2Seconds.toString().padStart(2, '0')}`;
             
             // 合計タイム計算
-            const totalSeconds = timeStringToSeconds(swimTime) + timeStringToSeconds(bikeTime) + 
-                               timeStringToSeconds(runTime) + 
-                               (parseInt(goals['t1-minutes'] || 0) * 60 + parseInt(goals['t1-seconds'] || 0)) +
-                               (parseInt(goals['t2-minutes'] || 0) * 60 + parseInt(goals['t2-seconds'] || 0));
+            const totalSeconds = (swimHours * 3600 + swimMinutes * 60 + swimSeconds) +
+                               (bikeHours * 3600 + bikeMinutes * 60 + bikeSecondsVal) +
+                               (runHours * 3600 + runMinutes * 60 + runSecondsVal) +
+                               (t1Minutes * 60 + t1Seconds) +
+                               (t2Minutes * 60 + t2Seconds);
             const totalTime = formatTimeHMS(totalSeconds);
             
             // AIコーチ分析データ
             const aiAnalysis = generateAICoachComment(raceId, totalSeconds);
-            const challengeLevel = aiAnalysis.challengeLevel.replace(/🏆|🔥|💪|📈|🎯/, '').trim();
+            const challengeLevel = aiAnalysis.challengeLevel.replace(/🏆|🔥|💪|📈|🎯|😌/, '').trim();
             const percentile = aiAnalysis.percentile ? `上位${100-aiAnalysis.percentile}%` : '-';
             
             // 同年代平均比計算（符号修正）
@@ -1521,67 +1487,55 @@
                     
                     <div class="goal-summary-info">
                         <div class="goal-summary-info-item">📅 ${formattedDate}</div>
-                        <div class="goal-summary-info-item">📍 ${race.location}</div>
+                        <div class="goal-summary-info-item">📍 ${race.location} • 🏊‍♂️ ${race.distance.type}ディスタンス</div>
                     </div>
                     
-                    <div class="goal-distances">
-                        <div class="goal-distances-title">📏 競技距離</div>
-                        <div class="goal-distances-grid">
-                            <div class="goal-distance-item">
-                                <div class="goal-distance-discipline">🏊‍♂️ スイム</div>
-                                <div class="goal-distance-value">${race.distance.swim}km</div>
-                            </div>
-                            <div class="goal-distance-item">
-                                <div class="goal-distance-discipline">🚴‍♂️ バイク</div>
-                                <div class="goal-distance-value">${race.distance.bike}km</div>
-                            </div>
-                            <div class="goal-distance-item">
-                                <div class="goal-distance-discipline">🏃‍♂️ ラン</div>
-                                <div class="goal-distance-value">${race.distance.run}km</div>
-                            </div>
+                    <div class="goal-data-grid">
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">🏊‍♂️ スイム</div>
+                            <div class="goal-data-value">${swimTime}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">T1</div>
+                            <div class="goal-data-value">${t1Time}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">🚴‍♂️ バイク</div>
+                            <div class="goal-data-value">${bikeTime}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">T2</div>
+                            <div class="goal-data-value">${t2Time}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">🏃‍♂️ ラン</div>
+                            <div class="goal-data-value">${runTime}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">🏁 総合</div>
+                            <div class="goal-data-value total">${totalTime}</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">距離</div>
+                            <div class="goal-data-value">${race.distance.swim}k/${race.distance.bike}k/${race.distance.run}k</div>
+                        </div>
+                        <div class="goal-data-column">
+                            <div class="goal-data-label">種別</div>
+                            <div class="goal-data-value">${race.distance.type}</div>
                         </div>
                     </div>
                     
-                    <div class="goal-times">
-                        <div class="goal-times-title">⏱️ 目標タイム</div>
-                        <div class="goal-times-grid">
-                            <div class="goal-time-item">
-                                <div class="goal-time-discipline">🏊‍♂️</div>
-                                <div class="goal-time-value">${swimTime}</div>
-                            </div>
-                            <div class="goal-time-item">
-                                <div class="goal-time-discipline">T1</div>
-                                <div class="goal-time-value">${t1Time}</div>
-                            </div>
-                            <div class="goal-time-item">
-                                <div class="goal-time-discipline">🚴‍♂️</div>
-                                <div class="goal-time-value">${bikeTime}</div>
-                            </div>
-                            <div class="goal-time-item">
-                                <div class="goal-time-discipline">T2</div>
-                                <div class="goal-time-value">${t2Time}</div>
-                            </div>
-                            <div class="goal-time-item">
-                                <div class="goal-time-discipline">🏃‍♂️</div>
-                                <div class="goal-time-value">${runTime}</div>
-                            </div>
-                        </div>
-                        <div class="goal-total-time">
-                            🏁 総合: ${totalTime}
-                        </div>
-                    </div>
-                    
-                    <div class="goal-ai-summary">
-                        <div class="goal-ai-item">
-                            <div class="goal-ai-label">チャレンジ度</div>
+                    <div class="goal-ai-grid">
+                        <div class="goal-ai-column">
+                            <div class="goal-ai-label">🤖 チャレンジ度</div>
                             <div class="goal-ai-value">${challengeLevel}</div>
                         </div>
-                        <div class="goal-ai-item">
-                            <div class="goal-ai-label">パーセンタイル</div>
+                        <div class="goal-ai-column">
+                            <div class="goal-ai-label">📊 パーセンタイル</div>
                             <div class="goal-ai-value">${percentile}</div>
                         </div>
-                        <div class="goal-ai-item">
-                            <div class="goal-ai-label">同年代平均比</div>
+                        <div class="goal-ai-column">
+                            <div class="goal-ai-label">⚖️ 同年代平均比</div>
                             <div class="goal-ai-value">${ageGroupComparison}</div>
                         </div>
                     </div>
@@ -1589,16 +1543,14 @@
             `;
         }
 
-        // セクションタイム計算
-        function calculateSectionTime(goals, section) {
-            const hours = parseInt(goals[`${section}-hours`] || 0);
-            const minutes = parseInt(goals[`${section}-minutes`] || 0);
-            const seconds = parseInt(goals[`${section}-seconds`] || 0);
-            
+        // セクションタイム計算（修正版）
+        function formatSectionTime(hours, minutes, seconds) {
             if (hours > 0) {
                 return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            } else {
+            } else if (minutes > 0) {
                 return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `0:${seconds.toString().padStart(2, '0')}`;
             }
         }
 

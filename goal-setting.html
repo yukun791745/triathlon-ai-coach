@@ -1041,7 +1041,19 @@
             document.getElementById('goal-form-section').style.display = 'none';
             document.getElementById('completion-panel').style.display = 'none';
             
-            updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を選んでください');
+            // 完了済み大会がある場合はメッセージを更新
+            const completedCount = completedGoals.size;
+            const totalCount = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
+            
+            if (completedCount > 0) {
+                updateStepIndicator(
+                    `ステップ 1: 目標設定する大会を選択 (${completedCount}/${totalCount}大会完了)`, 
+                    '追加で目標設定したい大会をクリックしてください'
+                );
+            } else {
+                updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を選んでください');
+            }
+            
             renderRaceSelectionGrid();
         }
 
@@ -1088,13 +1100,20 @@
             });
             
             let cardClass = `race-selection-card ${type}`;
-            if (isSelected) cardClass += ' selected';
+            if (isSelected && !isCompleted) cardClass += ' selected';
             
             let statusIndicator = '';
             if (isCompleted) {
                 statusIndicator = '<div class="selected-indicator">✓</div>';
             } else if (isSelected) {
                 statusIndicator = '<div class="selected-indicator">●</div>';
+            }
+            
+            let statusText = '';
+            if (isCompleted) {
+                statusText = '<div class="race-selection-info" style="color: #059669; font-weight: 600;">✅ 目標設定済み（クリックで編集）</div>';
+            } else if (isSelected) {
+                statusText = '<div class="race-selection-info" style="color: #2563eb; font-weight: 600;">📌 選択中</div>';
             }
             
             return `
@@ -1105,7 +1124,7 @@
                     <div class="race-selection-info">📅 ${formattedDate}</div>
                     <div class="race-selection-info">📍 ${race.location}</div>
                     <div class="race-selection-info">🏊‍♂️ ${race.distance.type}ディスタンス</div>
-                    ${isCompleted ? '<div class="race-selection-info" style="color: #059669; font-weight: 600;">✅ 目標設定済み</div>' : ''}
+                    ${statusText}
                 </div>
             `;
         }
@@ -1132,10 +1151,16 @@
         function updateProceedButton() {
             const button = document.getElementById('proceed-to-goal-button');
             const selectedCount = racesForGoalSetting.size;
+            const completedCount = completedGoals.size;
+            const totalCount = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
             
             if (selectedCount > 0) {
                 button.disabled = false;
                 button.textContent = `🎯 選択した${selectedCount}大会の目標設定を開始`;
+            } else if (completedCount > 0 && completedCount < totalCount) {
+                // 一部完了済みで、新たに選択していない場合
+                button.disabled = true;
+                button.textContent = '🎯 大会を選択してください';
             } else {
                 button.disabled = true;
                 button.textContent = '🎯 大会を選択してください';
@@ -1571,10 +1596,52 @@
             
             console.log('✅ 目標保存:', currentGoalRace, formData);
             
-            // 3秒後に完了パネル表示
-            setTimeout(() => {
-                showCompletionPanel();
-            }, 3000);
+            // 保存ボタンを無効化し、次のアクションボタンを表示
+            const saveButton = document.querySelector('#goal-form-section .action-button.primary');
+            if (saveButton) {
+                saveButton.textContent = '✅ 保存完了';
+                saveButton.disabled = true;
+                saveButton.style.opacity = '0.6';
+            }
+            
+            // 次のアクションボタンを表示
+            showNextActionButtons();
+        }
+
+        // 次のアクションボタンを表示
+        function showNextActionButtons() {
+            const allRaces = [...selectedRacesData.aRaces, ...selectedRacesData.otherRaces];
+            const uncompletedRaces = allRaces.filter(raceId => !completedGoals.has(raceId));
+            const hasMoreRaces = uncompletedRaces.length > 0;
+            
+            // 既存のアクションボタンエリアを更新
+            const actionButtonsArea = document.querySelector('#goal-form-section .action-buttons');
+            if (actionButtonsArea) {
+                let buttonsHtml = `
+                    <button class="action-button primary" style="opacity: 0.6;" disabled>
+                        ✅ 保存完了
+                    </button>
+                    <button class="action-button secondary" onclick="backToRaceSelection()">
+                        ← 大会選択に戻る
+                    </button>
+                `;
+                
+                if (hasMoreRaces) {
+                    buttonsHtml += `
+                        <button class="action-button warning" onclick="continueGoalSetting()">
+                            🎯 別の大会の目標も設定する (残り${uncompletedRaces.length}大会)
+                        </button>
+                    `;
+                }
+                
+                buttonsHtml += `
+                    <button class="action-button primary" onclick="proceedToTraining()">
+                        🚀 トレーニング計画に進む
+                    </button>
+                `;
+                
+                actionButtonsArea.innerHTML = buttonsHtml;
+            }
         }
 
         // 時間文字列をパース
@@ -1708,8 +1775,19 @@
 
         // 他の大会も目標設定
         function continueGoalSetting() {
-            // 未完了の大会から目標設定画面に戻る
-            showRaceSelectionPanel();
+            // 未完了の大会がある場合、次の大会を選択
+            const allRaces = [...selectedRacesData.aRaces, ...selectedRacesData.otherRaces];
+            const uncompletedRaces = allRaces.filter(raceId => !completedGoals.has(raceId));
+            
+            if (uncompletedRaces.length > 0) {
+                // 未完了の大会から選択できるように目標設定初期画面に戻る
+                racesForGoalSetting.clear();
+                uncompletedRaces.forEach(raceId => racesForGoalSetting.add(raceId));
+                showRaceSelectionPanel();
+            } else {
+                // 全て完了している場合はトレーニング計画へ
+                proceedToTraining();
+            }
         }
 
         // トレーニング計画に進む

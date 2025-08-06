@@ -420,6 +420,57 @@
             100% { background: #dcfce7; }
         }
         
+        /* AIコーチコメント */
+        .ai-coach-section {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        
+        .ai-coach-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ai-coach-comment {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .ai-insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .ai-insight {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .ai-insight-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        
+        .ai-insight-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
         .total-time-section {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
@@ -443,18 +494,6 @@
             justify-content: center;
             margin-top: 32px;
             flex-wrap: wrap;
-        }
-        
-        .action-button {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            border: none;
         }
         
         .action-button.primary {
@@ -647,13 +686,13 @@
                 
                 <div class="action-buttons">
                     <button class="action-button primary" id="continue-goal-button" onclick="continueGoalSetting()" style="display: none;">
-                        🎯 他の大会も目標設定する
+                        🎯 別の大会の目標も設定する
                     </button>
                     <button class="action-button warning" onclick="proceedToTraining()">
                         🚀 トレーニング計画に進む
                     </button>
-                    <button class="action-button secondary" onclick="backToSelection()">
-                        📋 大会選択に戻る
+                    <button class="action-button secondary" onclick="backToGoalSelection()">
+                        📋 目標設定画面に戻る
                     </button>
                 </div>
             </div>
@@ -706,6 +745,252 @@
         let currentGoalRace = null;
         let completedGoals = new Set();
         let goalData = {};
+
+        // ユーザーのパフォーマンスデータ（デモ用）
+        const userPerformanceData = {
+            age: 35,
+            gender: 'male',
+            experience: 'intermediate', // beginner, intermediate, advanced
+            recentRaces: [
+                {
+                    raceId: 'shonan_2024',
+                    name: '湘南国際トライアスロン2024',
+                    date: '2024-05-19',
+                    time: '2:45:30',
+                    distance: 'スタンダード',
+                    ranking: 145,
+                    totalParticipants: 800
+                },
+                {
+                    raceId: 'miyakojima_2024',
+                    name: '宮古島トライアスロン2024',
+                    date: '2024-04-14',
+                    time: '12:35:45',
+                    distance: 'ロング',
+                    ranking: 320,
+                    totalParticipants: 1200
+                }
+            ],
+            currentFTP: 240, // W
+            currentVDOT: 42,
+            swimPace100m: 135, // seconds
+            bikeFTP: 240,
+            runVDOT: 42
+        };
+
+        // 大会の過去データ（パーセンタイル計算用）
+        const raceHistoricalData = {
+            'miyakojima_2025': {
+                averageTime: {
+                    male: { '30-34': '11:45:30', '35-39': '12:15:20', '40-44': '12:45:10' },
+                    female: { '30-34': '13:20:15', '35-39': '13:45:30', '40-44': '14:15:45' }
+                },
+                percentiles: {
+                    male: {
+                        '35-39': {
+                            '10': '10:20:00', '25': '11:15:30', '50': '12:15:20', 
+                            '75': '13:45:10', '90': '15:30:00'
+                        }
+                    }
+                }
+            },
+            'shonan_2025': {
+                averageTime: {
+                    male: { '30-34': '2:35:20', '35-39': '2:42:15', '40-44': '2:52:30' },
+                    female: { '30-34': '3:05:30', '35-39': '3:15:20', '40-44': '3:28:45' }
+                },
+                percentiles: {
+                    male: {
+                        '35-39': {
+                            '10': '2:15:00', '25': '2:28:30', '50': '2:42:15',
+                            '75': '3:05:20', '90': '3:35:00'
+                        }
+                    }
+                }
+            },
+            'sado_2025': {
+                averageTime: {
+                    male: { '30-34': '11:25:15', '35-39': '11:58:30', '40-44': '12:35:20' },
+                    female: { '30-34': '13:15:45', '35-39': '13:42:30', '40-44': '14:25:15' }
+                },
+                percentiles: {
+                    male: {
+                        '35-39': {
+                            '10': '10:05:00', '25': '10:58:20', '50': '11:58:30',
+                            '75': '13:15:45', '90': '14:58:20'
+                        }
+                    }
+                }
+            },
+            'tokyo_festa_2025': {
+                averageTime: {
+                    male: { '30-34': '1:15:30', '35-39': '1:18:45', '40-44': '1:24:20' },
+                    female: { '30-34': '1:28:15', '35-39': '1:32:30', '40-44': '1:38:45' }
+                },
+                percentiles: {
+                    male: {
+                        '35-39': {
+                            '10': '1:05:00', '25': '1:12:15', '50': '1:18:45',
+                            '75': '1:28:30', '90': '1:42:00'
+                        }
+                    }
+                }
+            }
+        };
+
+        // AIコーチコメント生成
+        function generateAICoachComment(raceId, goalTimeSeconds) {
+            const race = raceDatabase[raceId];
+            const raceType = selectedRacesData.aRaces.includes(raceId) ? 'a-race' : 'other-race';
+            const historicalData = raceHistoricalData[raceId];
+            
+            let comment = "";
+            let challengeLevel = "";
+            let percentileInfo = "";
+            let comparisonInfo = "";
+            let recommendations = "";
+
+            // 年代グループ取得
+            const ageGroup = getAgeGroup(userPerformanceData.age);
+            
+            if (historicalData && historicalData.percentiles.male[ageGroup]) {
+                const percentiles = historicalData.percentiles.male[ageGroup];
+                const goalTimeStr = formatTime(goalTimeSeconds);
+                
+                // パーセンタイル分析
+                const percentile = calculatePercentile(goalTimeSeconds, percentiles);
+                percentileInfo = `この目標は${ageGroup}歳男性で上位${100-percentile}%に相当します。`;
+                
+                if (percentile <= 10) {
+                    challengeLevel = "🏆 エリートレベル";
+                } else if (percentile <= 25) {
+                    challengeLevel = "🔥 非常にチャレンジング";
+                } else if (percentile <= 50) {
+                    challengeLevel = "💪 適度にチャレンジング";
+                } else if (percentile <= 75) {
+                    challengeLevel = "📈 現実的で達成可能";
+                } else {
+                    challengeLevel = "🎯 安全で確実";
+                }
+            }
+
+            // 過去の同じ大会との比較
+            const pastRace = userPerformanceData.recentRaces.find(r => 
+                r.name.includes(race.name.split('トライアスロン')[0].split('第')[0].trim())
+            );
+            
+            if (pastRace) {
+                const pastTimeSeconds = timeStringToSeconds(pastRace.time);
+                const timeDiff = pastTimeSeconds - goalTimeSeconds;
+                const improvement = Math.abs(timeDiff);
+                const improvementStr = formatTime(improvement);
+                
+                if (timeDiff > 0) {
+                    comparisonInfo = `昨年より${improvementStr}の向上を目指す意欲的な目標です。`;
+                } else {
+                    comparisonInfo = `昨年より${improvementStr}余裕を持った安全な目標設定です。`;
+                }
+            }
+
+            // 距離別の分析とアドバイス
+            if (race.distance.type === 'ロング') {
+                recommendations = raceType === 'a-race' ? 
+                    "メイン目標として、12-16週間の本格的な準備期間を確保し、ロングライド・LSD中心のベース作りから始めましょう。" :
+                    "経験積み重ねとして、完走を第一目標に設定し、無理のないペース配分を心がけましょう。";
+            } else if (race.distance.type === 'スタンダード') {
+                recommendations = raceType === 'a-race' ?
+                    "バランスの取れた3種目強化が重要です。週4-5回のトレーニングで各種目の質を高めていきましょう。" :
+                    "レーステンポでの練習を取り入れ、レース感覚を養う良い機会として活用しましょう。";
+            } else {
+                recommendations = "スピード重視の大会です。高強度インターバルとレースペース練習を中心に準備しましょう。";
+            }
+
+            // 現在のパフォーマンスとの整合性チェック
+            let consistencyNote = "";
+            if (race.distance.type === 'スタンダード' && userPerformanceData.currentVDOT) {
+                const expectedTime = estimateTimeFromVDOT(userPerformanceData.currentVDOT, race.distance);
+                const goalDiff = Math.abs(expectedTime - goalTimeSeconds);
+                
+                if (goalDiff < 300) { // 5分以内
+                    consistencyNote = "現在の走力に適した現実的な目標です。";
+                } else if (goalTimeSeconds < expectedTime) {
+                    consistencyNote = "現在の走力を上回る挑戦的な目標設定です。";
+                } else {
+                    consistencyNote = "現在の走力に余裕を持った安全な目標です。";
+                }
+            }
+
+            // コメント組み立て
+            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''}${consistencyNote ? ' ' + consistencyNote : ''} ${recommendations}`;
+
+            // 200文字に調整
+            if (comment.length > 200) {
+                comment = comment.substring(0, 197) + "...";
+            }
+
+            return {
+                comment: comment,
+                challengeLevel: challengeLevel,
+                percentile: percentileInfo ? calculatePercentile(goalTimeSeconds, historicalData.percentiles.male[ageGroup]) : null,
+                comparison: comparisonInfo,
+                consistency: consistencyNote
+            };
+        }
+
+        // 年代グループ取得
+        function getAgeGroup(age) {
+            if (age < 30) return '25-29';
+            if (age < 35) return '30-34';
+            if (age < 40) return '35-39';
+            if (age < 45) return '40-44';
+            if (age < 50) return '45-49';
+            return '50+';
+        }
+
+        // パーセンタイル計算
+        function calculatePercentile(goalTimeSeconds, percentiles) {
+            const times = Object.keys(percentiles).map(p => timeStringToSeconds(percentiles[p]));
+            const sortedTimes = times.sort((a, b) => a - b);
+            
+            for (let i = 0; i < sortedTimes.length; i++) {
+                if (goalTimeSeconds <= sortedTimes[i]) {
+                    const percentile = parseInt(Object.keys(percentiles)[i]);
+                    return percentile;
+                }
+            }
+            return 100;
+        }
+
+        // 時間文字列を秒に変換
+        function timeStringToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 3) {
+                return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+            }
+            return 0;
+        }
+
+        // VDOTから推定タイム計算（簡易版）
+        function estimateTimeFromVDOT(vdot, distance) {
+            // 簡易的な計算（実際はより複雑な計算が必要）
+            const runTimeEstimate = (distance.run / 10) * (3600 / vdot) * 10;
+            const swimTimeEstimate = distance.swim * 1000 * (userPerformanceData.swimPace100m / 100);
+            const bikeTimeEstimate = (distance.bike / 25) * 3600; // 25km/hと仮定
+            return swimTimeEstimate + bikeTimeEstimate + runTimeEstimate + 300; // トランジション5分
+        }
+
+        // 時間フォーマット
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}時間${minutes}分`;
+            } else {
+                return `${minutes}分${secs}秒`;
+            }
+        }
 
         // 初期化
         function init() {
@@ -1067,6 +1352,19 @@
                                 --:--:--
                             </div>
                         </div>
+                        
+                        <!-- AIコーチコメント（保存後に表示） -->
+                        <div class="ai-coach-section" id="ai-coach-${raceId}" style="display: none;">
+                            <div class="ai-coach-title">
+                                🤖 AIコーチからのコメント
+                            </div>
+                            <div class="ai-coach-comment" id="ai-comment-${raceId}">
+                                <!-- JavaScript で動的に生成 -->
+                            </div>
+                            <div class="ai-insights" id="ai-insights-${raceId}">
+                                <!-- JavaScript で動的に生成 -->
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -1263,9 +1561,111 @@
             completedGoals.add(currentGoalRace);
             racesForGoalSetting.delete(currentGoalRace);
             
+            // 合計タイム取得
+            const totalTimeText = document.getElementById(`total-time-${currentGoalRace}`).textContent;
+            const totalTimeSeconds = parseTimeString(totalTimeText);
+            
+            // AIコーチコメント生成・表示
+            const aiAnalysis = generateAICoachComment(currentGoalRace, totalTimeSeconds);
+            showAICoachComment(currentGoalRace, aiAnalysis);
+            
             console.log('✅ 目標保存:', currentGoalRace, formData);
             
-            showCompletionPanel();
+            // 3秒後に完了パネル表示
+            setTimeout(() => {
+                showCompletionPanel();
+            }, 3000);
+        }
+
+        // 時間文字列をパース
+        function parseTimeString(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 3) {
+                return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+            }
+            return 0;
+        }
+
+        // AIコーチコメント表示
+        function showAICoachComment(raceId, aiAnalysis) {
+            const commentSection = document.getElementById(`ai-coach-${raceId}`);
+            const commentDiv = document.getElementById(`ai-comment-${raceId}`);
+            const insightsDiv = document.getElementById(`ai-insights-${raceId}`);
+            
+            // コメント表示
+            commentDiv.textContent = aiAnalysis.comment;
+            
+            // インサイト表示
+            let insightsHtml = '';
+            
+            if (aiAnalysis.challengeLevel) {
+                insightsHtml += `
+                    <div class="ai-insight">
+                        <div class="ai-insight-label">チャレンジ度</div>
+                        <div class="ai-insight-value">${aiAnalysis.challengeLevel}</div>
+                    </div>
+                `;
+            }
+            
+            if (aiAnalysis.percentile !== null) {
+                insightsHtml += `
+                    <div class="ai-insight">
+                        <div class="ai-insight-label">パーセンタイル</div>
+                        <div class="ai-insight-value">上位${100-aiAnalysis.percentile}%</div>
+                    </div>
+                `;
+            }
+            
+            // 過去実績との比較
+            const pastRace = userPerformanceData.recentRaces.find(r => 
+                r.name.includes(raceDatabase[raceId].name.split('トライアスロン')[0].split('第')[0].trim())
+            );
+            
+            if (pastRace) {
+                const goalTime = parseTimeString(document.getElementById(`total-time-${raceId}`).textContent);
+                const pastTime = timeStringToSeconds(pastRace.time);
+                const improvement = pastTime - goalTime;
+                
+                insightsHtml += `
+                    <div class="ai-insight">
+                        <div class="ai-insight-label">昨年比較</div>
+                        <div class="ai-insight-value">${improvement > 0 ? '+' : ''}${formatTime(Math.abs(improvement))}</div>
+                    </div>
+                `;
+            }
+            
+            // 年代平均との比較
+            const race = raceDatabase[raceId];
+            const historicalData = raceHistoricalData[raceId];
+            if (historicalData) {
+                const ageGroup = getAgeGroup(userPerformanceData.age);
+                const averageTime = historicalData.averageTime.male[ageGroup];
+                if (averageTime) {
+                    const avgSeconds = timeStringToSeconds(averageTime);
+                    const goalSeconds = parseTimeString(document.getElementById(`total-time-${raceId}`).textContent);
+                    const diff = avgSeconds - goalSeconds;
+                    
+                    insightsHtml += `
+                        <div class="ai-insight">
+                            <div class="ai-insight-label">年代平均比</div>
+                            <div class="ai-insight-value">${diff > 0 ? '+' : ''}${formatTime(Math.abs(diff))}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            insightsDiv.innerHTML = insightsHtml;
+            
+            // アニメーション付きで表示
+            commentSection.style.display = 'block';
+            commentSection.style.opacity = '0';
+            commentSection.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                commentSection.style.transition = 'all 0.5s ease';
+                commentSection.style.opacity = '1';
+                commentSection.style.transform = 'translateY(0)';
+            }, 100);
         }
 
         // 完了パネル表示
@@ -1295,11 +1695,12 @@
             `;
             
             // 継続ボタンの表示制御
-            const hasMoreRaces = racesForGoalSetting.size > 0;
+            const hasMoreRaces = (selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length) > completedGoals.size;
             const continueButton = document.getElementById('continue-goal-button');
             if (hasMoreRaces) {
                 continueButton.style.display = 'inline-block';
-                continueButton.textContent = `🎯 残り${racesForGoalSetting.size}大会も目標設定する`;
+                const remainingCount = (selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length) - completedGoals.size;
+                continueButton.textContent = `🎯 別の大会の目標も設定する (残り${remainingCount}大会)`;
             } else {
                 continueButton.style.display = 'none';
             }
@@ -1307,18 +1708,26 @@
 
         // 他の大会も目標設定
         function continueGoalSetting() {
-            if (racesForGoalSetting.size > 0) {
-                currentGoalRace = [...racesForGoalSetting][0];
-                showGoalForm();
-            } else {
-                showRaceSelectionPanel();
-            }
+            // 未完了の大会から目標設定画面に戻る
+            showRaceSelectionPanel();
         }
 
         // トレーニング計画に進む
         function proceedToTraining() {
-            alert('🚀 トレーニング計画策定に進みます！\n\n設定された目標:\n' + 
-                  [...completedGoals].map(raceId => `• ${raceDatabase[raceId].name}: ${goalData[raceId] ? 'タイム設定済み' : '設定中'}`).join('\n'));
+            const completedCount = completedGoals.size;
+            const totalCount = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
+            
+            alert(`🚀 トレーニング計画策定に進みます！\n\n設定完了: ${completedCount}/${totalCount}大会\n\n` + 
+                  [...completedGoals].map(raceId => {
+                      const race = raceDatabase[raceId];
+                      const totalTime = goalData[raceId] ? '目標設定済み' : '設定中';
+                      return `• ${race.name}: ${totalTime}`;
+                  }).join('\n'));
+        }
+
+        // 目標設定画面に戻る
+        function backToGoalSelection() {
+            showRaceSelectionPanel();
         }
 
         // 大会選択に戻る

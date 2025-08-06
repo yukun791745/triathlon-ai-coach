@@ -1090,7 +1090,6 @@
             let comparisonInfo = "";
             let recommendations = "";
             let performanceAnalysis = "";
-            let trainingFocus = "";
 
             // 年代グループ取得
             const ageGroup = getAgeGroup(userPerformanceData.age);
@@ -1106,74 +1105,66 @@
             // 個人パフォーマンスベースのチャレンジ度判定
             let personalChallenge = calculatePersonalChallenge(raceId, goalTimeSeconds);
             challengeLevel = personalChallenge.level;
-            performanceAnalysis = personalChallenge.analysis;
 
             // 過去の同じ大会との比較
             const pastRace = userPerformanceData.recentRaces.find(r => 
                 r.name.includes(race.name.split('トライアスロン')[0].split('第')[0].trim())
             );
             
-            if (pastRace) {
-                const pastTimeSeconds = timeStringToSeconds(pastRace.time);
-                const timeDiff = pastTimeSeconds - goalTimeSeconds;
-                const improvement = Math.abs(timeDiff);
-                const improvementStr = formatTime(improvement);
-                
-                if (timeDiff > 0) {
-                    comparisonInfo = `昨年より${improvementStr}の向上を目指す意欲的な目標です。継続的な改善により達成可能です。`;
-                } else if (timeDiff < 0) {
-                    comparisonInfo = `昨年より${improvementStr}余裕を持った安全な目標設定です。確実な完走と楽しむことを重視した戦略です。`;
-                } else {
-                    comparisonInfo = `昨年と同等のタイムを目指す安定した目標です。`;
-                }
-            }
-
-            // 距離別の詳細分析とアドバイス
-            if (race.distance.type === 'ロング') {
-                if (raceType === 'a-race') {
-                    recommendations = "メイン目標として16-20週間の本格的な準備期間を確保してください。";
-                    trainingFocus = "週末のロングライド（4-6時間）とLSD（2-3時間）を中心に、月間走行距離200km以上、月間泳距離15km以上を目標とし、栄養補給とペース配分の練習も重要です。";
-                } else {
-                    recommendations = "経験積み重ねとして、完走を第一目標に無理のないペース配分を心がけましょう。";
-                    trainingFocus = "ベースとなる有酸素能力の向上に集中し、週4-5回の定期的なトレーニングでフィニッシュラインを目指しましょう。";
-                }
-            } else if (race.distance.type === 'スタンダード') {
-                if (raceType === 'a-race') {
-                    recommendations = "バランスの取れた3種目強化が重要です。12-16週間の計画的なトレーニングが必要です。";
-                    trainingFocus = "週4-6回のトレーニングで各種目の質を高め、スイム週3回（技術重視）、バイク週2-3回（FTP向上）、ラン週3-4回（スピード＋持久力）の組み合わせが効果的です。";
-                } else {
-                    recommendations = "レーステンポでの練習を取り入れ、レース感覚を養う良い機会として活用しましょう。";
-                    trainingFocus = "週3-4回の効率的なトレーニングで、各種目のレースペース練習を重視し、トランジション練習も取り入れてください。";
-                }
-            } else {
-                if (raceType === 'a-race') {
-                    recommendations = "スピード重視の大会です。高強度インターバルとレースペース練習が中核となります。";
-                    trainingFocus = "週5-6回の質の高いトレーニングで、VO2max向上を重視し、短時間高強度の練習とレースシミュレーションが重要です。";
-                } else {
-                    recommendations = "スピード体験の良い機会です。普段より高いペースでのチャレンジを楽しみましょう。";
-                    trainingFocus = "週3-4回のトレーニングで、普段より少し高めの強度に慣れ、短時間でのパフォーマンス向上を図りましょう。";
-                }
-            }
-
-            // 季節・時期に応じたアドバイス
-            const raceDate = new Date(race.date);
-            const raceMonth = raceDate.getMonth() + 1;
-            let seasonalAdvice = "";
+            // 現在のフィットネスレベル分析
+            const currentFitnessAnalysis = analyzeCurrentFitness(race.distance.type);
             
-            if (raceMonth >= 4 && raceMonth <= 6) {
-                seasonalAdvice = "春シーズンの大会として、冬場のベーストレーニングの成果を発揮する絶好の機会です。";
-            } else if (raceMonth >= 7 && raceMonth <= 8) {
-                seasonalAdvice = "夏場の大会のため、暑熱対策と水分補給戦略が特に重要になります。";
-            } else if (raceMonth >= 9 && raceMonth <= 10) {
-                seasonalAdvice = "シーズン後半の大会として、年間を通じた成長の集大成となる重要なレースです。";
+            // チャレンジ度に応じたコメント生成
+            if (personalChallenge.level.includes('極めてチャレンジング')) {
+                performanceAnalysis = `${currentFitnessAnalysis.summary}この目標達成には根本的な能力向上が必要で、特に${currentFitnessAnalysis.weakness}の強化が急務です。`;
+                recommendations = `16-20週間の集中的なトレーニングプランを立て、専門コーチの指導も検討してください。`;
+            } else if (personalChallenge.level.includes('非常にチャレンジング')) {
+                performanceAnalysis = `${currentFitnessAnalysis.summary}現在の能力を大幅に向上させる意欲的な目標で、${currentFitnessAnalysis.strength}を活かしつつ${currentFitnessAnalysis.weakness}の改善が重要です。`;
+                recommendations = `12-16週間の計画的なトレーニングで、週5-6回の質の高い練習を継続してください。`;
+            } else if (personalChallenge.level.includes('適度にチャレンジング')) {
+                performanceAnalysis = `${currentFitnessAnalysis.summary}バランスの取れた挑戦的目標で、現在の${currentFitnessAnalysis.strength}を基盤とした着実な向上が期待できます。`;
+                recommendations = `週4-5回の効率的なトレーニングで、各種目をバランスよく強化していきましょう。`;
+            } else if (personalChallenge.level.includes('現実的で達成可能')) {
+                performanceAnalysis = `${currentFitnessAnalysis.summary}現在の能力に適した現実的な目標設定です。`;
+                recommendations = `週3-4回のトレーニングで十分達成可能です。レース戦術の練習も重視してください。`;
+            } else if (personalChallenge.level.includes('安全で確実')) {
+                performanceAnalysis = `${currentFitnessAnalysis.summary}現在の能力から見て余裕のある目標設定です。`;
+                if (pastRace) {
+                    const pastTimeSeconds = timeStringToSeconds(pastRace.time);
+                    const improvement = (pastTimeSeconds - goalTimeSeconds) / 60;
+                    comparisonInfo = `昨年の${pastRace.name}（${pastRace.time}）と比較して${Math.abs(improvement).toFixed(0)}分余裕を持った設定です。`;
+                }
+                recommendations = `より挑戦的な目標（10-15%向上）も十分達成可能です。メイン目標なら${formatTime(goalTimeSeconds * 0.9)}程度も検討してみてください。`;
+            } else { // 非常に余裕のある
+                performanceAnalysis = `${currentFitnessAnalysis.summary}あなたの実力を大きく下回る設定です。`;
+                if (pastRace) {
+                    const pastTimeSeconds = timeStringToSeconds(pastRace.time);
+                    const improvement = (pastTimeSeconds - goalTimeSeconds) / 60;
+                    comparisonInfo = `昨年の${pastRace.name}（${pastRace.time}）より${Math.abs(improvement).toFixed(0)}分も余裕があります。`;
+                }
+                
+                // より挑戦的な目標を提案
+                const challengingGoal = Math.floor(goalTimeSeconds * 0.85);
+                const moderateGoal = Math.floor(goalTimeSeconds * 0.92);
+                recommendations = `現在の実力なら${formatTime(challengingGoal)}の挑戦的目標や、${formatTime(moderateGoal)}の適度な目標も十分達成可能です。せっかくの機会なので、より自分を伸ばす目標設定を検討してみてはいかがでしょうか。`;
             }
 
-            // コメント組み立て（300文字程度に拡張）
-            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''} ${performanceAnalysis} ${recommendations} ${trainingFocus} ${seasonalAdvice}`;
+            // 距離別の具体的アドバイス（簡潔に）
+            let specificAdvice = "";
+            if (race.distance.type === 'ロング') {
+                specificAdvice = "長時間のペース管理と栄養補給戦略が成功の鍵です。";
+            } else if (race.distance.type === 'スタンダード') {
+                specificAdvice = "3種目のバランスとトランジション効率が重要です。";
+            } else {
+                specificAdvice = "スピード重視のレース展開を意識した練習を重視してください。";
+            }
 
-            // 300文字程度に調整
-            if (comment.length > 300) {
-                comment = comment.substring(0, 297) + "...";
+            // コメント組み立て（重複表現を避けて簡潔に）
+            comment = `${challengeLevel}の目標設定です。${percentileInfo} ${performanceAnalysis}${comparisonInfo ? ' ' + comparisonInfo : ''} ${recommendations} ${specificAdvice}`;
+
+            // 280文字程度に調整
+            if (comment.length > 280) {
+                comment = comment.substring(0, 277) + "...";
             }
 
             return {
@@ -1181,10 +1172,54 @@
                 challengeLevel: challengeLevel,
                 percentile: percentile,
                 comparison: comparisonInfo,
-                performance: performanceAnalysis,
-                training: trainingFocus,
-                seasonal: seasonalAdvice
+                performance: performanceAnalysis
             };
+        }
+
+        // 現在のフィットネスレベル分析
+        function analyzeCurrentFitness(raceType) {
+            const vdot = userPerformanceData.currentVDOT;
+            const ftp = userPerformanceData.currentFTP;
+            const swimPace = userPerformanceData.swimPace100m;
+            
+            let strength = "";
+            let weakness = "";
+            let summary = "";
+            
+            // 各種目のレベル判定（仮の基準）
+            const runLevel = vdot > 50 ? "高" : vdot > 40 ? "中" : "初";
+            const bikeLevel = ftp > 280 ? "高" : ftp > 220 ? "中" : "初";
+            const swimLevel = swimPace < 120 ? "高" : swimPace < 150 ? "中" : "初";
+            
+            // 強み・弱みの特定
+            const levels = [
+                { discipline: "ラン", level: runLevel },
+                { discipline: "バイク", level: bikeLevel },
+                { discipline: "スイム", level: swimLevel }
+            ];
+            
+            const strengths = levels.filter(l => l.level === "高").map(l => l.discipline);
+            const weaknesses = levels.filter(l => l.level === "初").map(l => l.discipline);
+            
+            if (strengths.length > 0) {
+                strength = strengths.join("・") + "が得意";
+            } else {
+                strength = "バランス型";
+            }
+            
+            if (weaknesses.length > 0) {
+                weakness = weaknesses.join("・");
+            } else {
+                weakness = "全種目バランス";
+            }
+            
+            // 総合フィットネスレベル
+            const avgLevel = levels.filter(l => l.level === "高").length >= 2 ? "高" : 
+                           levels.filter(l => l.level === "中").length >= 2 ? "中" : "発展途上";
+            
+            summary = `現在のフィットネスレベル（${avgLevel}、${strength}）から見て、`;
+            
+            return { summary, strength, weakness, avgLevel };
         }
 
         // 個人パフォーマンスベースのチャレンジ度計算

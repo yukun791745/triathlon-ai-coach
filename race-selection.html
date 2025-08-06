@@ -74,6 +74,78 @@
             font-size: 12px;
             color: #6b7280;
         }
+
+        /* 選択状況パネル */
+        .selection-panel {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .selection-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .selection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .selection-stat {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .selection-stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .selection-stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .goal-setting-button {
+            background: white;
+            color: #d97706;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .goal-setting-button:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+        
+        .goal-setting-button:disabled {
+            background: rgba(255, 255, 255, 0.5);
+            color: rgba(217, 119, 6, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
         
         .search-panel {
             background: white;
@@ -141,11 +213,44 @@
             border: 1px solid #e5e7eb;
             overflow: hidden;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .race-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 選択状態の視覚的表現 */
+        .race-card.selected-a {
+            border: 3px solid #dc2626;
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+        }
+        
+        .race-card.selected-other {
+            border: 3px solid #2563eb;
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+        }
+        
+        .selection-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        .selection-badge.a-race {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .selection-badge.other-race {
+            background: #2563eb;
+            color: white;
         }
         
         .race-content {
@@ -282,12 +387,68 @@
             font-weight: 500;
         }
         
+        .race-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .selection-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .selection-button {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .selection-button.a-race {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        
+        .selection-button.a-race:hover,
+        .selection-button.a-race.active {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .selection-button.other-race {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        
+        .selection-button.other-race:hover,
+        .selection-button.other-race.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .selection-button.remove {
+            border-color: #6b7280;
+            color: #6b7280;
+        }
+        
+        .selection-button.remove:hover,
+        .selection-button.remove.active {
+            background: #6b7280;
+            color: white;
+        }
+        
         .race-button {
             display: block;
             width: 100%;
-            background-color: #2563eb;
+            background-color: #059669;
             color: white;
-            padding: 12px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
@@ -297,7 +458,7 @@
         }
         
         .race-button:hover {
-            background-color: #1d4ed8;
+            background-color: #047857;
         }
         
         .footer {
@@ -317,6 +478,16 @@
         .no-results h3 {
             font-size: 1.5rem;
             margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .selection-buttons {
+                flex-direction: column;
+            }
+            
+            .selection-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -346,6 +517,33 @@
                     <div class="stat-label">日本選手権</div>
                 </div>
             </div>
+        </div>
+        
+        <!-- 選択状況パネル -->
+        <div class="selection-panel">
+            <h2 class="selection-title">
+                🎯 参加大会選択
+                <span style="font-size: 12px; font-weight: 400; opacity: 0.9;">- Aレース・その他レースを選択</span>
+            </h2>
+            
+            <div class="selection-stats">
+                <div class="selection-stat">
+                    <div class="selection-stat-number" id="a-race-count">0</div>
+                    <div class="selection-stat-label">🏆 Aレース（メイン目標）</div>
+                </div>
+                <div class="selection-stat">
+                    <div class="selection-stat-number" id="other-race-count">0</div>
+                    <div class="selection-stat-label">🎪 その他レース</div>
+                </div>
+                <div class="selection-stat">
+                    <div class="selection-stat-number" id="total-selected-count">0</div>
+                    <div class="selection-stat-label">📊 合計選択数</div>
+                </div>
+            </div>
+            
+            <button class="goal-setting-button" id="goal-setting-button" disabled>
+                🎯 目標設定ページへ進む
+            </button>
         </div>
         
         <!-- 検索・フィルター -->
@@ -426,6 +624,12 @@
 
     <script>
         console.log('🚀 スクリプト開始');
+
+        // 選択状態管理
+        let selectedRaces = {
+            aRaces: new Set(),
+            otherRaces: new Set()
+        };
 
         // 大会データ（51大会完全版）
         const races = [
@@ -1261,19 +1465,40 @@
             });
         }
 
-        // 大会カード生成（複数距離対応）
+        // 選択状態の取得
+        function getSelectionState(raceId) {
+            if (selectedRaces.aRaces.has(raceId)) {
+                return 'a-race';
+            } else if (selectedRaces.otherRaces.has(raceId)) {
+                return 'other-race';
+            }
+            return null;
+        }
+
+        // 大会カード生成（選択機能付き）
         function createRaceCard(race) {
             const formattedDate = formatDate(race.date);
             const calculatedStatus = calculateEntryStatus(race);
             const statusClass = getStatusClass(calculatedStatus);
+            const selectionState = getSelectionState(race.id);
 
             // 距離バッジの生成（複数距離対応）
             const distanceBadges = Array.isArray(race.distance) 
                 ? race.distance.map(dist => `<span class="distance-badge">${dist}</span>`).join('')
                 : `<span class="distance-badge">${race.distance}</span>`;
 
+            // 選択バッジ
+            const selectionBadge = selectionState ? 
+                `<div class="selection-badge ${selectionState}">
+                    ${selectionState === 'a-race' ? '🏆 Aレース' : '🎪 その他'}
+                </div>` : '';
+
+            // カードクラス
+            const cardClass = selectionState ? `race-card selected-${selectionState}` : 'race-card';
+
             return `
-                <div class="race-card" data-id="${race.id}">
+                <div class="${cardClass}" data-id="${race.id}">
+                    ${selectionBadge}
                     <div class="race-content">
                         <div class="race-header">
                             <span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span>
@@ -1298,12 +1523,97 @@
                             ${race.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
                         </div>
                         
-                        <a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">
-                            🔗 公式サイト
-                        </a>
+                        <div class="race-actions">
+                            <div class="selection-buttons">
+                                <button class="selection-button a-race ${selectionState === 'a-race' ? 'active' : ''}" 
+                                        onclick="selectRace('${race.id}', 'a-race')">
+                                    🏆 Aレース
+                                </button>
+                                <button class="selection-button other-race ${selectionState === 'other-race' ? 'active' : ''}" 
+                                        onclick="selectRace('${race.id}', 'other-race')">
+                                    🎪 その他
+                                </button>
+                                ${selectionState ? `
+                                <button class="selection-button remove" 
+                                        onclick="removeSelection('${race.id}')">
+                                    ❌ 解除
+                                </button>` : ''}
+                            </div>
+                            
+                            <a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">
+                                🔗 公式サイト
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        // 選択状況の更新
+        function updateSelectionStats() {
+            const aRaceCount = selectedRaces.aRaces.size;
+            const otherRaceCount = selectedRaces.otherRaces.size;
+            const totalCount = aRaceCount + otherRaceCount;
+
+            document.getElementById('a-race-count').textContent = aRaceCount;
+            document.getElementById('other-race-count').textContent = otherRaceCount;
+            document.getElementById('total-selected-count').textContent = totalCount;
+
+            // 目標設定ボタンの有効化/無効化
+            const goalButton = document.getElementById('goal-setting-button');
+            if (totalCount > 0) {
+                goalButton.disabled = false;
+                goalButton.textContent = `🎯 目標設定ページへ進む (${totalCount}大会選択済み)`;
+            } else {
+                goalButton.disabled = true;
+                goalButton.textContent = '🎯 目標設定ページへ進む';
+            }
+        }
+
+        // 大会選択
+        function selectRace(raceId, type) {
+            // 既存の選択を削除
+            selectedRaces.aRaces.delete(raceId);
+            selectedRaces.otherRaces.delete(raceId);
+
+            // 新しい選択を追加
+            if (type === 'a-race') {
+                selectedRaces.aRaces.add(raceId);
+            } else if (type === 'other-race') {
+                selectedRaces.otherRaces.add(raceId);
+            }
+
+            updateSelectionStats();
+            filterRaces(); // 表示を更新
+            console.log('✅ 選択更新:', { aRaces: [...selectedRaces.aRaces], otherRaces: [...selectedRaces.otherRaces] });
+        }
+
+        // 選択解除
+        function removeSelection(raceId) {
+            selectedRaces.aRaces.delete(raceId);
+            selectedRaces.otherRaces.delete(raceId);
+            updateSelectionStats();
+            filterRaces(); // 表示を更新
+            console.log('❌ 選択解除:', raceId);
+        }
+
+        // 目標設定ページへ遷移
+        function goToGoalSetting() {
+            const selectedData = {
+                aRaces: [...selectedRaces.aRaces],
+                otherRaces: [...selectedRaces.otherRaces]
+            };
+
+            // URLパラメータとして選択データを渡す
+            const params = new URLSearchParams();
+            params.set('races', JSON.stringify(selectedData));
+            
+            // 実際の遷移（デモではアラート表示）
+            const url = `goal-setting.html?${params.toString()}`;
+            alert(`目標設定ページに遷移します。\n\n選択した大会:\n🏆 Aレース: ${selectedData.aRaces.length}件\n🎪 その他: ${selectedData.otherRaces.length}件\n\n遷移先: ${url}`);
+            
+            // 実際の環境では以下を使用
+            // window.location.href = url;
         }
 
         // DOM要素
@@ -1316,6 +1626,7 @@
         const racesContainer = document.getElementById('races-container');
         const filteredCount = document.getElementById('filtered-count');
         const totalCount = document.getElementById('total-count');
+        const goalButton = document.getElementById('goal-setting-button');
 
         // フィルタリング実行
         function filterRaces() {
@@ -1395,12 +1706,15 @@
         categorySelect.addEventListener('change', filterRaces);
         distanceSelect.addEventListener('change', filterRaces);
         statusSelect.addEventListener('change', filterRaces);
+        goalButton.addEventListener('click', goToGoalSetting);
 
         // 初期化
         totalCount.textContent = races.length;
+        updateSelectionStats();
         filterRaces();
 
         console.log('✅ 初期化完了 - ', races.length, '件の大会データ');
-    </script>
-</body>
-</html>
+
+        // グローバル関数として公開（onclick用）
+        window.selectRace = selectRace;
+        window.removeSelection = removeSelection;

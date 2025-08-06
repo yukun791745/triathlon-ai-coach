@@ -2246,15 +2246,7 @@
 
         // トレーニング計画に進む
         function proceedToTraining() {
-            const completedCount = completedGoals.size;
-            const totalCount = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
-            
-            alert(`🚀 トレーニング計画策定に進みます！\n\n設定完了: ${completedCount}/${totalCount}大会\n\n` + 
-                  [...completedGoals].map(raceId => {
-                      const race = raceDatabase[raceId];
-                      const totalTime = goalData[raceId] ? '目標設定済み' : '設定中';
-                      return `• ${race.name}: ${totalTime}`;
-                  }).join('\n'));
+            window.location.href = 'training-plan.html';
         }
 
         // 目標設定画面に戻る

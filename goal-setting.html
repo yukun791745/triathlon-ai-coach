@@ -1095,31 +1095,18 @@
             // 年代グループ取得
             const ageGroup = getAgeGroup(userPerformanceData.age);
             
+            // パーセンタイル分析（相対評価用）
+            let percentile = null;
             if (historicalData && historicalData.percentiles.male[ageGroup]) {
                 const percentiles = historicalData.percentiles.male[ageGroup];
-                const goalTimeStr = formatTime(goalTimeSeconds);
-                
-                // パーセンタイル分析
-                const percentile = calculatePercentile(goalTimeSeconds, percentiles);
+                percentile = calculatePercentile(goalTimeSeconds, percentiles);
                 percentileInfo = `この目標は${ageGroup}歳男性で上位${100-percentile}%に相当します。`;
-                
-                if (percentile <= 10) {
-                    challengeLevel = "🏆 エリートレベル";
-                    performanceAnalysis = "非常に高いパフォーマンスを要求される目標です。継続的な高強度トレーニングと戦略的なピーキングが必要です。";
-                } else if (percentile <= 25) {
-                    challengeLevel = "🔥 非常にチャレンジング";
-                    performanceAnalysis = "かなり意欲的な目標設定です。現在の能力を大幅に向上させる必要があります。";
-                } else if (percentile <= 50) {
-                    challengeLevel = "💪 適度にチャレンジング";
-                    performanceAnalysis = "バランスの取れた挑戦的目標です。計画的なトレーニングで達成可能です。";
-                } else if (percentile <= 75) {
-                    challengeLevel = "📈 現実的で達成可能";
-                    performanceAnalysis = "現実的な目標設定です。着実なトレーニングで確実に達成できるでしょう。";
-                } else {
-                    challengeLevel = "🎯 安全で確実";
-                    performanceAnalysis = "安全性を重視した目標です。完走を最優先とした戦略が適しています。";
-                }
             }
+
+            // 個人パフォーマンスベースのチャレンジ度判定
+            let personalChallenge = calculatePersonalChallenge(raceId, goalTimeSeconds);
+            challengeLevel = personalChallenge.level;
+            performanceAnalysis = personalChallenge.analysis;
 
             // 過去の同じ大会との比較
             const pastRace = userPerformanceData.recentRaces.find(r => 
@@ -1168,22 +1155,6 @@
                 }
             }
 
-            // 現在のパフォーマンスとの整合性チェック
-            let consistencyNote = "";
-            if (race.distance.type === 'スタンダード' && userPerformanceData.currentVDOT) {
-                const expectedTime = estimateTimeFromVDOT(userPerformanceData.currentVDOT, race.distance);
-                const goalDiff = expectedTime - goalTimeSeconds;
-                
-                if (Math.abs(goalDiff) < 300) { // 5分以内
-                    consistencyNote = "現在の走力レベルに適した現実的な目標です。";
-                } else if (goalDiff < 0) {
-                    const improvement = Math.abs(goalDiff);
-                    consistencyNote = `現在の能力を${Math.floor(improvement/60)}分${improvement%60}秒上回る挑戦的な目標設定です。計画的な能力向上が必要です。`;
-                } else {
-                    consistencyNote = "現在の走力に余裕を持った安全な目標です。";
-                }
-            }
-
             // 季節・時期に応じたアドバイス
             const raceDate = new Date(race.date);
             const raceMonth = raceDate.getMonth() + 1;
@@ -1198,7 +1169,7 @@
             }
 
             // コメント組み立て（300文字程度に拡張）
-            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''}${consistencyNote ? ' ' + consistencyNote : ''} ${performanceAnalysis} ${recommendations} ${trainingFocus} ${seasonalAdvice}`;
+            comment = `${challengeLevel}の目標設定です。${percentileInfo}${comparisonInfo ? ' ' + comparisonInfo : ''} ${performanceAnalysis} ${recommendations} ${trainingFocus} ${seasonalAdvice}`;
 
             // 300文字程度に調整
             if (comment.length > 300) {
@@ -1208,13 +1179,79 @@
             return {
                 comment: comment,
                 challengeLevel: challengeLevel,
-                percentile: percentileInfo ? calculatePercentile(goalTimeSeconds, historicalData.percentiles.male[ageGroup]) : null,
+                percentile: percentile,
                 comparison: comparisonInfo,
-                consistency: consistencyNote,
                 performance: performanceAnalysis,
                 training: trainingFocus,
                 seasonal: seasonalAdvice
             };
+        }
+
+        // 個人パフォーマンスベースのチャレンジ度計算
+        function calculatePersonalChallenge(raceId, goalTimeSeconds) {
+            const race = raceDatabase[raceId];
+            
+            // 現在の能力から予想タイム計算（仮のアルゴリズム）
+            let predictedTime = estimateTimeFromCurrentPerformance(race);
+            
+            // 過去実績がある場合はそれも考慮
+            const pastRace = userPerformanceData.recentRaces.find(r => 
+                r.name.includes(race.name.split('トライアスロン')[0].split('第')[0].trim())
+            );
+            
+            if (pastRace) {
+                const pastTimeSeconds = timeStringToSeconds(pastRace.time);
+                // 過去実績と現在予想の平均を取る（重み付き）
+                predictedTime = (predictedTime * 0.6) + (pastTimeSeconds * 0.4);
+            }
+            
+            // 目標との差を計算
+            const timeDifference = predictedTime - goalTimeSeconds;
+            const improvementPercent = (timeDifference / predictedTime) * 100;
+            
+            let level = "";
+            let analysis = "";
+            
+            if (improvementPercent > 15) {
+                level = "🏆 極めてチャレンジング";
+                analysis = `現在の能力から${formatTime(Math.abs(timeDifference))}の大幅な向上を要求する極めて野心的な目標です。根本的な能力向上が必要です。`;
+            } else if (improvementPercent > 8) {
+                level = "🔥 非常にチャレンジング";
+                analysis = `現在の能力から${formatTime(Math.abs(timeDifference))}の大幅な向上を目指す挑戦的な目標です。集中的なトレーニングが必要です。`;
+            } else if (improvementPercent > 3) {
+                level = "💪 適度にチャレンジング";
+                analysis = `現在の能力から${formatTime(Math.abs(timeDifference))}の向上を目指すバランスの良い目標です。計画的なトレーニングで達成可能です。`;
+            } else if (improvementPercent > -3) {
+                level = "📈 現実的で達成可能";
+                analysis = "現在の能力レベルに適した現実的な目標設定です。着実なトレーニングで確実に達成できるでしょう。";
+            } else if (improvementPercent > -8) {
+                level = "🎯 安全で確実";
+                analysis = "現在の能力に余裕を持った安全な目標設定です。完走を重視した戦略が適しています。";
+            } else {
+                level = "😌 非常に余裕のある";
+                analysis = "現在の能力を大きく下回る非常に余裕のある目標です。楽しむことを最優先とした設定です。";
+            }
+            
+            return { level, analysis };
+        }
+
+        // 現在のパフォーマンスから予想タイム計算（仮のアルゴリズム）
+        function estimateTimeFromCurrentPerformance(race) {
+            // 仮のアルゴリズム：VDOT、FTP、スイムペースから計算
+            const swimTimeEstimate = (race.distance.swim * 1000) * (userPerformanceData.swimPace100m / 100);
+            
+            // FTPから推定バイクスピード計算（仮）
+            const estimatedBikeSpeed = Math.min(45, Math.max(20, userPerformanceData.currentFTP / 6)); // W → km/h変換（仮）
+            const bikeTimeEstimate = (race.distance.bike / estimatedBikeSpeed) * 3600;
+            
+            // VDOTからラン予想タイム計算（仮）
+            const runPacePerKm = Math.max(180, 600 - (userPerformanceData.currentVDOT * 8)); // 秒/km（仮）
+            const runTimeEstimate = race.distance.run * runPacePerKm;
+            
+            // トランジション時間追加（仮）
+            const transitionTime = race.distance.type === 'ロング' ? 600 : 300; // 秒
+            
+            return swimTimeEstimate + bikeTimeEstimate + runTimeEstimate + transitionTime;
         }
 
         // 年代グループ取得
@@ -1425,7 +1462,7 @@
             const challengeLevel = aiAnalysis.challengeLevel.replace(/🏆|🔥|💪|📈|🎯/, '').trim();
             const percentile = aiAnalysis.percentile ? `上位${100-aiAnalysis.percentile}%` : '-';
             
-            // 同年代平均比計算
+            // 同年代平均比計算（符号修正）
             let ageGroupComparison = '-';
             const historicalData = raceHistoricalData[raceId];
             if (historicalData) {
@@ -1433,8 +1470,8 @@
                 const averageTime = historicalData.averageTime.male[ageGroup];
                 if (averageTime) {
                     const avgSeconds = timeStringToSeconds(averageTime);
-                    const diff = totalSeconds - avgSeconds;
-                    ageGroupComparison = `${diff > 0 ? '+' : ''}${formatTime(Math.abs(diff))}`;
+                    const diff = avgSeconds - totalSeconds; // 平均 - 目標（正=目標が速い、負=目標が遅い）
+                    ageGroupComparison = `${diff > 0 ? '-' : '+'}${formatTime(Math.abs(diff))}`;
                 }
             }
             
@@ -2131,7 +2168,7 @@
                 `;
             }
             
-            // 年代平均との比較
+            // 年代平均との比較（符号修正）
             const race = raceDatabase[raceId];
             const historicalData = raceHistoricalData[raceId];
             if (historicalData) {
@@ -2140,12 +2177,12 @@
                 if (averageTime) {
                     const avgSeconds = timeStringToSeconds(averageTime);
                     const goalSeconds = parseTimeString(document.getElementById(`total-time-${raceId}`).textContent);
-                    const diff = goalSeconds - avgSeconds; // 目標 - 平均（正=遅い、負=早い）
+                    const diff = avgSeconds - goalSeconds; // 平均 - 目標（正=目標が速い、負=目標が遅い）
                     
                     insightsHtml += `
                         <div class="ai-insight">
                             <div class="ai-insight-label">同年代平均比</div>
-                            <div class="ai-insight-value">${diff > 0 ? '+' : ''}${formatTime(Math.abs(diff))}</div>
+                            <div class="ai-insight-value">${diff > 0 ? '-' : '+'}${formatTime(Math.abs(diff))}</div>
                         </div>
                     `;
                 }

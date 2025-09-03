@@ -1442,8 +1442,8 @@
                 const paceMinutes = Math.floor(pacePerHundred / 60);
                 const paceSecs = Math.floor(pacePerHundred % 60);
                 
-                const display = document.getElementById(`swim-pace-display-${raceId}`);
-                display.textContent = `ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /100m`;
+                const display = document.getElementById(`swim-result-display-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /100m)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
                 
@@ -1451,8 +1451,8 @@
                 const distance = race.distance.bike;
                 const speed = (distance / (totalSeconds / 3600)).toFixed(1);
                 
-                const display = document.getElementById(`bike-speed-display-${raceId}`);
-                display.textContent = `平均スピード: ${speed} km/h`;
+                const display = document.getElementById(`bike-result-display-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (平均スピード: ${speed} km/h)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
                 
@@ -1462,8 +1462,8 @@
                 const paceMinutes = Math.floor(pacePerKm / 60);
                 const paceSecs = Math.floor(pacePerKm % 60);
                 
-                const display = document.getElementById(`run-pace-display-${raceId}`);
-                display.textContent = `平均ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /km`;
+                const display = document.getElementById(`run-result-display-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (平均ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /km)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
             }

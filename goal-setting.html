@@ -1326,6 +1326,19 @@
                                         平均ペース: --:-- /km
                                     </div>
                                 </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、平均ペース(/km)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="run-pace-minutes-${raceId}" min="3" max="10" placeholder="5" oninput="calculateFromPace('run', '${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="run-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromPace('run', '${raceId}')">
+                                        <span class="input-unit">/km</span>
+                                    </div>
+                                    <div class="calculated-display" id="run-time-display-${raceId}">
+                                        合計タイム: --:--:--
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- トランジション -->

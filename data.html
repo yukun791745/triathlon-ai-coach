@@ -17,7 +17,7 @@
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-top: 120px;
             padding-left: 20px;
             padding-right: 20px;
             padding-bottom: 20px;
@@ -107,12 +107,69 @@
             margin: 0 0.5rem;
             font-size: 0.8rem;
         }
+
+        /* 同期ボタン（ナビゲーションバー内） */
+        .nav-sync-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-sync-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .nav-sync-btn.connect {
+            background: linear-gradient(45deg, #fc4c02, #ff6b35);
+            color: white;
+        }
+
+        .nav-sync-btn.sync {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .nav-sync-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .nav-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .nav-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .nav-status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             min-height: calc(100vh - 140px);
         }
@@ -150,53 +207,8 @@
             overflow-y: auto;
         }
         
-        .strava-header {
-            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
-        }
-        
-        .connect-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-        }
-        
-        .connect-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(252, 76, 2, 0.3);
-        }
-        
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .status.loading {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+        .summary-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
         
         .activity-item {
@@ -253,10 +265,6 @@
             font-size: 0.8em;
         }
         
-        .summary-header {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-        
         .loading-spinner {
             border: 3px solid #f3f3f3;
             border-radius: 50%;
@@ -271,10 +279,67 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Strava接続モーダル */
+        .strava-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .strava-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .strava-modal h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .strava-modal-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .strava-modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(252, 76, 2, 0.3);
+        }
+
+        .modal-close {
+            background: #6c757d;
+            margin-top: 10px;
+        }
         
         @media (max-width: 1024px) {
             body {
-                padding-top: 140px;
+                padding-top: 160px;
+            }
+
+            .flow-nav-container {
+                flex-direction: column;
+                gap: 1rem;
             }
 
             .flow-nav-steps {
@@ -291,6 +356,11 @@
                 display: none;
             }
 
+            .nav-sync-controls {
+                width: 100%;
+                justify-content: center;
+            }
+
             .container {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -299,6 +369,16 @@
     </style>
 </head>
 <body>
+    <!-- Strava接続モーダル -->
+    <div id="stravaModal" class="strava-modal">
+        <div class="strava-modal-content">
+            <h3>Strava連携</h3>
+            <p style="margin-bottom: 1.5rem; color: #666;">アクティビティデータを取得するためにStravaに接続してください。</p>
+            <button id="modalConnectBtn" class="strava-modal-btn">Stravaに接続</button>
+            <button id="modalCloseBtn" class="strava-modal-btn modal-close">後で接続</button>
+        </div>
+    </div>
+
     <!-- フロー型ナビゲーションバー -->
     <nav class="flow-navbar">
         <div class="flow-nav-container">
@@ -318,42 +398,15 @@
                 <span class="flow-nav-arrow">→</span>
                 <span class="flow-nav-step disabled">レース振り返り</span>
             </div>
+            <div class="nav-sync-controls">
+                <div id="navConnectionStatus" class="nav-status">未接続</div>
+                <button id="navConnectBtn" class="nav-sync-btn connect" style="display: none;">接続</button>
+                <button id="navSyncBtn" class="nav-sync-btn sync" style="display: none;">同期</button>
+            </div>
         </div>
     </nav>
 
     <div class="container">
-        <!-- Strava連携パネル -->
-        <div class="panel">
-            <div class="header strava-header">
-                <h1>Strava連携</h1>
-                <p>アクティビティデータを取得</p>
-            </div>
-            
-            <div class="content">
-                <div id="connectionStatus" class="status">未接続</div>
-                
-                <button id="connectBtn" class="connect-btn">
-                    Stravaに接続
-                </button>
-                
-                <div id="syncSection" style="display: none;">
-                    <button id="syncBtn" class="connect-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        アクティビティを同期
-                    </button>
-                    <div id="syncStatus"></div>
-                </div>
-                
-                <div id="stravaInstructions">
-                    <h3>接続手順</h3>
-                    <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
-                        <li>「Stravaに接続」をクリック</li>
-                        <li>Strava認証ページで「Authorize」</li>
-                        <li>アクティビティを同期</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-        
         <!-- アクティビティリストパネル -->
         <div class="panel">
             <div class="header">
@@ -399,12 +452,47 @@
         const STRAVA_CLIENT_ID = '171117';
         const REDIRECT_URI = 'https://wondrous-dasik-a58240.netlify.app/data.html';
         
-        // 初期化時にキャッシュされたデータがあれば表示
-        if (activities.length > 0) {
-            displayActivities(activities);
-            generateSummary(activities);
-            updateConnectionStatus('connected', `${activities.length}件のキャッシュされたアクティビティを表示中`);
-            showSyncSection();
+        // 初期化時の処理
+        function initializeApp() {
+            // キャッシュされたデータがあれば表示
+            if (activities.length > 0) {
+                displayActivities(activities);
+                generateSummary(activities);
+            }
+            
+            // Strava接続状態をチェック
+            if (stravaToken) {
+                updateNavConnectionStatus('connected', 'Strava接続済み');
+                showNavSyncBtn();
+            } else {
+                updateNavConnectionStatus('error', '未接続');
+                showNavConnectBtn();
+                // 初回訪問時はモーダルを表示
+                if (!localStorage.getItem('strava_modal_shown')) {
+                    showStravaModal();
+                    localStorage.setItem('strava_modal_shown', 'true');
+                }
+            }
+        }
+        
+        // モーダル表示/非表示
+        function showStravaModal() {
+            document.getElementById('stravaModal').style.display = 'flex';
+        }
+        
+        function hideStravaModal() {
+            document.getElementById('stravaModal').style.display = 'none';
+        }
+        
+        // ナビゲーションバーの表示制御
+        function showNavConnectBtn() {
+            document.getElementById('navConnectBtn').style.display = 'block';
+            document.getElementById('navSyncBtn').style.display = 'none';
+        }
+        
+        function showNavSyncBtn() {
+            document.getElementById('navConnectBtn').style.display = 'none';
+            document.getElementById('navSyncBtn').style.display = 'block';
         }
         
         // Strava認証開始関数
@@ -413,7 +501,8 @@
             
             const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
             
-            updateConnectionStatus('loading', 'Strava認証ページに移動中...');
+            updateNavConnectionStatus('loading', '認証中...');
+            hideStravaModal();
             
             setTimeout(() => {
                 window.location.href = authUrl;
@@ -426,49 +515,87 @@
             
             if (!stravaToken) {
                 console.error('No Strava token available');
+                updateNavConnectionStatus('error', 'トークンなし');
+                showNavConnectBtn();
                 return;
             }
             
-            updateSyncStatus('loading', 'アクティビティを同期中...');
+            updateNavConnectionStatus('loading', '同期中...');
             
-            // 実際のStrava API呼び出し
-            fetch('/.netlify/functions/strava-activities', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: stravaToken })
+            // Strava APIに直接アクセス
+            const stravaApiUrl = 'https://www.strava.com/api/v3/athlete/activities';
+            const after = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+            
+            fetch(`${stravaApiUrl}?after=${after}&per_page=30`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${stravaToken}`,
+                    'Accept': 'application/json'
+                }
             })
             .then(response => {
                 if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
+                    throw new Error(`Strava API error: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Activities received:', data);
+                console.log('Direct Strava activities received:', data.length);
                 
-                if (data.activities) {
-                    activities = data.activities;
-                    localStorage.setItem('cached_activities', JSON.stringify(activities));
-                    
-                    displayActivities(activities);
-                    generateSummary(activities);
-                    updateSyncStatus('connected', `${activities.length}件のアクティビティを同期しました`);
-                    
-                    console.log('Real Strava activities synced and cached');
-                } else {
-                    throw new Error('No activities in response');
-                }
+                activities = data;
+                localStorage.setItem('cached_activities', JSON.stringify(activities));
+                
+                displayActivities(activities);
+                generateSummary(activities);
+                updateNavConnectionStatus('connected', `${activities.length}件同期完了`);
+                
+                console.log('Strava activities synced successfully');
             })
             .catch(error => {
-                console.error('Sync error:', error);
-                updateSyncStatus('error', '同期に失敗しました: ' + (error.error || error.message));
+                console.error('Sync failed, trying Netlify function:', error);
                 
-                // トークンが無効な場合はクリア
-                if (error.status === 401) {
-                    localStorage.removeItem('strava_access_token');
-                    stravaToken = null;
-                    updateConnectionStatus('error', '認証が無効です。再接続してください');
-                }
+                // フォールバック: Netlify Functions
+                fetch('/.netlify/functions/strava-activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: stravaToken })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            try {
+                                const errorData = JSON.parse(text);
+                                throw new Error(errorData.error || text);
+                            } catch {
+                                throw new Error(text);
+                            }
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.activities) {
+                        activities = data.activities;
+                        localStorage.setItem('cached_activities', JSON.stringify(activities));
+                        
+                        displayActivities(activities);
+                        generateSummary(activities);
+                        updateNavConnectionStatus('connected', `${activities.length}件同期完了`);
+                    } else {
+                        throw new Error('No activities in response');
+                    }
+                })
+                .catch(netlifyError => {
+                    console.error('Both sync methods failed:', netlifyError);
+                    updateNavConnectionStatus('error', '同期失敗');
+                    
+                    // トークンが無効な場合はクリア
+                    if (error.message.includes('401') || netlifyError.message.includes('401')) {
+                        localStorage.removeItem('strava_access_token');
+                        stravaToken = null;
+                        showNavConnectBtn();
+                    }
+                });
             });
         }
         
@@ -552,21 +679,10 @@
         }
         
         // ユーティリティ関数
-        function updateConnectionStatus(className, message) {
-            const status = document.getElementById('connectionStatus');
-            status.className = `status ${className}`;
+        function updateNavConnectionStatus(className, message) {
+            const status = document.getElementById('navConnectionStatus');
+            status.className = `nav-status ${className}`;
             status.textContent = message;
-        }
-        
-        function updateSyncStatus(className, message) {
-            const status = document.getElementById('syncStatus');
-            status.className = `status ${className}`;
-            status.textContent = message;
-        }
-        
-        function showSyncSection() {
-            document.getElementById('syncSection').style.display = 'block';
-            document.getElementById('stravaInstructions').style.display = 'none';
         }
         
         function displayActivities(activitiesData) {
@@ -619,18 +735,10 @@
                 
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Activity clicked:', activityId);
-                    console.log('Opening activity detail page...');
-                    
-                    // activity-detail.htmlに遷移
                     const detailUrl = `activity-detail.html?id=${activityId}`;
-                    console.log('Detail URL:', detailUrl);
-                    
                     window.open(detailUrl, '_blank');
                 });
             });
-            
-            console.log('Activity items displayed with click handlers');
         }
         
         function formatDuration(seconds) {
@@ -647,13 +755,13 @@
         
         function getActivityIcon(type) {
             const icons = {
-                'Run': 'ï¿½',
-                'Ride': 'ï¿½', 
-                'Swim': 'ï¿½',
-                'WeightTraining': 'ï¿½',
-                'Yoga': 'ï¿½'
+                'Run': '🏃',
+                'Ride': '🚴', 
+                'Swim': '🏊',
+                'WeightTraining': '🏋️',
+                'Yoga': '🧘'
             };
-            return icons[type] || 'ï¿½';
+            return icons[type] || '💪';
         }
         
         function getSportDisplayName(type) {
@@ -673,9 +781,8 @@
             const code = urlParams.get('code');
             
             if (code && !stravaToken) {
-                updateConnectionStatus('loading', '認証処理中...');
+                updateNavConnectionStatus('loading', '認証処理中...');
                 
-                // 実際のStrava API呼び出し
                 fetch('/.netlify/functions/strava-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -694,18 +801,19 @@
                         localStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
                         localStorage.setItem('strava_expires_at', data.expires_at);
                         
-                        updateConnectionStatus('connected', 'Strava接続完了！');
-                        showSyncSection();
+                        updateNavConnectionStatus('connected', 'Strava接続完了！');
+                        showNavSyncBtn();
                         window.history.replaceState({}, document.title, window.location.pathname);
                         
-                        console.log('Real Strava token received, ready for sync');
+                        // 自動的に同期を実行
+                        setTimeout(syncActivities, 1000);
                     } else {
                         throw new Error('No access token received');
                     }
                 })
                 .catch(error => {
                     console.error('Token exchange error:', error);
-                    updateConnectionStatus('error', '認証に失敗しました: ' + (error.error || error.message));
+                    updateNavConnectionStatus('error', '認証失敗');
                 });
             }
         }
@@ -714,28 +822,29 @@
         window.addEventListener('load', function() {
             console.log('Page loaded, initializing...');
             
-            // 既にトークンがあるかチェック
-            if (stravaToken) {
-                updateConnectionStatus('connected', 'Strava接続済み');
-                showSyncSection();
-            }
-            
+            initializeApp();
             handleStravaCallback();
             
-            const connectBtn = document.getElementById('connectBtn');
-            const syncBtn = document.getElementById('syncBtn');
-            const clearCacheBtn = document.getElementById('clearCacheBtn');
+            // イベントリスナーの設定
+            const navConnectBtn = document.getElementById('navConnectBtn');
+            const navSyncBtn = document.getElementById('navSyncBtn');
+            const modalConnectBtn = document.getElementById('modalConnectBtn');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
             
-            if (connectBtn) {
-                connectBtn.addEventListener('click', connectStrava);
+            if (navConnectBtn) {
+                navConnectBtn.addEventListener('click', connectStrava);
             }
             
-            if (syncBtn) {
-                syncBtn.addEventListener('click', syncActivities);
+            if (navSyncBtn) {
+                navSyncBtn.addEventListener('click', syncActivities);
             }
             
-            if (clearCacheBtn) {
-                clearCacheBtn.addEventListener('click', clearCache);
+            if (modalConnectBtn) {
+                modalConnectBtn.addEventListener('click', connectStrava);
+            }
+            
+            if (modalCloseBtn) {
+                modalCloseBtn.addEventListener('click', hideStravaModal);
             }
             
             console.log('Initialization complete!');

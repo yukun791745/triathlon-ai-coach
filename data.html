@@ -460,7 +460,7 @@
                 const heartRate = activity.average_heartrate ? `${Math.round(activity.average_heartrate)}bpm` : '-';
                 
                 return `
-                    <div class="activity-item" data-activity-id="${activity.id}">
+                    <div class="activity-item" data-activity-id="${activity.id}" style="cursor: pointer;">
                         <div class="activity-header">
                             <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
                             <span class="activity-date">${date}</span>
@@ -484,6 +484,25 @@
             }).join('');
             
             container.innerHTML = html;
+            
+            // クリックイベントリスナーを追加
+            document.querySelectorAll('.activity-item').forEach(item => {
+                const activityId = item.getAttribute('data-activity-id');
+                
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Activity clicked:', activityId);
+                    console.log('Opening activity detail page...');
+                    
+                    // activity-detail.htmlに遷移
+                    const detailUrl = `activity-detail.html?id=${activityId}`;
+                    console.log('Detail URL:', detailUrl);
+                    
+                    window.open(detailUrl, '_blank');
+                });
+            });
+            
+            console.log('Activity items displayed with click handlers');
         }
         
         function formatDuration(seconds) {

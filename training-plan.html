@@ -15,7 +15,95 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
-            padding: 32px 16px;
+            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-left: 16px;
+            padding-right: 16px;
+            padding-bottom: 32px;
+        }
+
+        /* フロー型ナビゲーションバー */
+        .flow-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .flow-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .flow-nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .flow-nav-steps {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-nav-step {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .flow-nav-step.home {
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+            color: #374151;
+        }
+
+        .flow-nav-step.current {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 3px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .flow-nav-step.available {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .flow-nav-step.disabled {
+            background: linear-gradient(45deg, #d1d5db, #9ca3af);
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .flow-nav-step:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .flow-nav-arrow {
+            color: #9ca3af;
+            margin: 0 0.5rem;
+            font-size: 0.8rem;
         }
         
         .container {
@@ -395,6 +483,24 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding-top: 140px;
+            }
+
+            .flow-nav-steps {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .flow-nav-step {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .flow-nav-arrow {
+                display: none;
+            }
+
             .input-grid {
                 grid-template-columns: 1fr;
             }
@@ -419,23 +525,45 @@
     </style>
 </head>
 <body>
+    <!-- フロー型ナビゲーションバー -->
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="index.html" class="flow-nav-step home">ホーム</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="race-selection.html" class="flow-nav-step available">レース選択</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="goal-setting.html" class="flow-nav-step available">目標設定</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="#" class="flow-nav-step current">トレーニング計画</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="progress-tracking.html" class="flow-nav-step available">トレーニング進捗</a>
+                <span class="flow-nav-arrow">→</span>
+                <span class="flow-nav-step disabled">レース戦略</span>
+                <span class="flow-nav-arrow">→</span>
+                <span class="flow-nav-step disabled">レース振り返り</span>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
         <!-- ヘッダー -->
         <div class="header">
-            <h1 class="title">🚀 トレーニング計画</h1>
+            <h1 class="title">トレーニング計画</h1>
             <p class="subtitle">TSSベースのピリオダイゼーション計画</p>
             
             <div class="breadcrumb">
                 <div class="breadcrumb-item">
-                    <span>📋 大会選択</span>
+                    <span>大会選択</span>
                 </div>
                 <span>→</span>
                 <div class="breadcrumb-item">
-                    <span>🎯 目標設定</span>
+                    <span>目標設定</span>
                 </div>
                 <span>→</span>
                 <div class="breadcrumb-item breadcrumb-current">
-                    <span>🚀 トレーニング計画</span>
+                    <span>トレーニング計画</span>
                 </div>
             </div>
         </div>
@@ -443,14 +571,14 @@
         <!-- ユーザー情報入力 -->
         <div class="user-input-section">
             <h2 class="section-title">
-                📝 トレーニング設定
+                トレーニング設定
                 <span style="font-size: 14px; font-weight: 400; color: #6b7280;">- あなたの状況に合わせてトレーニング計画を作成します</span>
             </h2>
             
             <div class="input-grid">
                 <!-- 基本情報 -->
                 <div class="input-group">
-                    <h3 class="input-group-title">📊 基本情報</h3>
+                    <h3 class="input-group-title">基本情報</h3>
                     
                     <div class="form-field">
                         <label class="form-label">トレーニング開始希望日</label>
@@ -476,7 +604,7 @@
 
                 <!-- スケジュール設定 -->
                 <div class="input-group">
-                    <h3 class="input-group-title">📅 スケジュール設定</h3>
+                    <h3 class="input-group-title">スケジュール設定</h3>
                     
                     <div class="form-field">
                         <label class="form-label">ロングセッション可能日（複数選択可）</label>
@@ -525,7 +653,7 @@
 
                 <!-- 現在のフィットネス -->
                 <div class="input-group">
-                    <h3 class="input-group-title">💪 現在のフィットネス</h3>
+                    <h3 class="input-group-title">現在のフィットネス</h3>
                     
                     <div class="form-field">
                         <label class="form-label">VO2max（ラン）</label>
@@ -555,7 +683,7 @@
 
                 <!-- 強度配分設定 -->
                 <div class="input-group">
-                    <h3 class="input-group-title">⚡ 強度配分設定</h3>
+                    <h3 class="input-group-title">強度配分設定</h3>
                     
                     <div class="form-field">
                         <label class="form-label">Zone2（有酸素ベース）割合</label>
@@ -580,7 +708,7 @@
             </div>
             
             <button class="generate-button" onclick="generateTrainingPlan()">
-                🚀 トレーニング計画を作成
+                トレーニング計画を作成
             </button>
         </div>
 
@@ -588,7 +716,7 @@
         <div class="training-summary-section" id="training-summary-section">
             <div class="summary-header">
                 <h2 class="section-title">
-                    📊 トレーニング計画サマリー
+                    トレーニング計画サマリー
                 </h2>
                 <div class="summary-stats" id="summary-stats">
                     <!-- JavaScript で動的に生成 -->
@@ -597,7 +725,7 @@
 
             <!-- 期待改善効果 -->
             <div class="improvement-section">
-                <h3 class="improvement-title">📈 期待改善効果（トレーニング終了時点）</h3>
+                <h3 class="improvement-title">期待改善効果（トレーニング終了時点）</h3>
                 <div class="improvement-grid" id="improvement-grid">
                     <!-- JavaScript で動的に生成 -->
                 </div>
@@ -610,7 +738,7 @@
 
             <!-- 週別トレーニングチャート -->
             <div class="chart-container">
-                <div class="chart-title">📊 週別トレーニング時間</div>
+                <div class="chart-title">週別トレーニング時間</div>
                 <div class="chart-wrapper">
                     <svg class="chart-svg" id="hours-chart">
                         <!-- JavaScript で動的に生成 -->
@@ -637,7 +765,7 @@
             </div>
 
             <div class="chart-container">
-                <div class="chart-title">📈 週別TSS</div>
+                <div class="chart-title">週別TSS</div>
                 <div class="chart-wrapper">
                     <svg class="chart-svg" id="tss-chart">
                         <!-- JavaScript で動的に生成 -->
@@ -645,649 +773,3 @@
                 </div>
                 <div class="chart-legend">
                     <div class="legend-item">
-                        <div class="legend-color color-swim"></div>
-                        <span>スイム</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-bike"></div>
-                        <span>バイク</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-run"></div>
-                        <span>ラン</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-strength"></div>
-                        <span>筋トレ</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- フッター -->
-        <div class="footer">
-            <p>🤖 科学的なピリオダイゼーションに基づくトレーニング計画</p>
-        </div>
-    </div>
-
-    <script>
-        // デモ用の目標設定済み大会データ
-        const completedGoals = new Map([
-            ['miyakojima_2025', {
-                name: '第39回全日本トライアスロン宮古島大会',
-                date: '2025-04-13',
-                location: '沖縄県宮古島市',
-                distance: { swim: 3.0, bike: 155, run: 42.195, type: 'ロング' },
-                isArace: true
-            }],
-            ['shonan_2025', {
-                name: '湘南国際トライアスロン大会',
-                date: '2025-05-18',
-                location: '神奈川県藤沢市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' },
-                isArace: false
-            }]
-        ]);
-
-        // 初期化
-        function init() {
-            console.log('🚀 トレーニング計画ページ初期化開始');
-            
-            // メインレース選択肢を設定
-            populateMainRaceOptions();
-            
-            // デフォルト開始日を今日に設定
-            const today = new Date();
-            document.getElementById('training-start-date').value = today.toISOString().split('T')[0];
-        }
-
-        // メインレース選択肢を設定
-        function populateMainRaceOptions() {
-            const select = document.getElementById('main-race-select');
-            
-            completedGoals.forEach((race, raceId) => {
-                if (race.isArace) {
-                    const option = document.createElement('option');
-                    option.value = raceId;
-                    option.textContent = `${race.name} (${new Date(race.date).toLocaleDateString('ja-JP')})`;
-                    select.appendChild(option);
-                }
-            });
-        }
-
-        // トレーニング計画作成
-        function generateTrainingPlan() {
-            console.log('📊 トレーニング計画作成開始');
-            
-            // フォームデータ取得
-            const formData = getFormData();
-            if (!formData) return;
-            
-            // ピリオダイゼーション計算
-            const periodization = calculatePeriodization(formData);
-            
-            // TSS・Zone配分計算
-            const weeklyPlans = calculateWeeklyPlans(formData, periodization);
-            
-            // 改善予測計算
-            const improvements = calculateImprovements(formData, periodization.totalWeeks);
-            
-            // UI更新
-            updateTrainingSummary(formData, weeklyPlans, improvements, periodization);
-            
-            // サマリーセクション表示
-            document.getElementById('training-summary-section').style.display = 'block';
-        }
-
-        // フォームデータ取得
-        function getFormData() {
-            const startDate = document.getElementById('training-start-date').value;
-            const mainRaceId = document.getElementById('main-race-select').value;
-            const weeklyHours = parseInt(document.getElementById('weekly-hours').value);
-            
-            if (!startDate || !mainRaceId) {
-                alert('トレーニング開始日とメインレースを選択してください。');
-                return null;
-            }
-            
-            // ロングセッション可能日取得
-            const longDays = [];
-            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
-                if (document.getElementById(`long-${day.slice(0,3)}`).checked) {
-                    longDays.push(day);
-                }
-            });
-            
-            return {
-                startDate: new Date(startDate),
-                mainRace: completedGoals.get(mainRaceId),
-                mainRaceDate: new Date(completedGoals.get(mainRaceId).date),
-                weeklyHours: weeklyHours,
-                longDays: longDays,
-                focusDiscipline: document.getElementById('focus-discipline').value,
-                currentVDOT: parseInt(document.getElementById('current-vdot').value) || 42,
-                currentFTP: parseInt(document.getElementById('current-ftp').value) || 240,
-                currentSwimPace: parseInt(document.getElementById('current-swim-pace').value) || 135,
-                currentFrequency: document.getElementById('current-frequency').value,
-                zone2Ratio: parseInt(document.getElementById('zone2-ratio').value) / 100,
-                strengthFrequency: parseInt(document.getElementById('strength-frequency').value)
-            };
-        }
-
-        // ピリオダイゼーション計算
-        function calculatePeriodization(formData) {
-            // 日数計算を修正
-            const timeDiff = formData.mainRaceDate.getTime() - formData.startDate.getTime();
-            const totalDays = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
-            const totalWeeks = Math.ceil(totalDays / 7);
-            
-            console.log(`📅 期間計算: ${totalDays}日 = ${totalWeeks}週`);
-            
-            let phases = {};
-            if (totalWeeks >= 16) {
-                // 16週以上：完全ピリオダイゼーション
-                phases = {
-                    base: Math.ceil(totalWeeks * 0.5),      // 50% ベース期
-                    build: Math.ceil(totalWeeks * 0.3),     // 30% ビルド期
-                    peak: Math.ceil(totalWeeks * 0.15),     // 15% ピーク期
-                    taper: Math.max(1, Math.ceil(totalWeeks * 0.05)) // 5% テーパー期
-                };
-            } else if (totalWeeks >= 12) {
-                // 12-15週：標準ピリオダイゼーション
-                phases = {
-                    base: Math.ceil(totalWeeks * 0.45),
-                    build: Math.ceil(totalWeeks * 0.35),
-                    peak: Math.ceil(totalWeeks * 0.15),
-                    taper: Math.max(1, Math.ceil(totalWeeks * 0.05))
-                };
-            } else if (totalWeeks >= 8) {
-                // 8-11週：短縮ピリオダイゼーション
-                phases = {
-                    base: Math.ceil(totalWeeks * 0.4),
-                    build: Math.ceil(totalWeeks * 0.4),
-                    peak: Math.ceil(totalWeeks * 0.15),
-                    taper: Math.max(1, Math.ceil(totalWeeks * 0.05))
-                };
-            } else {
-                // 8週未満：最小ピリオダイゼーション
-                phases = {
-                    base: Math.max(1, Math.ceil(totalWeeks * 0.3)),
-                    build: Math.max(1, Math.ceil(totalWeeks * 0.4)),
-                    peak: Math.max(1, Math.ceil(totalWeeks * 0.2)),
-                    taper: Math.max(1, Math.ceil(totalWeeks * 0.1))
-                };
-            }
-            
-            // 週数調整
-            const totalPhaseWeeks = phases.base + phases.build + phases.peak + phases.taper;
-            if (totalPhaseWeeks !== totalWeeks) {
-                const diff = totalWeeks - totalPhaseWeeks;
-                phases.base += diff; // ベース期で調整
-            }
-            
-            return { phases, totalWeeks };
-        }
-
-        // 週別計画計算
-        function calculateWeeklyPlans(formData, periodization) {
-            const plans = [];
-            let currentWeek = 0;
-            
-            // 各フェーズの計算
-            Object.entries(periodization.phases).forEach(([phase, weeks]) => {
-                for (let i = 0; i < weeks; i++) {
-                    currentWeek++;
-                    const weekPlan = calculateWeekPlan(formData, phase, currentWeek, periodization.totalWeeks);
-                    plans.push({ ...weekPlan, phase, week: currentWeek });
-                }
-            });
-            
-            return plans;
-        }
-
-        // 週単位計画計算
-        function calculateWeekPlan(formData, phase, weekNum, totalWeeks) {
-            const baseHours = formData.weeklyHours;
-            
-            // フェーズ別強度係数
-            const phaseMultipliers = {
-                base: 1.0,
-                build: 1.1,
-                peak: 1.2,
-                taper: 0.6
-            };
-            
-            const totalHours = baseHours * phaseMultipliers[phase];
-            
-            // 種目別時間配分（バランス型デフォルト）
-            let distribution = {
-                swim: 0.25,
-                bike: 0.35,
-                run: 0.30,
-                strength: 0.10
-            };
-            
-            // 優先種目調整
-            if (formData.focusDiscipline === 'swim') {
-                distribution = { swim: 0.35, bike: 0.30, run: 0.25, strength: 0.10 };
-            } else if (formData.focusDiscipline === 'bike') {
-                distribution = { swim: 0.20, bike: 0.45, run: 0.25, strength: 0.10 };
-            } else if (formData.focusDiscipline === 'run') {
-                distribution = { swim: 0.20, bike: 0.30, run: 0.40, strength: 0.10 };
-            }
-            
-            // 筋トレ頻度調整
-            distribution.strength = formData.strengthFrequency * 0.05;
-            const remaining = 1 - distribution.strength;
-            ['swim', 'bike', 'run'].forEach(discipline => {
-                distribution[discipline] = distribution[discipline] * remaining;
-            });
-            
-            // 時間配分
-            const hours = {
-                swim: totalHours * distribution.swim,
-                bike: totalHours * distribution.bike,
-                run: totalHours * distribution.run,
-                strength: totalHours * distribution.strength
-            };
-            
-            // TSS計算（仮の係数）
-            const tssPerHour = {
-                swim: 50,   // スイムTSS/h
-                bike: 70,   // バイクTSS/h  
-                run: 85,    // ランTSS/h
-                strength: 40 // 筋トレTSS/h
-            };
-            
-            const tss = {};
-            Object.keys(hours).forEach(discipline => {
-                tss[discipline] = Math.round(hours[discipline] * tssPerHour[discipline]);
-            });
-            
-            // Zone配分計算
-            const zones = calculateZoneDistribution(formData, phase, hours);
-            
-            return { hours, tss, zones };
-        }
-
-        // Zone配分計算
-        function calculateZoneDistribution(formData, phase, hours) {
-            const zone2Ratio = formData.zone2Ratio;
-            const highIntensityRatio = 1 - zone2Ratio;
-            
-            // フェーズ別Zone配分調整
-            const phaseAdjustments = {
-                base: { zone2: 1.0, high: 0.8 },      // ベース期：低強度重視
-                build: { zone2: 0.9, high: 1.2 },     // ビルド期：強度バランス
-                peak: { zone2: 0.8, high: 1.4 },      // ピーク期：高強度重視  
-                taper: { zone2: 0.7, high: 0.6 }      // テーパー期：全体的に軽く
-            };
-            
-            const adjustment = phaseAdjustments[phase];
-            const zones = {};
-            
-            Object.keys(hours).forEach(discipline => {
-                if (discipline === 'strength') {
-                    zones[discipline] = {
-                        zone1: hours[discipline] * 1.0, // 筋トレは全てZone1として扱う
-                        zone2: 0, zone3: 0, zone4: 0, zone5: 0
-                    };
-                } else {
-                    const totalHours = hours[discipline];
-                    const adjustedZone2Ratio = Math.min(0.95, zone2Ratio * adjustment.zone2);
-                    const adjustedHighRatio = (1 - adjustedZone2Ratio) * adjustment.high;
-                    
-                    zones[discipline] = {
-                        zone1: totalHours * adjustedZone2Ratio * 0.5,  // Zone1-2を半分ずつ
-                        zone2: totalHours * adjustedZone2Ratio * 0.5,
-                        zone3: totalHours * adjustedHighRatio * 0.4,   // 高強度をZone3-5に配分
-                        zone4: totalHours * adjustedHighRatio * 0.4,
-                        zone5: totalHours * adjustedHighRatio * 0.2
-                    };
-                }
-            });
-            
-            return zones;
-        }
-
-        // 改善予測計算
-        function calculateImprovements(formData, totalWeeks) {
-            // トレーニング強度係数（週あたりの改善率） - 修正版
-            const weeklyImprovementRate = {
-                beginner: 0.008,    // 0.8%/週
-                intermediate: 0.005, // 0.5%/週
-                advanced: 0.003,    // 0.3%/週
-                elite: 0.002        // 0.2%/週
-            };
-            
-            const rate = weeklyImprovementRate[formData.currentFrequency] || 0.005;
-            const totalImprovementRatio = rate * totalWeeks;
-            
-            // 改善上限（現実的な範囲）
-            const maxLimits = {
-                vdot: 0.20,    // 最大20%改善
-                ftp: 0.25,     // 最大25%改善
-                swim: 0.10     // 最大10%改善
-            };
-            
-            // 実際の改善率計算（上限適用）
-            const vdotImprovementRatio = Math.min(totalImprovementRatio, maxLimits.vdot);
-            const ftpImprovementRatio = Math.min(totalImprovementRatio * 1.1, maxLimits.ftp); // バイクは少し改善しやすい
-            const swimImprovementRatio = Math.min(totalImprovementRatio * 0.7, maxLimits.swim); // スイムは技術要素で改善限定
-            
-            // 改善後の値
-            const improvedVDOT = formData.currentVDOT * (1 + vdotImprovementRatio);
-            const improvedFTP = formData.currentFTP * (1 + ftpImprovementRatio);
-            const improvedSwimPace = formData.currentSwimPace * (1 - swimImprovementRatio); // ペースは小さいほうが良い
-            
-            // タイム改善計算
-            const runTimeImprovement = calculateRunTimeImprovement(formData.currentVDOT, improvedVDOT, formData.mainRace.distance.run);
-            const bikeTimeImprovement = calculateBikeTimeImprovement(formData.currentFTP, improvedFTP, formData.mainRace.distance.bike);
-            
-            return {
-                vdot: { current: formData.currentVDOT, improved: improvedVDOT, gain: vdotImprovementRatio * 100 },
-                ftp: { current: formData.currentFTP, improved: improvedFTP, gain: ftpImprovementRatio * 100 },
-                swimPace: { current: formData.currentSwimPace, improved: improvedSwimPace, gain: swimImprovementRatio * 100 },
-                runTime: runTimeImprovement,
-                bikeTime: bikeTimeImprovement
-            };
-        }
-
-        // ランタイム改善計算
-        function calculateRunTimeImprovement(currentVDOT, improvedVDOT, distance) {
-            // VDOTから推定ペース計算（簡易版）
-            const currentPace = 600 - (currentVDOT * 8); // 秒/km（仮の計算）
-            const improvedPace = 600 - (improvedVDOT * 8);
-            
-            const currentTime = (currentPace * distance) / 60; // 分
-            const improvedTime = (improvedPace * distance) / 60;
-            
-            return {
-                current: Math.round(currentTime),
-                improved: Math.round(improvedTime),
-                gain: Math.round(currentTime - improvedTime)
-            };
-        }
-
-        // バイクタイム改善計算
-        function calculateBikeTimeImprovement(currentFTP, improvedFTP, distance) {
-            // FTPから推定スピード計算（仮の計算）
-            const currentSpeed = Math.min(45, Math.max(20, currentFTP / 6)); // km/h
-            const improvedSpeed = Math.min(45, Math.max(20, improvedFTP / 6));
-            
-            const currentTime = (distance / currentSpeed) * 60; // 分
-            const improvedTime = (distance / improvedSpeed) * 60;
-            
-            return {
-                current: Math.round(currentTime),
-                improved: Math.round(improvedTime),
-                gain: Math.round(currentTime - improvedTime)
-            };
-        }
-
-        // トレーニングサマリーUI更新
-        function updateTrainingSummary(formData, weeklyPlans, improvements, periodization) {
-            // 統計情報更新
-            updateSummaryStats(formData, weeklyPlans, periodization);
-            
-            // 改善予測更新
-            updateImprovementSection(improvements);
-            
-            // Zone分布チャート更新
-            updateZoneDistribution(weeklyPlans);
-            
-            // 週別チャート更新
-            updateWeeklyCharts(weeklyPlans, periodization);
-        }
-
-        // 統計情報更新
-        function updateSummaryStats(formData, weeklyPlans, periodization) {
-            const totalHours = weeklyPlans.reduce((sum, week) => 
-                sum + Object.values(week.hours).reduce((s, h) => s + h, 0), 0);
-            const totalTSS = weeklyPlans.reduce((sum, week) => 
-                sum + Object.values(week.tss).reduce((s, t) => s + t, 0), 0);
-            
-            const statsHtml = `
-                <div class="summary-stat">
-                    <div class="summary-stat-number">${periodization.totalWeeks}</div>
-                    <div class="summary-stat-label">総週数</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="summary-stat-number">${Math.round(totalHours)}</div>
-                    <div class="summary-stat-label">総時間</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="summary-stat-number">${totalTSS}</div>
-                    <div class="summary-stat-label">総TSS</div>
-                </div>
-                <div class="summary-stat">
-                    <div class="summary-stat-number">${Math.round(totalHours / periodization.totalWeeks)}</div>
-                    <div class="summary-stat-label">週平均時間</div>
-                </div>
-            `;
-            
-            document.getElementById('summary-stats').innerHTML = statsHtml;
-        }
-
-        // 改善予測セクション更新
-        function updateImprovementSection(improvements) {
-            const improvementHtml = `
-                <div class="improvement-item">
-                    <div class="improvement-value">VO2max: ${improvements.vdot.current.toFixed(0)} → ${improvements.vdot.improved.toFixed(0)}</div>
-                    <div class="improvement-label">+${improvements.vdot.gain.toFixed(1)}% 向上</div>
-                </div>
-                <div class="improvement-item">
-                    <div class="improvement-value">FTP: ${improvements.ftp.current}W → ${Math.round(improvements.ftp.improved)}W</div>
-                    <div class="improvement-label">+${improvements.ftp.gain.toFixed(1)}% 向上</div>
-                </div>
-                <div class="improvement-item">
-                    <div class="improvement-value">ランタイム: ${improvements.runTime.current}分 → ${improvements.runTime.improved}分</div>
-                    <div class="improvement-label">${improvements.runTime.gain}分 短縮</div>
-                </div>
-                <div class="improvement-item">
-                    <div class="improvement-value">バイクタイム: ${improvements.bikeTime.current}分 → ${improvements.bikeTime.improved}分</div>
-                    <div class="improvement-label">${improvements.bikeTime.gain}分 短縮</div>
-                </div>
-            `;
-            
-            document.getElementById('improvement-grid').innerHTML = improvementHtml;
-        }
-
-        // Zone分布チャート更新
-        function updateZoneDistribution(weeklyPlans) {
-            // 全期間のZone合計計算
-            const totalZones = {
-                swim: { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 },
-                bike: { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 },
-                run: { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 }
-            };
-            
-            weeklyPlans.forEach(week => {
-                ['swim', 'bike', 'run'].forEach(discipline => {
-                    Object.keys(totalZones[discipline]).forEach(zone => {
-                        totalZones[discipline][zone] += week.zones[discipline][zone];
-                    });
-                });
-            });
-            
-            // チャートHTML生成
-            let chartsHtml = '';
-            ['swim', 'bike', 'run'].forEach(discipline => {
-                const zones = totalZones[discipline];
-                const total = Object.values(zones).reduce((sum, val) => sum + val, 0);
-                
-                if (total > 0) {
-                    const percentages = {};
-                    Object.keys(zones).forEach(zone => {
-                        percentages[zone] = (zones[zone] / total) * 100;
-                    });
-                    
-                    chartsHtml += `
-                        <div class="zone-chart">
-                            <div class="zone-chart-title">${discipline.toUpperCase()} Zone分布</div>
-                            <div class="zone-bar">
-                                <div class="zone-segment zone1" style="width: ${percentages.zone1}%">${percentages.zone1 > 5 ? 'Z1' : ''}</div>
-                                <div class="zone-segment zone2" style="width: ${percentages.zone2}%">${percentages.zone2 > 5 ? 'Z2' : ''}</div>
-                                <div class="zone-segment zone3" style="width: ${percentages.zone3}%">${percentages.zone3 > 5 ? 'Z3' : ''}</div>
-                                <div class="zone-segment zone4" style="width: ${percentages.zone4}%">${percentages.zone4 > 5 ? 'Z4' : ''}</div>
-                                <div class="zone-segment zone5" style="width: ${percentages.zone5}%">${percentages.zone5 > 5 ? 'Z5' : ''}</div>
-                            </div>
-                            <div class="zone-legend">
-                                <span>Z1: ${percentages.zone1.toFixed(0)}%</span>
-                                <span>Z2: ${percentages.zone2.toFixed(0)}%</span>
-                                <span>Z3: ${percentages.zone3.toFixed(0)}%</span>
-                                <span>Z4: ${percentages.zone4.toFixed(0)}%</span>
-                                <span>Z5: ${percentages.zone5.toFixed(0)}%</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            
-            document.getElementById('zone-distribution').innerHTML = chartsHtml;
-        }
-
-        // 週別チャート更新
-        function updateWeeklyCharts(weeklyPlans, periodization) {
-            updateStackedBarChart('hours-chart', weeklyPlans, 'hours', 'h');
-            updateStackedBarChart('tss-chart', weeklyPlans, 'tss', '');
-        }
-
-        // 積み上げ棒グラフ更新
-        function updateStackedBarChart(chartId, weeklyPlans, dataType, unit) {
-            const svg = document.getElementById(chartId);
-            const svgRect = svg.getBoundingClientRect();
-            const width = svgRect.width || 800;
-            const height = svgRect.height || 300;
-            
-            const margin = { top: 20, right: 20, bottom: 50, left: 60 };
-            const chartWidth = width - margin.left - margin.right;
-            const chartHeight = height - margin.top - margin.bottom;
-            
-            // データ準備
-            const disciplines = ['swim', 'bike', 'run', 'strength'];
-            const colors = {
-                swim: '#0891b2',
-                bike: '#dc2626', 
-                run: '#059669',
-                strength: '#7c3aed'
-            };
-            
-            const maxValue = Math.max(...weeklyPlans.map(week => 
-                disciplines.reduce((sum, d) => sum + (week[dataType][d] || 0), 0)
-            ));
-            
-            // 軸スケール
-            const barWidth = Math.max(20, chartWidth / weeklyPlans.length * 0.8);
-            const barSpacing = chartWidth / weeklyPlans.length;
-            
-            // SVG初期化
-            svg.innerHTML = '';
-            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-            
-            // Y軸目盛り
-            const yTicks = 5;
-            for (let i = 0; i <= yTicks; i++) {
-                const y = margin.top + (chartHeight * i / yTicks);
-                const value = maxValue * (yTicks - i) / yTicks;
-                
-                // 格子線
-                const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                gridLine.setAttribute('x1', margin.left);
-                gridLine.setAttribute('y1', y);
-                gridLine.setAttribute('x2', margin.left + chartWidth);
-                gridLine.setAttribute('y2', y);
-                gridLine.setAttribute('stroke', '#e5e7eb');
-                gridLine.setAttribute('stroke-width', '1');
-                svg.appendChild(gridLine);
-                
-                // Y軸ラベル
-                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                label.setAttribute('x', margin.left - 10);
-                label.setAttribute('y', y + 4);
-                label.setAttribute('text-anchor', 'end');
-                label.setAttribute('font-size', '12');
-                label.setAttribute('fill', '#6b7280');
-                label.textContent = Math.round(value * 10) / 10;
-                svg.appendChild(label);
-            }
-            
-            // 棒グラフ描画
-            weeklyPlans.forEach((week, index) => {
-                const x = margin.left + (index * barSpacing) + (barSpacing - barWidth) / 2;
-                let currentY = margin.top + chartHeight;
-                
-                disciplines.forEach(discipline => {
-                    const value = week[dataType][discipline] || 0;
-                    if (value > 0) {
-                        const barHeight = (value / maxValue) * chartHeight;
-                        
-                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        rect.setAttribute('x', x);
-                        rect.setAttribute('y', currentY - barHeight);
-                        rect.setAttribute('width', barWidth);
-                        rect.setAttribute('height', barHeight);
-                        rect.setAttribute('fill', colors[discipline]);
-                        
-                        // ツールチップ（簡易版）
-                        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-                        title.textContent = `W${week.week} ${discipline}: ${value.toFixed(1)}${unit}`;
-                        rect.appendChild(title);
-                        
-                        svg.appendChild(rect);
-                        currentY -= barHeight;
-                    }
-                });
-                
-                // X軸ラベル（週番号）
-                const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                xLabel.setAttribute('x', x + barWidth / 2);
-                xLabel.setAttribute('y', margin.top + chartHeight + 20);
-                xLabel.setAttribute('text-anchor', 'middle');
-                xLabel.setAttribute('font-size', '11');
-                xLabel.setAttribute('fill', '#374151');
-                xLabel.textContent = `W${week.week}`;
-                svg.appendChild(xLabel);
-                
-                // フェーズ区切り線
-                if (index > 0 && week.phase !== weeklyPlans[index - 1].phase) {
-                    const phaseLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    phaseLine.setAttribute('x1', x - barSpacing / 2);
-                    phaseLine.setAttribute('y1', margin.top);
-                    phaseLine.setAttribute('x2', x - barSpacing / 2);
-                    phaseLine.setAttribute('y2', margin.top + chartHeight);
-                    phaseLine.setAttribute('stroke', '#f59e0b');
-                    phaseLine.setAttribute('stroke-width', '2');
-                    phaseLine.setAttribute('stroke-dasharray', '4,4');
-                    svg.appendChild(phaseLine);
-                }
-            });
-            
-            // Y軸線
-            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            yAxis.setAttribute('x1', margin.left);
-            yAxis.setAttribute('y1', margin.top);
-            yAxis.setAttribute('x2', margin.left);
-            yAxis.setAttribute('y2', margin.top + chartHeight);
-            yAxis.setAttribute('stroke', '#374151');
-            yAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(yAxis);
-            
-            // X軸線
-            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            xAxis.setAttribute('x1', margin.left);
-            xAxis.setAttribute('y1', margin.top + chartHeight);
-            xAxis.setAttribute('x2', margin.left + chartWidth);
-            xAxis.setAttribute('y2', margin.top + chartHeight);
-            xAxis.setAttribute('stroke', '#374151');
-            xAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(xAxis);
-        }
-
-        // ページ読み込み時の初期化
-        document.addEventListener('DOMContentLoaded', init);
-
-        console.log('✅ トレーニング計画ページスクリプト読み込み完了');
-    </script>
-</body>
-</html>

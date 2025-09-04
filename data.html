@@ -334,7 +334,7 @@
         
         @media (max-width: 1024px) {
             body {
-                padding-top: 160px;
+                padding-top: 120px;
             }
 
             .flow-nav-container {
@@ -356,14 +356,22 @@
                 display: none;
             }
 
-            .nav-sync-controls {
-                width: 100%;
-                justify-content: center;
+            .sync-controls {
+                top: 130px;
+                right: 10px;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .sync-btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
 
             .container {
                 grid-template-columns: 1fr;
                 gap: 10px;
+                min-height: calc(100vh - 160px);
             }
         }
     </style>

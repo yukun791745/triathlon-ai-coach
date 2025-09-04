@@ -17,7 +17,95 @@
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
+        }
+
+        /* フロー型ナビゲーションバー */
+        .flow-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .flow-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .flow-nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .flow-nav-steps {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-nav-step {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .flow-nav-step.home {
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+            color: #374151;
+        }
+
+        .flow-nav-step.current {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 3px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .flow-nav-step.available {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .flow-nav-step.disabled {
+            background: linear-gradient(45deg, #d1d5db, #9ca3af);
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .flow-nav-step:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .flow-nav-arrow {
+            color: #9ca3af;
+            margin: 0 0.5rem;
+            font-size: 0.8rem;
         }
         
         .container {
@@ -26,7 +114,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
-            min-height: calc(100vh - 40px);
+            min-height: calc(100vh - 140px);
         }
         
         .panel {
@@ -185,6 +273,24 @@
         }
         
         @media (max-width: 1024px) {
+            body {
+                padding-top: 140px;
+            }
+
+            .flow-nav-steps {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .flow-nav-step {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .flow-nav-arrow {
+                display: none;
+            }
+
             .container {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -193,11 +299,33 @@
     </style>
 </head>
 <body>
+    <!-- フロー型ナビゲーションバー -->
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="index.html" class="flow-nav-step home">ホーム</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="race-selection.html" class="flow-nav-step available">レース選択</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="goal-setting.html" class="flow-nav-step available">目標設定</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="training-plan.html" class="flow-nav-step available">トレーニング計画</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="#" class="flow-nav-step current">トレーニング進捗</a>
+                <span class="flow-nav-arrow">→</span>
+                <span class="flow-nav-step disabled">レース戦略</span>
+                <span class="flow-nav-arrow">→</span>
+                <span class="flow-nav-step disabled">レース振り返り</span>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
         <!-- Strava連携パネル -->
         <div class="panel">
             <div class="header strava-header">
-                <h1>🏃‍♂️ Strava連携</h1>
+                <h1>Strava連携</h1>
                 <p>アクティビティデータを取得</p>
             </div>
             
@@ -210,13 +338,13 @@
                 
                 <div id="syncSection" style="display: none;">
                     <button id="syncBtn" class="connect-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        📊 アクティビティを同期
+                        アクティビティを同期
                     </button>
                     <div id="syncStatus"></div>
                 </div>
                 
                 <div id="stravaInstructions">
-                    <h3>📋 接続手順</h3>
+                    <h3>接続手順</h3>
                     <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
                         <li>「Stravaに接続」をクリック</li>
                         <li>Strava認証ページで「Authorize」</li>
@@ -229,7 +357,7 @@
         <!-- アクティビティリストパネル -->
         <div class="panel">
             <div class="header">
-                <h1>📈 アクティビティ一覧</h1>
+                <h1>アクティビティ一覧</h1>
                 <p>過去30日のトレーニング</p>
             </div>
             
@@ -245,7 +373,7 @@
         <!-- トレーニングサマリーパネル -->
         <div class="panel">
             <div class="header summary-header">
-                <h1>📊 トレーニングサマリー</h1>
+                <h1>トレーニングサマリー</h1>
                 <p>期間別統計とゾーン分析</p>
             </div>
             
@@ -260,7 +388,7 @@
     </div>
 
     <script>
-        console.log('🚀 JavaScript loading started...');
+        console.log('JavaScript loading started...');
         
         // グローバル変数
         let currentUser = { uid: 'anonymous_user' };
@@ -275,33 +403,33 @@
         if (activities.length > 0) {
             displayActivities(activities);
             generateSummary(activities);
-            updateConnectionStatus('connected', `✅ ${activities.length}件のキャッシュされたアクティビティを表示中`);
+            updateConnectionStatus('connected', `${activities.length}件のキャッシュされたアクティビティを表示中`);
             showSyncSection();
         }
         
         // Strava認証開始関数
         function connectStrava() {
-            console.log('🚀 connectStrava called');
+            console.log('connectStrava called');
             
             const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
             
-            updateConnectionStatus('loading', '🔄 Strava認証ページに移動中...');
+            updateConnectionStatus('loading', 'Strava認証ページに移動中...');
             
             setTimeout(() => {
                 window.location.href = authUrl;
             }, 500);
         }
         
-        // アクティビティ同期関数（実際のAPI呼び出し版）
+        // アクティビティ同期関数
         function syncActivities() {
-            console.log('📊 syncActivities called');
+            console.log('syncActivities called');
             
             if (!stravaToken) {
-                console.error('❌ No Strava token available');
+                console.error('No Strava token available');
                 return;
             }
             
-            updateSyncStatus('loading', '🔄 アクティビティを同期中...');
+            updateSyncStatus('loading', 'アクティビティを同期中...');
             
             // 実際のStrava API呼び出し
             fetch('/.netlify/functions/strava-activities', {
@@ -316,7 +444,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log('📊 Activities received:', data);
+                console.log('Activities received:', data);
                 
                 if (data.activities) {
                     activities = data.activities;
@@ -324,22 +452,22 @@
                     
                     displayActivities(activities);
                     generateSummary(activities);
-                    updateSyncStatus('connected', `✅ ${activities.length}件のアクティビティを同期しました`);
+                    updateSyncStatus('connected', `${activities.length}件のアクティビティを同期しました`);
                     
-                    console.log('📊 Real Strava activities synced and cached');
+                    console.log('Real Strava activities synced and cached');
                 } else {
                     throw new Error('No activities in response');
                 }
             })
             .catch(error => {
-                console.error('❌ Sync error:', error);
-                updateSyncStatus('error', '❌ 同期に失敗しました: ' + (error.error || error.message));
+                console.error('Sync error:', error);
+                updateSyncStatus('error', '同期に失敗しました: ' + (error.error || error.message));
                 
                 // トークンが無効な場合はクリア
                 if (error.status === 401) {
                     localStorage.removeItem('strava_access_token');
                     stravaToken = null;
-                    updateConnectionStatus('error', '❌ 認証が無効です。再接続してください');
+                    updateConnectionStatus('error', '認証が無効です。再接続してください');
                 }
             });
         }
@@ -374,7 +502,7 @@
             
             container.innerHTML = `
                 <div style="margin-bottom: 25px;">
-                    <h3 style="margin-bottom: 15px; color: #333;">📈 総合統計</h3>
+                    <h3 style="margin-bottom: 15px; color: #333;">総合統計</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
@@ -404,7 +532,7 @@
                 </div>
                 
                 <div style="margin-bottom: 25px;">
-                    <h3 style="margin-bottom: 15px; color: #333;">🏃‍♂️ 種目別統計</h3>
+                    <h3 style="margin-bottom: 15px; color: #333;">種目別統計</h3>
                     ${Object.entries(sportStats).map(([sport, stats]) => `
                         <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -519,13 +647,13 @@
         
         function getActivityIcon(type) {
             const icons = {
-                'Run': '🏃‍♂️',
-                'Ride': '🚴‍♂️', 
-                'Swim': '🏊‍♂️',
-                'WeightTraining': '🏋️‍♂️',
-                'Yoga': '🧘‍♂️'
+                'Run': 'ï¿½',
+                'Ride': 'ï¿½', 
+                'Swim': 'ï¿½',
+                'WeightTraining': 'ï¿½',
+                'Yoga': 'ï¿½'
             };
-            return icons[type] || '💪';
+            return icons[type] || 'ï¿½';
         }
         
         function getSportDisplayName(type) {
@@ -539,13 +667,13 @@
             return names[type] || type;
         }
         
-        // Stravaコールバック処理（実際のAPI呼び出し版）
+        // Stravaコールバック処理
         function handleStravaCallback() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             
             if (code && !stravaToken) {
-                updateConnectionStatus('loading', '🔄 認証処理中...');
+                updateConnectionStatus('loading', '認証処理中...');
                 
                 // 実際のStrava API呼び出し
                 fetch('/.netlify/functions/strava-auth', {
@@ -566,29 +694,29 @@
                         localStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
                         localStorage.setItem('strava_expires_at', data.expires_at);
                         
-                        updateConnectionStatus('connected', '✅ Strava接続完了！');
+                        updateConnectionStatus('connected', 'Strava接続完了！');
                         showSyncSection();
                         window.history.replaceState({}, document.title, window.location.pathname);
                         
-                        console.log('✅ Real Strava token received, ready for sync');
+                        console.log('Real Strava token received, ready for sync');
                     } else {
                         throw new Error('No access token received');
                     }
                 })
                 .catch(error => {
-                    console.error('❌ Token exchange error:', error);
-                    updateConnectionStatus('error', '❌ 認証に失敗しました: ' + (error.error || error.message));
+                    console.error('Token exchange error:', error);
+                    updateConnectionStatus('error', '認証に失敗しました: ' + (error.error || error.message));
                 });
             }
         }
         
         // ページ読み込み時の初期化
         window.addEventListener('load', function() {
-            console.log('🚀 Page loaded, initializing...');
+            console.log('Page loaded, initializing...');
             
             // 既にトークンがあるかチェック
             if (stravaToken) {
-                updateConnectionStatus('connected', '✅ Strava接続済み');
+                updateConnectionStatus('connected', 'Strava接続済み');
                 showSyncSection();
             }
             
@@ -610,10 +738,10 @@
                 clearCacheBtn.addEventListener('click', clearCache);
             }
             
-            console.log('🎉 Initialization complete!');
+            console.log('Initialization complete!');
         });
         
-        console.log('✅ JavaScript loading completed');
+        console.log('JavaScript loading completed');
     </script>
 </body>
 </html>

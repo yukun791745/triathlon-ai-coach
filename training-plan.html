@@ -530,7 +530,7 @@
         <div class="flow-nav-container">
             <div class="flow-nav-logo">AI Triathlon Coach</div>
             <div class="flow-nav-steps">
-                <a href="index.html" class="flow-nav-step home">ホーム</a>
+                <a href="landing-page.html" class="flow-nav-step home">ホーム</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="race-selection.html" class="flow-nav-step available">レース選択</a>
                 <span class="flow-nav-arrow">→</span>
@@ -747,6 +747,189 @@
                 <div class="chart-legend">
                     <div class="legend-item">
                         <div class="legend-color color-swim"></div>
+                        <span>スイム</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-bike"></div>
+                        <span>バイク</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-run"></div>
+                        <span>ラン</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color color-strength"></div>
+                        <span>筋トレ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- フッター -->
+        <div class="footer">
+            <p>科学的なピリオダイゼーションに基づくトレーニング計画</p>
+        </div>
+    </div>
+
+    <script>
+        // デモ用の目標設定済み大会データ
+        const completedGoals = new Map([
+            ['miyakojima_2025', {
+                name: '第39回全日本トライアスロン宮古島大会',
+                date: '2025-04-13',
+                location: '沖縄県宮古島市',
+                distance: { swim: 3.0, bike: 155, run: 42.195, type: 'ロング' },
+                isArace: true
+            }],
+            ['shonan_2025', {
+                name: '湘南国際トライアスロン大会',
+                date: '2025-05-18',
+                location: '神奈川県藤沢市',
+                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' },
+                isArace: false
+            }]
+        ]);
+
+        // 初期化
+        function init() {
+            console.log('トレーニング計画ページ初期化開始');
+            
+            // メインレース選択肢を設定
+            populateMainRaceOptions();
+            
+            // デフォルト開始日を今日に設定
+            const today = new Date();
+            document.getElementById('training-start-date').value = today.toISOString().split('T')[0];
+        }
+
+        // メインレース選択肢を設定
+        function populateMainRaceOptions() {
+            const select = document.getElementById('main-race-select');
+            
+            completedGoals.forEach((race, raceId) => {
+                if (race.isArace) {
+                    const option = document.createElement('option');
+                    option.value = raceId;
+                    option.textContent = `${race.name} (${new Date(race.date).toLocaleDateString('ja-JP')})`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // トレーニング計画作成
+        function generateTrainingPlan() {
+            console.log('トレーニング計画作成開始');
+            
+            // サマリーセクション表示
+            document.getElementById('training-summary-section').style.display = 'block';
+            
+            // デモデータで更新
+            updateTrainingSummary();
+        }
+
+        // トレーニングサマリー更新（デモ版）
+        function updateTrainingSummary() {
+            // 統計情報
+            document.getElementById('summary-stats').innerHTML = `
+                <div class="summary-stat">
+                    <div class="summary-stat-number">16</div>
+                    <div class="summary-stat-label">総週数</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-number">128</div>
+                    <div class="summary-stat-label">総時間</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-number">6400</div>
+                    <div class="summary-stat-label">総TSS</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-number">8</div>
+                    <div class="summary-stat-label">週平均時間</div>
+                </div>
+            `;
+            
+            // 改善予測
+            document.getElementById('improvement-grid').innerHTML = `
+                <div class="improvement-item">
+                    <div class="improvement-value">VO2max: 42 → 46</div>
+                    <div class="improvement-label">+9.5% 向上</div>
+                </div>
+                <div class="improvement-item">
+                    <div class="improvement-value">FTP: 240W → 264W</div>
+                    <div class="improvement-label">+10.0% 向上</div>
+                </div>
+                <div class="improvement-item">
+                    <div class="improvement-value">ランタイム: 50分 → 46分</div>
+                    <div class="improvement-label">4分 短縮</div>
+                </div>
+                <div class="improvement-item">
+                    <div class="improvement-value">バイクタイム: 96分 → 88分</div>
+                    <div class="improvement-label">8分 短縮</div>
+                </div>
+            `;
+            
+            // Zone分布（デモ）
+            document.getElementById('zone-distribution').innerHTML = `
+                <div class="zone-chart">
+                    <div class="zone-chart-title">SWIM Zone分布</div>
+                    <div class="zone-bar">
+                        <div class="zone-segment zone1" style="width: 30%">Z1</div>
+                        <div class="zone-segment zone2" style="width: 50%">Z2</div>
+                        <div class="zone-segment zone3" style="width: 15%">Z3</div>
+                        <div class="zone-segment zone4" style="width: 5%"></div>
+                        <div class="zone-segment zone5" style="width: 0%"></div>
+                    </div>
+                    <div class="zone-legend">
+                        <span>Z1: 30%</span>
+                        <span>Z2: 50%</span>
+                        <span>Z3: 15%</span>
+                        <span>Z4: 5%</span>
+                        <span>Z5: 0%</span>
+                    </div>
+                </div>
+                <div class="zone-chart">
+                    <div class="zone-chart-title">BIKE Zone分布</div>
+                    <div class="zone-bar">
+                        <div class="zone-segment zone1" style="width: 25%">Z1</div>
+                        <div class="zone-segment zone2" style="width: 55%">Z2</div>
+                        <div class="zone-segment zone3" style="width: 15%">Z3</div>
+                        <div class="zone-segment zone4" style="width: 5%"></div>
+                        <div class="zone-segment zone5" style="width: 0%"></div>
+                    </div>
+                    <div class="zone-legend">
+                        <span>Z1: 25%</span>
+                        <span>Z2: 55%</span>
+                        <span>Z3: 15%</span>
+                        <span>Z4: 5%</span>
+                        <span>Z5: 0%</span>
+                    </div>
+                </div>
+                <div class="zone-chart">
+                    <div class="zone-chart-title">RUN Zone分布</div>
+                    <div class="zone-bar">
+                        <div class="zone-segment zone1" style="width: 35%">Z1</div>
+                        <div class="zone-segment zone2" style="width: 45%">Z2</div>
+                        <div class="zone-segment zone3" style="width: 15%">Z3</div>
+                        <div class="zone-segment zone4" style="width: 5%"></div>
+                        <div class="zone-segment zone5" style="width: 0%"></div>
+                    </div>
+                    <div class="zone-legend">
+                        <span>Z1: 35%</span>
+                        <span>Z2: 45%</span>
+                        <span>Z3: 15%</span>
+                        <span>Z4: 5%</span>
+                        <span>Z5: 0%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html><div class="legend-color color-swim"></div>
                         <span>スイム</span>
                     </div>
                     <div class="legend-item">

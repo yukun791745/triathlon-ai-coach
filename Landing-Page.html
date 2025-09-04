@@ -432,6 +432,9 @@
         function navigateToStep(step) {
             // ページ遷移の実装
             switch(step) {
+                case 'home':
+                    window.location.href = 'index.html'; // または現在のファイル名
+                    break;
                 case 'race-selection':
                     window.location.href = 'race-selection.html';
                     break;

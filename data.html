@@ -577,6 +577,7 @@
             
             const connectBtn = document.getElementById('connectBtn');
             const syncBtn = document.getElementById('syncBtn');
+            const clearCacheBtn = document.getElementById('clearCacheBtn');
             
             if (connectBtn) {
                 connectBtn.addEventListener('click', connectStrava);
@@ -584,6 +585,10 @@
             
             if (syncBtn) {
                 syncBtn.addEventListener('click', syncActivities);
+            }
+            
+            if (clearCacheBtn) {
+                clearCacheBtn.addEventListener('click', clearCache);
             }
             
             console.log('🎉 Initialization complete!');

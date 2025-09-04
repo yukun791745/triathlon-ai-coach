@@ -732,6 +732,23 @@
             `;
         }
         
+        // 戻るボタンの処理
+        function goBackToData() {
+            try {
+                // 親ウィンドウ（data.html）がある場合はそこに戻る
+                if (window.opener && !window.opener.closed) {
+                    window.opener.focus();
+                    window.close();
+                } else {
+                    // 親ウィンドウがない場合は直接data.htmlに移動
+                    window.location.href = 'data.html';
+                }
+            } catch (e) {
+                console.log('⚠️ Cannot access parent window, redirecting to data.html');
+                window.location.href = 'data.html';
+            }
+        }
+        
         // ユーティリティ関数
         function formatDuration(seconds) {
             if (!seconds) return '0:00';
@@ -771,23 +788,6 @@
                 'Yoga': '🧘‍♂️'
             };
             return icons[type] || '🏃‍♂️';
-        }
-        
-        // 戻るボタンの処理
-        function goBackToData() {
-            try {
-                // 親ウィンドウ（data.html）がある場合はそこに戻る
-                if (window.opener && !window.opener.closed) {
-                    window.opener.focus();
-                    window.close();
-                } else {
-                    // 親ウィンドウがない場合は直接data.htmlに移動
-                    window.location.href = 'data.html';
-                }
-            } catch (e) {
-                console.log('⚠️ Cannot access parent window, redirecting to data.html');
-                window.location.href = 'data.html';
-            }
         }
         
         // ページ初期化

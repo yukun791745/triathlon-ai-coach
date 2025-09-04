@@ -604,7 +604,7 @@
         // デバッグフラグ
         let showDebug = false;
 
-        // 大会データ（51大会完全版 - race-selection.htmlと同一）
+        // 大会データ（51大会完全版）
         const raceDatabase = {
             // 4月開催大会
             'miyakojima_2025': {
@@ -688,155 +688,7 @@
                 distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
             },
 
-            // 6月開催大会
-            'nagaragawa_2025': {
-                name: '長良川国際トライアスロン大会',
-                date: '2025-06-08',
-                location: '岐阜県海津市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'biwako_2025': {
-                name: 'びわ湖トライアスロン',
-                date: '2025-06-15',
-                location: '滋賀県大津市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'murakami_sasagawa_2025': {
-                name: '村上・笹川流れ国際トライアスロン',
-                date: '2025-06-22',
-                location: '新潟県村上市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'jtu_supersprint_2025': {
-                name: '日本スーパースプリントトライアスロン選手権',
-                date: '2025-06-22',
-                location: '愛知県蒲郡市',
-                distance: { swim: 0.3, bike: 6.6, run: 1.6, type: 'スーパースプリント' }
-            },
-            'osaka_castle_2025': {
-                name: '大阪城トライアスロン',
-                date: '2025-06-01',
-                location: '大阪府大阪市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-            'kobe_port_2025': {
-                name: '神戸ポートアイランドトライアスロン',
-                date: '2025-06-08',
-                location: '兵庫県神戸市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-            'toyama_bayside_2025': {
-                name: '富山ベイサイドトライアスロン',
-                date: '2025-06-29',
-                location: '富山県富山市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'niigata_2025': {
-                name: '新潟トライアスロン',
-                date: '2025-06-15',
-                location: '新潟県新潟市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-
-            // 7月開催大会
-            'kaiki_2025': {
-                name: '皆生トライアスロン',
-                date: '2025-07-13',
-                location: '鳥取県米子市',
-                distance: { swim: 3.0, bike: 140, run: 42.195, type: 'ロング' }
-            },
-            'atami_2025': {
-                name: '熱海こがしトライアスロン',
-                date: '2025-07-20',
-                location: '静岡県熱海市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-            'kisarazu_2025': {
-                name: '木更津トライアスロン',
-                date: '2025-07-27',
-                location: '千葉県木更津市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'iwate_yakibashiri_2025': {
-                name: '岩手山焼走りトライアスロン',
-                date: '2025-07-06',
-                location: '岩手県八幡平市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'fukushima_2025': {
-                name: '福島トライアスロン',
-                date: '2025-07-13',
-                location: '福島県いわき市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'sendai_bay_2025': {
-                name: '宮城トライアスロン仙台ベイ',
-                date: '2025-07-20',
-                location: '宮城県仙台市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'aomori_2025': {
-                name: '青森トライアスロン',
-                date: '2025-07-27',
-                location: '青森県青森市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-            'aquathlon_uminomori_2025': {
-                name: '第3回日本アクアスロン選手権',
-                date: '2025-07-13',
-                location: '東京都江東区・海の森',
-                distance: { swim: 2.5, bike: 0, run: 10, type: 'アクアスロン' }
-            },
-            'tomakomai_2025': {
-                name: '第37回苫小牧ハスカップトライアスロン大会',
-                date: '2025-07-20',
-                location: '北海道苫小牧市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-
-            // 8月開催大会
-            'hokkaido_date_2025': {
-                name: '北海道トライアスロン伊達大会',
-                date: '2025-08-03',
-                location: '北海道伊達市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'kujukuri_2025': {
-                name: '九十九里トライアスロン',
-                date: '2025-08-10',
-                location: '千葉県九十九里町',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'toyako_2025': {
-                name: '洞爺湖トライアスロン国際大会',
-                date: '2025-08-17',
-                location: '北海道洞爺湖町',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'shikotsu_2025': {
-                name: '支笏湖トライアスロン',
-                date: '2025-08-24',
-                location: '北海道千歳市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'hakodate_2025': {
-                name: '函館トライアスロン',
-                date: '2025-08-31',
-                location: '北海道函館市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'towada_2025': {
-                name: '十和田湖トライアスロン',
-                date: '2025-08-10',
-                location: '青森県十和田市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'yamagata_2025': {
-                name: '山形トライアスロン',
-                date: '2025-08-17',
-                location: '山形県酒田市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
+            // 8月開催大会（重要な大会を追加）
             'akita_2025': {
                 name: '秋田トライアスロン',
                 date: '2025-08-24',
@@ -856,74 +708,6 @@
                 date: '2025-09-07',
                 location: '新潟県佐渡市',
                 distance: { swim: 3.8, bike: 190, run: 42.195, type: 'ロング' }
-            },
-            'goto_2025': {
-                name: '五島長崎国際トライアスロン',
-                date: '2025-09-14',
-                location: '長崎県五島市',
-                distance: { swim: 3.8, bike: 180, run: 42.195, type: 'ロング' }
-            },
-            'irago_2025': {
-                name: '伊良湖トライアスロン',
-                date: '2025-09-21',
-                location: '愛知県田原市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'setouchi_2025': {
-                name: '瀬戸内海トライアスロン',
-                date: '2025-09-07',
-                location: '広島県尾道市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'shimanami_2025': {
-                name: 'しまなみ海道トライアスロン',
-                date: '2025-09-14',
-                location: '愛媛県今治市',
-                distance: { swim: 1.9, bike: 90, run: 21.1, type: 'ミドル' }
-            },
-            'hiroshima_2025': {
-                name: '広島トライアスロン',
-                date: '2025-09-21',
-                location: '広島県広島市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'yamaguchi_2025': {
-                name: '山口トライアスロン',
-                date: '2025-09-28',
-                location: '山口県下関市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-
-            // 10月開催大会
-            'jtu_championship_2025': {
-                name: '日本トライアスロン選手権',
-                date: '2025-10-05',
-                location: '神奈川県横浜市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'amakusa_2025': {
-                name: '天草国際トライアスロン',
-                date: '2025-10-12',
-                location: '熊本県天草市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'expo_banpaku_2025': {
-                name: 'EXPO70万博記念公園トライアスロン',
-                date: '2025-10-19',
-                location: '大阪府吹田市',
-                distance: { swim: 0.75, bike: 20, run: 5, type: 'スプリント' }
-            },
-            'nanki_shirahama_2025': {
-                name: '南紀白浜トライアスロン',
-                date: '2025-10-26',
-                location: '和歌山県白浜町',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'yokosuka_2025': {
-                name: '横須賀トライアスロン',
-                date: '2025-10-05',
-                location: '神奈川県横須賀市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
             }
         };
 
@@ -947,31 +731,18 @@
         function updateDebugInfo() {
             const debugContent = document.getElementById('debug-content');
             const urlParams = new URLSearchParams(window.location.search);
-            const hashParams = new URLSearchParams(window.location.hash.substring(1));
             
             debugContent.innerHTML = `
                 <strong>URL情報:</strong><br>
                 - Full URL: ${window.location.href}<br>
                 - Query String: ${window.location.search}<br>
-                - Hash: ${window.location.hash}<br>
                 <br>
                 <strong>URLパラメータ:</strong><br>
                 ${Array.from(urlParams.entries()).map(([key, value]) => `- ${key}: ${value}`).join('<br>') || '(なし)'}<br>
                 <br>
-                <strong>Hashパラメータ:</strong><br>
-                ${Array.from(hashParams.entries()).map(([key, value]) => `- ${key}: ${value}`).join('<br>') || '(なし)'}<br>
-                <br>
-                <strong>localStorage:</strong><br>
-                ${Object.keys(localStorage).map(key => `- ${key}: ${localStorage.getItem(key)}`).join('<br>') || '(なし)'}<br>
-                <br>
                 <strong>選択データ:</strong><br>
                 - aRaces: [${selectedRacesData.aRaces.join(', ')}]<br>
                 - otherRaces: [${selectedRacesData.otherRaces.join(', ')}]<br>
-                <br>
-                <strong>大会データベース存在確認:</strong><br>
-                ${[...selectedRacesData.aRaces, ...selectedRacesData.otherRaces].map(raceId => 
-                    `- ${raceId}: ${raceDatabase[raceId] ? '✅存在' : '❌未登録'}`
-                ).join('<br>') || '(選択されていません)'}
             `;
         }
 
@@ -979,10 +750,7 @@
         function init() {
             console.log('🚀 目標設定ページ初期化開始');
             
-            // 複数の方法でデータを取得を試行
-            let foundData = false;
-            
-            // 方法1: URLクエリパラメータから取得
+            // URLパラメータから取得
             const urlParams = new URLSearchParams(window.location.search);
             const racesParam = urlParams.get('races');
             
@@ -990,71 +758,23 @@
                 try {
                     selectedRacesData = JSON.parse(decodeURIComponent(racesParam));
                     console.log('✅ URLパラメータから選択データ取得:', selectedRacesData);
-                    foundData = true;
                 } catch (error) {
                     console.error('❌ URLパラメータ解析エラー:', error);
+                    // デモデータを使用
+                    selectedRacesData = {
+                        aRaces: ['miyakojima_2025'],
+                        otherRaces: ['shonan_2025']
+                    };
                 }
-            }
-            
-            // 方法2: URLハッシュフラグメントから取得
-            if (!foundData && window.location.hash) {
-                try {
-                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                    const hashRacesParam = hashParams.get('races');
-                    if (hashRacesParam) {
-                        selectedRacesData = JSON.parse(decodeURIComponent(hashRacesParam));
-                        console.log('✅ ハッシュパラメータから選択データ取得:', selectedRacesData);
-                        foundData = true;
-                    }
-                } catch (error) {
-                    console.error('❌ ハッシュパラメータ解析エラー:', error);
-                }
-            }
-            
-            // 方法3: localStorageから取得
-            if (!foundData) {
-                try {
-                    const storedData = localStorage.getItem('selectedRaces');
-                    if (storedData) {
-                        selectedRacesData = JSON.parse(storedData);
-                        console.log('✅ localStorageから選択データ取得:', selectedRacesData);
-                        foundData = true;
-                    }
-                } catch (error) {
-                    console.error('❌ localStorage解析エラー:', error);
-                }
-            }
-            
-            // 方法4: postMessageで親ページから受信（iframe内の場合）
-            if (!foundData) {
-                window.addEventListener('message', function(event) {
-                    if (event.data && event.data.type === 'selectedRaces') {
-                        selectedRacesData = event.data.races;
-                        console.log('✅ postMessageから選択データ取得:', selectedRacesData);
-                        showRaceSelectionPanel();
-                    }
-                });
-                
-                // 親ページにデータ要求
-                if (window.parent !== window) {
-                    window.parent.postMessage({type: 'requestSelectedRaces'}, '*');
-                }
-            }
-            
-            // デモ用のサンプルデータ（全ての方法で取得できない場合）
-            if (!foundData || (selectedRacesData.aRaces.length === 0 && selectedRacesData.otherRaces.length === 0)) {
-                console.log('📝 デモ用サンプルデータを使用');
+            } else {
+                // デモデータを使用
                 selectedRacesData = {
-                    aRaces: ['miyakojima_2025', 'shonan_2025'],
-                    otherRaces: ['tokyo_festa_2025', 'gamagori_2025']
+                    aRaces: ['miyakojima_2025'],
+                    otherRaces: ['shonan_2025']
                 };
-                foundData = true;
             }
             
-            // 選択された大会があるかチェック
             const totalSelected = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
-            
-            console.log(`📊 選択大会数: ${totalSelected} (A-race: ${selectedRacesData.aRaces.length}, その他: ${selectedRacesData.otherRaces.length})`);
             
             if (totalSelected === 0) {
                 showNoSelectionPanel();
@@ -1069,16 +789,12 @@
                 <div style="text-align: center; padding: 48px 24px;">
                     <h2 style="font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 16px;">⚠️ 参加大会が選択されていません</h2>
                     <p style="font-size: 16px; color: #6b7280; margin-bottom: 32px; line-height: 1.6;">
-                        目標設定を行うには、まず参加予定の大会を選択してください。<br>
-                        大会一覧ページでAレース・その他レースを選択してから戻ってきてください。
+                        目標設定を行うには、まず参加予定の大会を選択してください。
                     </p>
                     <div class="action-buttons">
                         <a href="race-selection.html" class="action-button primary">
                             📋 大会選択ページに戻る
                         </a>
-                        <button class="action-button warning" onclick="toggleDebug()">
-                            🔍 デバッグ情報表示
-                        </button>
                     </div>
                 </div>
             `;
@@ -1086,18 +802,7 @@
 
         // 大会選択パネル表示
         function showRaceSelectionPanel() {
-            const completedCount = completedGoals.size;
-            const totalCount = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
-            
-            if (completedCount > 0) {
-                updateStepIndicator(
-                    `ステップ 1: 目標設定する大会を選択 (${completedCount}/${totalCount}大会完了)`, 
-                    '追加で目標設定したい大会を1つクリックしてください'
-                );
-            } else {
-                updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を1つ選んでください');
-            }
-            
+            updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を1つ選んでください');
             renderRaceSelectionGrid();
         }
 
@@ -1112,16 +817,12 @@
             const racesGrid = document.getElementById('races-grid');
             let html = '';
             
-            console.log('🎨 大会リスト表示開始');
-            
             // Aレース
             selectedRacesData.aRaces.forEach(raceId => {
                 const race = raceDatabase[raceId];
                 if (race) {
                     html += createRaceSelectionCard(raceId, race, 'a-race');
-                    console.log(`✅ Aレース追加: ${raceId} - ${race.name}`);
                 } else {
-                    console.error('❌ Aレース大会データが見つかりません:', raceId);
                     html += createErrorCard(raceId, 'a-race');
                 }
             });
@@ -1131,9 +832,7 @@
                 const race = raceDatabase[raceId];
                 if (race) {
                     html += createRaceSelectionCard(raceId, race, 'other-race');
-                    console.log(`✅ その他レース追加: ${raceId} - ${race.name}`);
                 } else {
-                    console.error('❌ その他レース大会データが見つかりません:', raceId);
                     html += createErrorCard(raceId, 'other-race');
                 }
             });
@@ -1143,7 +842,6 @@
             }
             
             racesGrid.innerHTML = html;
-            console.log('🎨 大会リスト表示完了');
         }
 
         // エラーカード生成
@@ -1195,7 +893,7 @@
             `;
         }
 
-        // 大会選択（1つずつ）
+        // 大会選択
         function selectRaceForGoal(raceId) {
             console.log('🎯 大会選択:', raceId);
             currentGoalRace = raceId;
@@ -1271,16 +969,27 @@
                                 <div class="input-group">
                                     <label class="input-label">目標タイム</label>
                                     <div class="input-row">
-                                        <input type="number" class="time-input" id="swim-hours-${raceId}" min="0" max="9" placeholder="0" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <input type="number" class="time-input" id="swim-hours-${raceId}" min="0" max="9" placeholder="0" oninput="clearPaceInputs('swim', '${raceId}'); calculateFromTime('swim', '${raceId}')">
                                         <span class="input-unit">時間</span>
-                                        <input type="number" class="time-input" id="swim-minutes-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <input type="number" class="time-input" id="swim-minutes-${raceId}" min="0" max="59" placeholder="30" oninput="clearPaceInputs('swim', '${raceId}'); calculateFromTime('swim', '${raceId}')">
                                         <span class="input-unit">分</span>
-                                        <input type="number" class="time-input" id="swim-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('swim', '${raceId}')">
+                                        <input type="number" class="time-input" id="swim-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="clearPaceInputs('swim', '${raceId}'); calculateFromTime('swim', '${raceId}')">
                                         <span class="input-unit">秒</span>
                                     </div>
-                                    <div class="calculated-display" id="swim-pace-display-${raceId}">
-                                        ペース: --:-- /100m
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、ペース(/100m)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="time-input" id="swim-pace-minutes-${raceId}" min="0" max="9" placeholder="2" oninput="clearTimeInputs('swim', '${raceId}'); calculateFromPace('swim', '${raceId}')">
+                                        <span class="input-separator">:</span>
+                                        <input type="number" class="time-input" id="swim-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="clearTimeInputs('swim', '${raceId}'); calculateFromPace('swim', '${raceId}')">
+                                        <span class="input-unit">/100m</span>
                                     </div>
+                                </div>
+                                
+                                <div class="calculated-display" id="swim-result-${raceId}">
+                                    タイムまたはペースを入力してください
                                 </div>
                             </div>
                             
@@ -1293,16 +1002,25 @@
                                 <div class="input-group">
                                     <label class="input-label">目標タイム</label>
                                     <div class="input-row">
-                                        <input type="number" class="time-input" id="bike-hours-${raceId}" min="0" max="12" placeholder="1" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <input type="number" class="time-input" id="bike-hours-${raceId}" min="0" max="12" placeholder="1" oninput="clearSpeedInputs('bike', '${raceId}'); calculateFromTime('bike', '${raceId}')">
                                         <span class="input-unit">時間</span>
-                                        <input type="number" class="time-input" id="bike-minutes-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <input type="number" class="time-input" id="bike-minutes-${raceId}" min="0" max="59" placeholder="30" oninput="clearSpeedInputs('bike', '${raceId}'); calculateFromTime('bike', '${raceId}')">
                                         <span class="input-unit">分</span>
-                                        <input type="number" class="time-input" id="bike-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('bike', '${raceId}')">
+                                        <input type="number" class="time-input" id="bike-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="clearSpeedInputs('bike', '${raceId}'); calculateFromTime('bike', '${raceId}')">
                                         <span class="input-unit">秒</span>
                                     </div>
-                                    <div class="calculated-display" id="bike-speed-display-${raceId}">
-                                        平均スピード: -- km/h
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="input-label">または、平均スピード(km/h)</label>
+                                    <div class="input-row">
+                                        <input type="number" class="pace-input" id="bike-speed-${raceId}" min="10" max="60" step="0.1" placeholder="25.0" oninput="clearTimeInputs('bike', '${raceId}'); calculateFromSpeed('bike', '${raceId}')">
+                                        <span class="input-unit">km/h</span>
                                     </div>
+                                </div>
+                                
+                                <div class="calculated-display" id="bike-result-${raceId}">
+                                    タイムまたはスピードを入力してください
                                 </div>
                             </div>
                             
@@ -1315,29 +1033,27 @@
                                 <div class="input-group">
                                     <label class="input-label">目標タイム</label>
                                     <div class="input-row">
-                                        <input type="number" class="time-input" id="run-hours-${raceId}" min="0" max="6" placeholder="0" oninput="calculateFromTime('run', '${raceId}')">
+                                        <input type="number" class="time-input" id="run-hours-${raceId}" min="0" max="6" placeholder="0" oninput="clearPaceInputs('run', '${raceId}'); calculateFromTime('run', '${raceId}')">
                                         <span class="input-unit">時間</span>
-                                        <input type="number" class="time-input" id="run-minutes-${raceId}" min="0" max="59" placeholder="50" oninput="calculateFromTime('run', '${raceId}')">
+                                        <input type="number" class="time-input" id="run-minutes-${raceId}" min="0" max="59" placeholder="50" oninput="clearPaceInputs('run', '${raceId}'); calculateFromTime('run', '${raceId}')">
                                         <span class="input-unit">分</span>
-                                        <input type="number" class="time-input" id="run-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="calculateFromTime('run', '${raceId}')">
+                                        <input type="number" class="time-input" id="run-seconds-${raceId}" min="0" max="59" placeholder="0" oninput="clearPaceInputs('run', '${raceId}'); calculateFromTime('run', '${raceId}')">
                                         <span class="input-unit">秒</span>
-                                    </div>
-                                    <div class="calculated-display" id="run-pace-display-${raceId}">
-                                        平均ペース: --:-- /km
                                     </div>
                                 </div>
                                 
                                 <div class="input-group">
                                     <label class="input-label">または、平均ペース(/km)</label>
                                     <div class="input-row">
-                                        <input type="number" class="time-input" id="run-pace-minutes-${raceId}" min="3" max="10" placeholder="5" oninput="calculateFromPace('run', '${raceId}')">
+                                        <input type="number" class="time-input" id="run-pace-minutes-${raceId}" min="3" max="10" placeholder="5" oninput="clearTimeInputs('run', '${raceId}'); calculateFromPace('run', '${raceId}')">
                                         <span class="input-separator">:</span>
-                                        <input type="number" class="time-input" id="run-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="calculateFromPace('run', '${raceId}')">
+                                        <input type="number" class="time-input" id="run-pace-seconds-${raceId}" min="0" max="59" placeholder="30" oninput="clearTimeInputs('run', '${raceId}'); calculateFromPace('run', '${raceId}')">
                                         <span class="input-unit">/km</span>
                                     </div>
-                                    <div class="calculated-display" id="run-time-display-${raceId}">
-                                        合計タイム: --:--:--
-                                    </div>
+                                </div>
+                                
+                                <div class="calculated-display" id="run-result-${raceId}">
+                                    タイムまたはペースを入力してください
                                 </div>
                             </div>
                             
@@ -1378,30 +1094,6 @@
                                 --:--:--
                             </div>
                         </div>
-                        
-                        <!-- AIコーチコメント（保存後に表示） -->
-                        <div class="ai-coach-section" id="ai-coach-${raceId}" style="display: none;">
-                            <div class="ai-coach-title">
-                                🤖 AIコーチからのコメント
-                            </div>
-                            <div class="ai-coach-comment" id="ai-comment-${raceId}">
-                                この目標は適度にチャレンジングで、現在の能力から見て達成可能な設定です。継続的なトレーニングで確実にパフォーマンス向上が期待できるでしょう。特にスイムとランのバランス強化を重視してください。
-                            </div>
-                            <div class="ai-insights" id="ai-insights-${raceId}">
-                                <div class="ai-insight">
-                                    <div class="ai-insight-label">チャレンジ度</div>
-                                    <div class="ai-insight-value">適度にチャレンジング</div>
-                                </div>
-                                <div class="ai-insight">
-                                    <div class="ai-insight-label">パーセンタイル</div>
-                                    <div class="ai-insight-value">上位40%</div>
-                                </div>
-                                <div class="ai-insight">
-                                    <div class="ai-insight-label">昨年比較</div>
-                                    <div class="ai-insight-value">+15分向上</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 
@@ -1416,14 +1108,92 @@
             `;
             
             document.getElementById('goal-form-section').innerHTML = html;
+        }
+
+        // 入力クリア関数群
+        function clearTimeInputs(discipline, raceId) {
+            document.getElementById(`${discipline}-hours-${raceId}`).value = '';
+            document.getElementById(`${discipline}-minutes-${raceId}`).value = '';
+            document.getElementById(`${discipline}-seconds-${raceId}`).value = '';
+        }
+
+        function clearPaceInputs(discipline, raceId) {
+            document.getElementById(`${discipline}-pace-minutes-${raceId}`).value = '';
+            document.getElementById(`${discipline}-pace-seconds-${raceId}`).value = '';
+        }
+
+        function clearSpeedInputs(discipline, raceId) {
+            document.getElementById(`${discipline}-speed-${raceId}`).value = '';
+        }
+
+        // ペースからタイム計算
+        function calculateFromPace(discipline, raceId) {
+            const race = raceDatabase[raceId];
             
-            // 初期値を設定して計算実行
-            setTimeout(() => {
-                calculateFromTime('swim', raceId);
-                calculateFromTime('bike', raceId);
-                calculateFromTime('run', raceId);
-                calculateTotal(raceId);
-            }, 100);
+            if (discipline === 'swim') {
+                const paceMinutes = parseInt(document.getElementById(`swim-pace-minutes-${raceId}`).value) || 0;
+                const paceSeconds = parseInt(document.getElementById(`swim-pace-seconds-${raceId}`).value) || 0;
+                
+                if (paceMinutes === 0 && paceSeconds === 0) return;
+                
+                const pacePerHundred = paceMinutes * 60 + paceSeconds;
+                const distance = race.distance.swim * 1000;
+                const totalSeconds = (pacePerHundred * distance) / 100;
+                
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                
+                const display = document.getElementById(`swim-result-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (ペース: ${paceMinutes}:${paceSeconds.toString().padStart(2, '0')} /100m)`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+                
+            } else if (discipline === 'run') {
+                const paceMinutes = parseInt(document.getElementById(`run-pace-minutes-${raceId}`).value) || 0;
+                const paceSeconds = parseInt(document.getElementById(`run-pace-seconds-${raceId}`).value) || 0;
+                
+                if (paceMinutes === 0 && paceSeconds === 0) return;
+                
+                const pacePerKm = paceMinutes * 60 + paceSeconds;
+                const distance = race.distance.run;
+                const totalSeconds = pacePerKm * distance;
+                
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                
+                const display = document.getElementById(`run-result-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (ペース: ${paceMinutes}:${paceSeconds.toString().padStart(2, '0')} /km)`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+            }
+            
+            calculateTotal(raceId);
+        }
+
+        // スピードからタイム計算
+        function calculateFromSpeed(discipline, raceId) {
+            const race = raceDatabase[raceId];
+            
+            if (discipline === 'bike') {
+                const speed = parseFloat(document.getElementById(`bike-speed-${raceId}`).value) || 0;
+                if (speed === 0) return;
+                
+                const distance = race.distance.bike;
+                const totalSeconds = (distance / speed) * 3600;
+                
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                
+                const display = document.getElementById(`bike-result-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (スピード: ${speed} km/h)`;
+                display.classList.add('updated');
+                setTimeout(() => display.classList.remove('updated'), 500);
+            }
+            
+            calculateTotal(raceId);
         }
 
         // タイムからペース/スピード計算
@@ -1442,7 +1212,7 @@
                 const paceMinutes = Math.floor(pacePerHundred / 60);
                 const paceSecs = Math.floor(pacePerHundred % 60);
                 
-                const display = document.getElementById(`swim-result-display-${raceId}`);
+                const display = document.getElementById(`swim-result-${raceId}`);
                 display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /100m)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
@@ -1451,8 +1221,8 @@
                 const distance = race.distance.bike;
                 const speed = (distance / (totalSeconds / 3600)).toFixed(1);
                 
-                const display = document.getElementById(`bike-result-display-${raceId}`);
-                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (平均スピード: ${speed} km/h)`;
+                const display = document.getElementById(`bike-result-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (スピード: ${speed} km/h)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
                 
@@ -1462,13 +1232,12 @@
                 const paceMinutes = Math.floor(pacePerKm / 60);
                 const paceSecs = Math.floor(pacePerKm % 60);
                 
-                const display = document.getElementById(`run-result-display-${raceId}`);
-                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (平均ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /km)`;
+                const display = document.getElementById(`run-result-${raceId}`);
+                display.textContent = `合計タイム: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} (ペース: ${paceMinutes}:${paceSecs.toString().padStart(2, '0')} /km)`;
                 display.classList.add('updated');
                 setTimeout(() => display.classList.remove('updated'), 500);
             }
             
-            // 合計タイム計算も実行
             calculateTotal(raceId);
         }
 
@@ -1511,45 +1280,8 @@
         function saveCurrentGoal() {
             if (!currentGoalRace) return;
             
-            // 目標データ収集
-            const goalTime = {
-                swim: {
-                    hours: parseInt(document.getElementById(`swim-hours-${currentGoalRace}`).value) || 0,
-                    minutes: parseInt(document.getElementById(`swim-minutes-${currentGoalRace}`).value) || 0,
-                    seconds: parseInt(document.getElementById(`swim-seconds-${currentGoalRace}`).value) || 0
-                },
-                bike: {
-                    hours: parseInt(document.getElementById(`bike-hours-${currentGoalRace}`).value) || 0,
-                    minutes: parseInt(document.getElementById(`bike-minutes-${currentGoalRace}`).value) || 0,
-                    seconds: parseInt(document.getElementById(`bike-seconds-${currentGoalRace}`).value) || 0
-                },
-                run: {
-                    hours: parseInt(document.getElementById(`run-hours-${currentGoalRace}`).value) || 0,
-                    minutes: parseInt(document.getElementById(`run-minutes-${currentGoalRace}`).value) || 0,
-                    seconds: parseInt(document.getElementById(`run-seconds-${currentGoalRace}`).value) || 0
-                },
-                transitions: {
-                    t1: {
-                        minutes: parseInt(document.getElementById(`t1-minutes-${currentGoalRace}`).value) || 0,
-                        seconds: parseInt(document.getElementById(`t1-seconds-${currentGoalRace}`).value) || 0
-                    },
-                    t2: {
-                        minutes: parseInt(document.getElementById(`t2-minutes-${currentGoalRace}`).value) || 0,
-                        seconds: parseInt(document.getElementById(`t2-seconds-${currentGoalRace}`).value) || 0
-                    }
-                }
-            };
-            
-            // データ保存
-            goalData[currentGoalRace] = goalTime;
             completedGoals.add(currentGoalRace);
-            
-            // AIコーチコメント表示
-            document.getElementById(`ai-coach-${currentGoalRace}`).style.display = 'block';
-            
             alert('目標が保存されました！');
-            
-            // 大会選択画面に戻る
             backToRaceSelection();
         }
 

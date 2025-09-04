@@ -497,7 +497,7 @@
             `).join('');
         }
         
-        // メトリクスカード生成
+        // メトリクスカード生成（速度計算修正版）
         function createMetricCards(metrics, sportType) {
             const cards = [];
             
@@ -522,10 +522,12 @@
                     });
                 }
             } else if (sportType === 'Ride') {
+                // 速度計算修正：Strava APIのaverage_speedはm/s単位なので3.6を掛けてkm/hに変換
                 if (metrics.avgSpeed || metrics.average_speed) {
-                    const speed = metrics.avgSpeed || (metrics.average_speed * 3.6).toFixed(1);
+                    const speedMs = metrics.avgSpeed || metrics.average_speed;
+                    const speedKmh = speedMs * 3.6;
                     cards.push({
-                        value: speed,
+                        value: speedKmh.toFixed(1),
                         label: '平均速度 (km/h)'
                     });
                 }
@@ -769,6 +771,23 @@
                 'Yoga': '🧘‍♂️'
             };
             return icons[type] || '🏃‍♂️';
+        }
+        
+        // 戻るボタンの処理
+        function goBackToData() {
+            try {
+                // 親ウィンドウ（data.html）がある場合はそこに戻る
+                if (window.opener && !window.opener.closed) {
+                    window.opener.focus();
+                    window.close();
+                } else {
+                    // 親ウィンドウがない場合は直接data.htmlに移動
+                    window.location.href = 'data.html';
+                }
+            } catch (e) {
+                console.log('⚠️ Cannot access parent window, redirecting to data.html');
+                window.location.href = 'data.html';
+            }
         }
         
         // ページ初期化

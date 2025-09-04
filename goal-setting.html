@@ -1206,6 +1206,13 @@
             const totalSeconds = hours * 3600 + minutes * 60 + seconds;
             if (totalSeconds === 0) return;
             
+            if (!calculatedTimes[raceId]) {
+                calculatedTimes[raceId] = {};
+            }
+            
+            // 計算結果を保存
+            calculatedTimes[raceId][discipline] = totalSeconds;
+            
             if (discipline === 'swim') {
                 const distance = race.distance.swim * 1000;
                 const pacePerHundred = (totalSeconds / distance) * 100;

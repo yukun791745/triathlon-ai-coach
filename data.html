@@ -292,7 +292,7 @@
             }, 500);
         }
         
-        // アクティビティ同期関数
+        // アクティビティ同期関数（実際のAPI呼び出し版）
         function syncActivities() {
             console.log('📊 syncActivities called');
             
@@ -303,81 +303,45 @@
             
             updateSyncStatus('loading', '🔄 アクティビティを同期中...');
             
-            // デモ用のサンプルデータ
-            const sampleActivities = [
-                {
-                    id: 1,
-                    name: "朝のランニング",
-                    sport_type: "Run",
-                    start_date: "2024-09-04T06:30:00Z",
-                    distance: 5200,
-                    moving_time: 1680,
-                    elapsed_time: 1680,
-                    total_elevation_gain: 45,
-                    average_speed: 3.1,
-                    average_heartrate: 165
-                },
-                {
-                    id: 2,
-                    name: "皇居一周サイクリング",
-                    sport_type: "Ride",
-                    start_date: "2024-09-03T18:00:00Z",
-                    distance: 12500,
-                    moving_time: 2100,
-                    elapsed_time: 2100,
-                    total_elevation_gain: 120,
-                    average_speed: 5.95,
-                    average_heartrate: 145,
-                    average_watts: 220
-                },
-                {
-                    id: 3,
-                    name: "夜のジョギング",
-                    sport_type: "Run",
-                    start_date: "2024-09-02T19:30:00Z",
-                    distance: 3800,
-                    moving_time: 1320,
-                    elapsed_time: 1320,
-                    total_elevation_gain: 25,
-                    average_speed: 2.88,
-                    average_heartrate: 158
-                },
-                {
-                    id: 4,
-                    name: "プールでスイム",
-                    sport_type: "Swim",
-                    start_date: "2024-09-01T09:00:00Z",
-                    distance: 1500,
-                    moving_time: 1800,
-                    elapsed_time: 1800,
-                    average_speed: 0.83,
-                    average_heartrate: 140
-                },
-                {
-                    id: 5,
-                    name: "週末ライド",
-                    sport_type: "Ride",
-                    start_date: "2024-08-31T08:00:00Z",
-                    distance: 45000,
-                    moving_time: 6300,
-                    elapsed_time: 7200,
-                    total_elevation_gain: 680,
-                    average_speed: 7.14,
-                    average_heartrate: 152,
-                    average_watts: 185
+            // 実際のStrava API呼び出し
+            fetch('/.netlify/functions/strava-activities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: stravaToken })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
                 }
-            ];
-            
-            setTimeout(() => {
-                activities = sampleActivities;
-                localStorage.setItem('cached_activities', JSON.stringify(activities));
+                return response.json();
+            })
+            .then(data => {
+                console.log('📊 Activities received:', data);
                 
-                displayActivities(activities);
-                generateSummary(activities);
-                updateSyncStatus('connected', `✅ ${activities.length}件のアクティビティを同期しました`);
+                if (data.activities) {
+                    activities = data.activities;
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    
+                    displayActivities(activities);
+                    generateSummary(activities);
+                    updateSyncStatus('connected', `✅ ${activities.length}件のアクティビティを同期しました`);
+                    
+                    console.log('📊 Real Strava activities synced and cached');
+                } else {
+                    throw new Error('No activities in response');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Sync error:', error);
+                updateSyncStatus('error', '❌ 同期に失敗しました: ' + (error.error || error.message));
                 
-                console.log('📊 Activities synced and cached');
-            }, 2000);
+                // トークンが無効な場合はクリア
+                if (error.status === 401) {
+                    localStorage.removeItem('strava_access_token');
+                    stravaToken = null;
+                    updateConnectionStatus('error', '❌ 認証が無効です。再接続してください');
+                }
+            });
         }
         
         // サマリー生成
@@ -556,7 +520,7 @@
             return names[type] || type;
         }
         
-        // Stravaコールバック処理
+        // Stravaコールバック処理（実際のAPI呼び出し版）
         function handleStravaCallback() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
@@ -564,17 +528,38 @@
             if (code && !stravaToken) {
                 updateConnectionStatus('loading', '🔄 認証処理中...');
                 
-                // デモ用の認証完了処理
-                setTimeout(() => {
-                    stravaToken = 'demo_access_token_' + Date.now();
-                    localStorage.setItem('strava_access_token', stravaToken);
-                    
-                    updateConnectionStatus('connected', '✅ Strava接続完了！');
-                    showSyncSection();
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    
-                    console.log('✅ Demo token set, ready for sync');
-                }, 2000);
+                // 実際のStrava API呼び出し
+                fetch('/.netlify/functions/strava-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.access_token) {
+                        stravaToken = data.access_token;
+                        localStorage.setItem('strava_access_token', stravaToken);
+                        localStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
+                        localStorage.setItem('strava_expires_at', data.expires_at);
+                        
+                        updateConnectionStatus('connected', '✅ Strava接続完了！');
+                        showSyncSection();
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                        console.log('✅ Real Strava token received, ready for sync');
+                    } else {
+                        throw new Error('No access token received');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Token exchange error:', error);
+                    updateConnectionStatus('error', '❌ 認証に失敗しました: ' + (error.error || error.message));
+                });
             }
         }
         

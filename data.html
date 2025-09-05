@@ -472,7 +472,7 @@
             });
         }
         
-        // サマリー生成
+        // サマリー生成（全期間 + 最近30日の統計）
         function generateSummary(activitiesData) {
             const container = document.getElementById('summaryContent');
             
@@ -481,59 +481,116 @@
                 return;
             }
             
-            // 基本統計
-            const totalTime = activitiesData.reduce((sum, a) => sum + (a.moving_time || 0), 0);
-            const totalDistance = activitiesData.reduce((sum, a) => sum + (a.distance || 0), 0);
-            const avgHeartRate = activitiesData
-                .filter(a => a.average_heartrate)
-                .reduce((sum, a, _, arr) => sum + a.average_heartrate / arr.length, 0);
+            // 最近30日のアクティビティを抽出
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const recent30Days = activitiesData.filter(a => new Date(a.start_date) >= thirtyDaysAgo);
             
-            // 種目別統計
-            const sportStats = {};
-            activitiesData.forEach(activity => {
-                const sport = activity.sport_type || activity.type;
-                if (!sportStats[sport]) {
-                    sportStats[sport] = { count: 0, time: 0, distance: 0 };
-                }
-                sportStats[sport].count++;
-                sportStats[sport].time += activity.moving_time || 0;
-                sportStats[sport].distance += activity.distance || 0;
-            });
+            // 統計計算関数
+            function calculateStats(activities) {
+                const totalTime = activities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+                const totalDistance = activities.reduce((sum, a) => sum + (a.distance || 0), 0);
+                const avgHeartRate = activities
+                    .filter(a => a.average_heartrate)
+                    .reduce((sum, a, _, arr) => sum + a.average_heartrate / arr.length, 0);
+                
+                const sportStats = {};
+                activities.forEach(activity => {
+                    const sport = activity.sport_type || activity.type;
+                    if (!sportStats[sport]) {
+                        sportStats[sport] = { count: 0, time: 0, distance: 0 };
+                    }
+                    sportStats[sport].count++;
+                    sportStats[sport].time += activity.moving_time || 0;
+                    sportStats[sport].distance += activity.distance || 0;
+                });
+                
+                return { totalTime, totalDistance, avgHeartRate, sportStats, count: activities.length };
+            }
             
-            container.innerHTML = `
-                <div style="margin-bottom: 25px;">
-                    <h3 style="margin-bottom: 15px; color: #333;">総合統計</h3>
+            const allTimeStats = calculateStats(activitiesData);
+            const recentStats = calculateStats(recent30Days);
+            
+            // 全期間の統計表示
+            let html = `
+                <div style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
+                        <span style="margin-right: 8px;">📊</span>全期間統計
+                        <span style="margin-left: 10px; font-size: 0.8em; color: #666; font-weight: normal;">(${activitiesData.length}件)</span>
+                    </h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${formatDuration(totalTime)}
+                                ${formatDuration(allTimeStats.totalTime)}
                             </div>
                             <div style="color: #666; font-size: 0.9em;">総トレーニング時間</div>
                         </div>
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${(totalDistance / 1000).toFixed(1)}km
+                                ${(allTimeStats.totalDistance / 1000).toFixed(1)}km
                             </div>
                             <div style="color: #666; font-size: 0.9em;">総距離</div>
                         </div>
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${Math.round(avgHeartRate) || '-'}bpm
+                                ${Math.round(allTimeStats.avgHeartRate) || '-'}bpm
                             </div>
                             <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
                         </div>
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${activitiesData.length}
+                                ${allTimeStats.count}
                             </div>
                             <div style="color: #666; font-size: 0.9em;">総セッション数</div>
                         </div>
                     </div>
                 </div>
-                
+            `;
+            
+            // 最近30日の統計表示
+            if (recent30Days.length > 0) {
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
+                            <span style="margin-right: 8px;">🗓️</span>最近30日
+                            <span style="margin-left: 10px; font-size: 0.8em; color: #666; font-weight: normal;">(${recent30Days.length}件)</span>
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
+                                    ${formatDuration(recentStats.totalTime)}
+                                </div>
+                                <div style="color: #666; font-size: 0.9em;">トレーニング時間</div>
+                            </div>
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
+                                    ${(recentStats.totalDistance / 1000).toFixed(1)}km
+                                </div>
+                                <div style="color: #666; font-size: 0.9em;">距離</div>
+                            </div>
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
+                                    ${Math.round(recentStats.avgHeartRate) || '-'}bpm
+                                </div>
+                                <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
+                            </div>
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
+                                    ${recentStats.count}
+                                </div>
+                                <div style="color: #666; font-size: 0.9em;">セッション数</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 種目別統計表示（全期間ベース）
+            html += `
                 <div style="margin-bottom: 25px;">
-                    <h3 style="margin-bottom: 15px; color: #333;">種目別統計</h3>
-                    ${Object.entries(sportStats).map(([sport, stats]) => `
+                    <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
+                        <span style="margin-right: 8px;">🏃‍♂️</span>種目別統計
+                    </h3>
+                    ${Object.entries(allTimeStats.sportStats).map(([sport, stats]) => `
                         <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; align-items: center;">
@@ -549,6 +606,8 @@
                     `).join('')}
                 </div>
             `;
+            
+            container.innerHTML = html;
         }
         
         // ユーティリティ関数

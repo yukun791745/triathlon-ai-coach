@@ -17,7 +17,7 @@
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: 140px;
+            padding-top: 120px; /* ナビゲーションバー分の余白 */
             padding-left: 20px;
             padding-right: 20px;
             padding-bottom: 20px;
@@ -107,94 +107,14 @@
             margin: 0 0.5rem;
             font-size: 0.8rem;
         }
-
-        /* 同期ボタン（右上固定） */
-        .sync-controls {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 999;
-        }
-
-        .sync-btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 0;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            white-space: nowrap;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 
-                0 4px 8px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
-            border-left: 1px solid rgba(255, 255, 255, 0.2);
-            border-right: 1px solid rgba(0, 0, 0, 0.2);
-            border-bottom: 2px solid rgba(0, 0, 0, 0.3);
-        }
-
-        .sync-btn.connect {
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
-            color: white;
-        }
-
-        .sync-btn.sync {
-            background: linear-gradient(to bottom, #27ae60, #229954);
-            color: white;
-        }
-
-        .sync-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 
-                0 6px 12px rgba(0, 0, 0, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .sync-status {
-            padding: 8px 14px;
-            border-radius: 0;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            box-shadow: 
-                inset 0 2px 4px rgba(0, 0, 0, 0.1),
-                0 1px 0 rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .sync-status.connected {
-            background: linear-gradient(to bottom, #d4edda, #c3e6cb);
-            color: #155724;
-        }
-
-        .sync-status.error {
-            background: linear-gradient(to bottom, #f8d7da, #f5c6cb);
-            color: #721c24;
-        }
-
-        .sync-status.loading {
-            background: linear-gradient(to bottom, #fff3cd, #ffeaa7);
-            color: #856404;
-        }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
-            min-height: calc(100vh - 160px);
+            min-height: calc(100vh - 140px);
         }
         
         .panel {
@@ -230,8 +150,53 @@
             overflow-y: auto;
         }
         
-        .summary-header {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        .strava-header {
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+        }
+        
+        .connect-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(252, 76, 2, 0.3);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
         
         .activity-item {
@@ -241,6 +206,7 @@
             margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .activity-item:hover {
@@ -286,91 +252,53 @@
             color: #666;
             font-size: 0.8em;
         }
-
-        /* Strava接続モーダル */
-        .strava-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+        
+        .summary-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
-
-        .strava-modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #4facfe;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
-
-        .strava-modal-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(to bottom, #fc4c02, #e8440b);
-            color: white;
-            border: none;
-            border-radius: 0;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-close {
-            background: linear-gradient(to bottom, #6c757d, #5a6268);
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 1024px) {
             body {
-                padding-top: 180px;
+                padding-top: 140px;
+            }
+
+            .flow-nav-steps {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .flow-nav-step {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .flow-nav-arrow {
+                display: none;
             }
 
             .container {
                 grid-template-columns: 1fr;
                 gap: 10px;
             }
-
-            .sync-controls {
-                top: 160px;
-                right: 10px;
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .sync-btn {
-                padding: 8px 14px;
-                font-size: 0.8rem;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- Strava接続モーダル -->
-    <div id="stravaModal" class="strava-modal">
-        <div class="strava-modal-content">
-            <h3>Strava連携</h3>
-            <p style="margin-bottom: 1.5rem; color: #666;">アクティビティデータを取得するためにStravaに接続してください。</p>
-            <button id="modalConnectBtn" class="strava-modal-btn">Stravaに接続</button>
-            <button id="modalCloseBtn" class="strava-modal-btn modal-close">後で接続</button>
-        </div>
-    </div>
-
-    <!-- 同期コントロール（右上固定） -->
-    <div class="sync-controls">
-        <div id="syncStatus" class="sync-status">未接続</div>
-        <button id="connectBtn" class="sync-btn connect" style="display: none;">接続</button>
-        <button id="syncBtn" class="sync-btn sync" style="display: none;">同期</button>
-    </div>
-
     <!-- フロー型ナビゲーションバー -->
     <nav class="flow-navbar">
         <div class="flow-nav-container">
@@ -394,6 +322,38 @@
     </nav>
 
     <div class="container">
+        <!-- Strava連携パネル -->
+        <div class="panel">
+            <div class="header strava-header">
+                <h1>Strava連携</h1>
+                <p>アクティビティデータを取得</p>
+            </div>
+            
+            <div class="content">
+                <div id="connectionStatus" class="status">未接続</div>
+                
+                <button id="connectBtn" class="connect-btn">
+                    Stravaに接続
+                </button>
+                
+                <div id="syncSection" style="display: none;">
+                    <button id="syncBtn" class="connect-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        アクティビティを同期
+                    </button>
+                    <div id="syncStatus"></div>
+                </div>
+                
+                <div id="stravaInstructions">
+                    <h3>接続手順</h3>
+                    <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                        <li>「Stravaに接続」をクリック</li>
+                        <li>Strava認証ページで「Authorize」</li>
+                        <li>アクティビティを同期</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
         <!-- アクティビティリストパネル -->
         <div class="panel">
             <div class="header">
@@ -428,261 +388,360 @@
     </div>
 
     <script>
-        // 完全にES5互換のJavaScript
-        var app = {
-            stravaToken: null,
-            activities: [],
-            STRAVA_CLIENT_ID: '171117',
-            REDIRECT_URI: 'https://wondrous-dasik-a58240.netlify.app/data.html',
+        console.log('JavaScript loading started...');
+        
+        // グローバル変数
+        let currentUser = { uid: 'anonymous_user' };
+        let stravaToken = localStorage.getItem('strava_access_token');
+        let activities = JSON.parse(localStorage.getItem('cached_activities') || '[]');
+        
+        // Strava設定
+        const STRAVA_CLIENT_ID = '171117';
+        const REDIRECT_URI = 'https://wondrous-dasik-a58240.netlify.app/data.html';
+        
+        // 初期化時にキャッシュされたデータがあれば表示
+        if (activities.length > 0) {
+            displayActivities(activities);
+            generateSummary(activities);
+            updateConnectionStatus('connected', `${activities.length}件のキャッシュされたアクティビティを表示中`);
+            showSyncSection();
+        }
+        
+        // Strava認証開始関数
+        function connectStrava() {
+            console.log('connectStrava called');
             
-            init: function() {
-                console.log('アプリケーション初期化開始');
-                this.stravaToken = localStorage.getItem('strava_access_token');
-                this.activities = JSON.parse(localStorage.getItem('cached_activities') || '[]');
-                
-                if (this.activities.length > 0) {
-                    this.displayActivities();
-                    this.generateSummary();
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
+            
+            updateConnectionStatus('loading', 'Strava認証ページに移動中...');
+            
+            setTimeout(() => {
+                window.location.href = authUrl;
+            }, 500);
+        }
+        
+        // アクティビティ同期関数
+        function syncActivities() {
+            console.log('syncActivities called');
+            
+            if (!stravaToken) {
+                console.error('No Strava token available');
+                return;
+            }
+            
+            updateSyncStatus('loading', 'アクティビティを同期中...');
+            
+            // 実際のStrava API呼び出し
+            fetch('/.netlify/functions/strava-activities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: stravaToken })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Activities received:', data);
                 
-                if (this.stravaToken) {
-                    this.updateStatus('connected', 'Strava接続済み');
-                    this.showSyncBtn();
+                if (data.activities) {
+                    activities = data.activities;
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    
+                    displayActivities(activities);
+                    generateSummary(activities);
+                    updateSyncStatus('connected', `${activities.length}件のアクティビティを同期しました`);
+                    
+                    console.log('Real Strava activities synced and cached');
                 } else {
-                    this.updateStatus('error', '未接続');
-                    this.showConnectBtn();
-                    if (!localStorage.getItem('modal_shown')) {
-                        this.showModal();
-                        localStorage.setItem('modal_shown', 'true');
-                    }
+                    throw new Error('No activities in response');
                 }
+            })
+            .catch(error => {
+                console.error('Sync error:', error);
+                updateSyncStatus('error', '同期に失敗しました: ' + (error.error || error.message));
                 
-                this.setupEvents();
-                this.handleCallback();
-            },
-            
-            showModal: function() {
-                document.getElementById('stravaModal').style.display = 'flex';
-            },
-            
-            hideModal: function() {
-                document.getElementById('stravaModal').style.display = 'none';
-            },
-            
-            showConnectBtn: function() {
-                document.getElementById('connectBtn').style.display = 'block';
-                document.getElementById('syncBtn').style.display = 'none';
-            },
-            
-            showSyncBtn: function() {
-                document.getElementById('connectBtn').style.display = 'none';
-                document.getElementById('syncBtn').style.display = 'block';
-            },
-            
-            updateStatus: function(type, message) {
-                var status = document.getElementById('syncStatus');
-                status.className = 'sync-status ' + type;
-                status.textContent = message;
-            },
-            
-            connect: function() {
-                var url = 'https://www.strava.com/oauth/authorize' +
-                         '?client_id=' + this.STRAVA_CLIENT_ID +
-                         '&response_type=code' +
-                         '&redirect_uri=' + encodeURIComponent(this.REDIRECT_URI) +
-                         '&scope=read,activity:read_all';
-                
-                this.updateStatus('loading', '認証中...');
-                this.hideModal();
-                window.location.href = url;
-            },
-            
-            sync: function() {
-                if (!this.stravaToken) {
-                    this.updateStatus('error', 'トークンなし');
-                    this.showConnectBtn();
-                    return;
+                // トークンが無効な場合はクリア
+                if (error.status === 401) {
+                    localStorage.removeItem('strava_access_token');
+                    stravaToken = null;
+                    updateConnectionStatus('error', '認証が無効です。再接続してください');
                 }
+            });
+        }
+        
+        // サマリー生成
+        function generateSummary(activitiesData) {
+            const container = document.getElementById('summaryContent');
+            
+            if (activitiesData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティがありません</div>';
+                return;
+            }
+            
+            // 基本統計
+            const totalTime = activitiesData.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+            const totalDistance = activitiesData.reduce((sum, a) => sum + (a.distance || 0), 0);
+            const avgHeartRate = activitiesData
+                .filter(a => a.average_heartrate)
+                .reduce((sum, a, _, arr) => sum + a.average_heartrate / arr.length, 0);
+            
+            // 種目別統計
+            const sportStats = {};
+            activitiesData.forEach(activity => {
+                const sport = activity.sport_type || activity.type;
+                if (!sportStats[sport]) {
+                    sportStats[sport] = { count: 0, time: 0, distance: 0 };
+                }
+                sportStats[sport].count++;
+                sportStats[sport].time += activity.moving_time || 0;
+                sportStats[sport].distance += activity.distance || 0;
+            });
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">総合統計</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${formatDuration(totalTime)}
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総トレーニング時間</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${(totalDistance / 1000).toFixed(1)}km
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総距離</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${Math.round(avgHeartRate) || '-'}bpm
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${activitiesData.length}
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総セッション数</div>
+                        </div>
+                    </div>
+                </div>
                 
-                this.updateStatus('loading', '同期中...');
-                var self = this;
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">種目別統計</h3>
+                    ${Object.entries(sportStats).map(([sport, stats]) => `
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-size: 1.2em; margin-right: 8px;">${getActivityIcon(sport)}</span>
+                                    <span style="font-weight: 600;">${getSportDisplayName(sport)}</span>
+                                </div>
+                                <div style="text-align: right; font-size: 0.9em;">
+                                    <div style="color: #4facfe; font-weight: 600;">${formatDuration(stats.time)}</div>
+                                    <div style="color: #666;">${stats.count}回 • ${(stats.distance/1000).toFixed(1)}km</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // ユーティリティ関数
+        function updateConnectionStatus(className, message) {
+            const status = document.getElementById('connectionStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function updateSyncStatus(className, message) {
+            const status = document.getElementById('syncStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function showSyncSection() {
+            document.getElementById('syncSection').style.display = 'block';
+            document.getElementById('stravaInstructions').style.display = 'none';
+        }
+        
+        function displayActivities(activitiesData) {
+            const container = document.getElementById('activityList');
+            
+            if (activitiesData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティが見つかりません</div>';
+                return;
+            }
+            
+            const sortedActivities = activitiesData.sort((a, b) => {
+                return new Date(b.start_date) - new Date(a.start_date);
+            });
+            
+            const html = sortedActivities.map(activity => {
+                const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
+                const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
+                const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+                const heartRate = activity.average_heartrate ? `${Math.round(activity.average_heartrate)}bpm` : '-';
                 
-                fetch('https://www.strava.com/api/v3/athlete/activities?per_page=100', {
-                    headers: {
-                        'Authorization': 'Bearer ' + this.stravaToken
-                    }
+                return `
+                    <div class="activity-item" data-activity-id="${activity.id}" style="cursor: pointer;">
+                        <div class="activity-header">
+                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
+                            <span class="activity-date">${date}</span>
+                        </div>
+                        <div class="activity-stats">
+                            <div class="stat">
+                                <div class="stat-value">${distance}</div>
+                                <div class="stat-label">km</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${duration}</div>
+                                <div class="stat-label">時間</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${heartRate}</div>
+                                <div class="stat-label">心拍</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+            
+            // クリックイベントリスナーを追加
+            document.querySelectorAll('.activity-item').forEach(item => {
+                const activityId = item.getAttribute('data-activity-id');
+                
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Activity clicked:', activityId);
+                    console.log('Opening activity detail page...');
+                    
+                    // activity-detail.htmlに遷移
+                    const detailUrl = `activity-detail.html?id=${activityId}`;
+                    console.log('Detail URL:', detailUrl);
+                    
+                    window.open(detailUrl, '_blank');
+                });
+            });
+            
+            console.log('Activity items displayed with click handlers');
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function getActivityIcon(type) {
+            const icons = {
+                'Run': 'ï¿½',
+                'Ride': 'ï¿½', 
+                'Swim': 'ï¿½',
+                'WeightTraining': 'ï¿½',
+                'Yoga': 'ï¿½'
+            };
+            return icons[type] || 'ï¿½';
+        }
+        
+        function getSportDisplayName(type) {
+            const names = {
+                'Run': 'ランニング',
+                'Ride': 'バイク',
+                'Swim': 'スイム',
+                'WeightTraining': '筋トレ',
+                'Yoga': 'ヨガ'
+            };
+            return names[type] || type;
+        }
+        
+        // Stravaコールバック処理
+        function handleStravaCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code && !stravaToken) {
+                updateConnectionStatus('loading', '認証処理中...');
+                
+                // 実際のStrava API呼び出し
+                fetch('/.netlify/functions/strava-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
                 })
-                .then(function(response) {
-                    if (!response.ok) throw new Error('API Error');
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
                     return response.json();
                 })
-                .then(function(data) {
-                    self.activities = data;
-                    localStorage.setItem('cached_activities', JSON.stringify(data));
-                    self.displayActivities();
-                    self.generateSummary();
-                    self.updateStatus('connected', data.length + '件同期完了');
+                .then(data => {
+                    if (data.access_token) {
+                        stravaToken = data.access_token;
+                        localStorage.setItem('strava_access_token', stravaToken);
+                        localStorage.setItem('strava_athlete', JSON.stringify(data.athlete));
+                        localStorage.setItem('strava_expires_at', data.expires_at);
+                        
+                        updateConnectionStatus('connected', 'Strava接続完了！');
+                        showSyncSection();
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                        console.log('Real Strava token received, ready for sync');
+                    } else {
+                        throw new Error('No access token received');
+                    }
                 })
-                .catch(function(error) {
-                    console.error('同期エラー:', error);
-                    self.updateStatus('error', '同期失敗');
+                .catch(error => {
+                    console.error('Token exchange error:', error);
+                    updateConnectionStatus('error', '認証に失敗しました: ' + (error.error || error.message));
                 });
-            },
-            
-            displayActivities: function() {
-                var container = document.getElementById('activityList');
-                if (this.activities.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティがありません</div>';
-                    return;
-                }
-                
-                var html = '';
-                for (var i = 0; i < this.activities.length; i++) {
-                    var activity = this.activities[i];
-                    var date = new Date(activity.start_date).toLocaleDateString('ja-JP');
-                    var distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
-                    var duration = this.formatTime(activity.moving_time || activity.elapsed_time);
-                    var heartRate = activity.average_heartrate ? Math.round(activity.average_heartrate) + 'bpm' : '-';
-                    
-                    html += '<div class="activity-item">';
-                    html += '<div class="activity-header">';
-                    html += '<span class="activity-type">' + this.getIcon(activity.type) + ' ' + activity.name + '</span>';
-                    html += '<span class="activity-date">' + date + '</span>';
-                    html += '</div>';
-                    html += '<div class="activity-stats">';
-                    html += '<div class="stat"><div class="stat-value">' + distance + '</div><div class="stat-label">km</div></div>';
-                    html += '<div class="stat"><div class="stat-value">' + duration + '</div><div class="stat-label">時間</div></div>';
-                    html += '<div class="stat"><div class="stat-value">' + heartRate + '</div><div class="stat-label">心拍</div></div>';
-                    html += '</div>';
-                    html += '</div>';
-                }
-                container.innerHTML = html;
-            },
-            
-            generateSummary: function() {
-                var container = document.getElementById('summaryContent');
-                if (this.activities.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">データがありません</div>';
-                    return;
-                }
-                
-                var totalTime = 0;
-                var totalDistance = 0;
-                var totalActivities = this.activities.length;
-                
-                for (var i = 0; i < this.activities.length; i++) {
-                    totalTime += this.activities[i].moving_time || 0;
-                    totalDistance += this.activities[i].distance || 0;
-                }
-                
-                var html = '<div style="margin-bottom: 25px;">';
-                html += '<h3 style="margin-bottom: 15px; color: #333;">総合統計</h3>';
-                html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
-                html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">';
-                html += '<div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">' + this.formatTime(totalTime) + '</div>';
-                html += '<div style="color: #666; font-size: 0.9em;">総トレーニング時間</div>';
-                html += '</div>';
-                html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">';
-                html += '<div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">' + (totalDistance / 1000).toFixed(1) + 'km</div>';
-                html += '<div style="color: #666; font-size: 0.9em;">総距離</div>';
-                html += '</div>';
-                html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">';
-                html += '<div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">' + totalActivities + '</div>';
-                html += '<div style="color: #666; font-size: 0.9em;">総セッション数</div>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-                
-                container.innerHTML = html;
-            },
-            
-            formatTime: function(seconds) {
-                if (!seconds) return '0:00';
-                var hours = Math.floor(seconds / 3600);
-                var minutes = Math.floor((seconds % 3600) / 60);
-                
-                if (hours > 0) {
-                    return hours + ':' + (minutes < 10 ? '0' : '') + minutes;
-                } else {
-                    return minutes + ':' + (seconds % 60 < 10 ? '0' : '') + Math.floor(seconds % 60);
-                }
-            },
-            
-            getIcon: function(type) {
-                var icons = {
-                    'Run': '🏃',
-                    'Ride': '🚴',
-                    'Swim': '🏊',
-                    'WeightTraining': '🏋️',
-                    'Yoga': '🧘'
-                };
-                return icons[type] || '💪';
-            },
-            
-            handleCallback: function() {
-                var params = new URLSearchParams(window.location.search);
-                var code = params.get('code');
-                
-                if (code && !this.stravaToken) {
-                    this.updateStatus('loading', '認証処理中...');
-                    var self = this;
-                    
-                    fetch('/.netlify/functions/strava-auth', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: code })
-                    })
-                    .then(function(response) {
-                        return response.json();
-                    })
-                    .then(function(data) {
-                        if (data.access_token) {
-                            self.stravaToken = data.access_token;
-                            localStorage.setItem('strava_access_token', self.stravaToken);
-                            self.updateStatus('connected', 'Strava接続完了');
-                            self.showSyncBtn();
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                            setTimeout(function() { self.sync(); }, 1000);
-                        }
-                    })
-                    .catch(function(error) {
-                        console.error('認証エラー:', error);
-                        self.updateStatus('error', '認証失敗');
-                    });
-                }
-            },
-            
-            setupEvents: function() {
-                var self = this;
-                
-                var connectBtn = document.getElementById('connectBtn');
-                if (connectBtn) {
-                    connectBtn.onclick = function() { self.connect(); };
-                }
-                
-                var syncBtn = document.getElementById('syncBtn');
-                if (syncBtn) {
-                    syncBtn.onclick = function() { self.sync(); };
-                }
-                
-                var modalConnectBtn = document.getElementById('modalConnectBtn');
-                if (modalConnectBtn) {
-                    modalConnectBtn.onclick = function() { self.connect(); };
-                }
-                
-                var modalCloseBtn = document.getElementById('modalCloseBtn');
-                if (modalCloseBtn) {
-                    modalCloseBtn.onclick = function() { self.hideModal(); };
-                }
             }
-        };
-        
-        // アプリケーション開始
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                app.init();
-            });
-        } else {
-            app.init();
         }
+        
+        // ページ読み込み時の初期化
+        window.addEventListener('load', function() {
+            console.log('Page loaded, initializing...');
+            
+            // 既にトークンがあるかチェック
+            if (stravaToken) {
+                updateConnectionStatus('connected', 'Strava接続済み');
+                showSyncSection();
+            }
+            
+            handleStravaCallback();
+            
+            const connectBtn = document.getElementById('connectBtn');
+            const syncBtn = document.getElementById('syncBtn');
+            const clearCacheBtn = document.getElementById('clearCacheBtn');
+            
+            if (connectBtn) {
+                connectBtn.addEventListener('click', connectStrava);
+            }
+            
+            if (syncBtn) {
+                syncBtn.addEventListener('click', syncActivities);
+            }
+            
+            if (clearCacheBtn) {
+                clearCacheBtn.addEventListener('click', clearCache);
+            }
+            
+            console.log('Initialization complete!');
+        });
+        
+        console.log('JavaScript loading completed');
     </script>
+</body>
+</html>

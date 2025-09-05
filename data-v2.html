@@ -402,10 +402,10 @@
                 console.log('Incremental sync after', new Date(afterTimestamp * 1000));
             }
             
-            fetchAllActivities(afterTimestamp, isFirstSync);
+            fetchAllActivities(afterTimestamp, isFirstSync, existingActivities);
         }
         
-        function fetchAllActivities(afterTimestamp, isFirstSync) {
+        function fetchAllActivities(afterTimestamp, isFirstSync, existingActivities) {
             var allActivities = [];
             var page = 1;
             var perPage = 200;

@@ -17,13 +17,12 @@
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-top: 120px;
             padding-left: 20px;
             padding-right: 20px;
             padding-bottom: 20px;
         }
 
-        /* フロー型ナビゲーションバー */
         .flow-navbar {
             position: fixed;
             top: 0;
@@ -198,6 +197,47 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
+
+        .sync-info {
+            background: #e7f3ff;
+            color: #0056b3;
+            border: 1px solid #b3d9ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .sync-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sync-controls button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auto-sync-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .manual-sync-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .full-sync-btn {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
         
         .activity-item {
             padding: 15px;
@@ -207,6 +247,11 @@
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+        }
+
+        .activity-item.new {
+            border-left: 4px solid #28a745;
+            background: #f8fff9;
         }
         
         .activity-item:hover {
@@ -299,7 +344,6 @@
     </style>
 </head>
 <body>
-    <!-- フロー型ナビゲーションバー -->
     <nav class="flow-navbar">
         <div class="flow-nav-container">
             <div class="flow-nav-logo">AI Triathlon Coach</div>
@@ -322,11 +366,10 @@
     </nav>
 
     <div class="container">
-        <!-- Strava連携パネル -->
         <div class="panel">
             <div class="header strava-header">
                 <h1>Strava連携</h1>
-                <p>アクティビティデータを取得</p>
+                <p>アクティビティデータを管理</p>
             </div>
             
             <div class="content">
@@ -337,9 +380,21 @@
                 </button>
                 
                 <div id="syncSection" style="display: none;">
-                    <button id="syncBtn" class="connect-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        アクティビティを同期
+                    <div id="syncInfo" class="sync-info"></div>
+                    
+                    <div class="sync-controls">
+                        <button id="autoSyncBtn" class="auto-sync-btn">
+                            自動更新
+                        </button>
+                        <button id="manualSyncBtn" class="manual-sync-btn">
+                            手動更新
+                        </button>
+                    </div>
+                    
+                    <button id="fullSyncBtn" class="connect-btn full-sync-btn">
+                        全データ再取得
                     </button>
+                    
                     <div id="syncStatus"></div>
                 </div>
                 
@@ -354,11 +409,10 @@
             </div>
         </div>
         
-        <!-- アクティビティリストパネル -->
         <div class="panel">
             <div class="header">
                 <h1>アクティビティ一覧</h1>
-                <p>過去30日のトレーニング</p>
+                <p id="activityPeriod">過去1年のトレーニング</p>
             </div>
             
             <div class="content">
@@ -370,7 +424,6 @@
             </div>
         </div>
         
-        <!-- トレーニングサマリーパネル -->
         <div class="panel">
             <div class="header summary-header">
                 <h1>トレーニングサマリー</h1>
@@ -388,26 +441,62 @@
     </div>
 
     <script>
-        console.log('JavaScript loading started...');
+        console.log('Enhanced JavaScript loading started...');
         
         // グローバル変数
         let currentUser = { uid: 'anonymous_user' };
         let stravaToken = localStorage.getItem('strava_access_token');
         let activities = JSON.parse(localStorage.getItem('cached_activities') || '[]');
+        let lastSyncTime = localStorage.getItem('last_sync_time');
+        let isFirstTimeUser = localStorage.getItem('is_first_time_user') !== 'false';
+        let autoSyncEnabled = localStorage.getItem('auto_sync_enabled') === 'true';
         
         // Strava設定
         const STRAVA_CLIENT_ID = '171117';
         const REDIRECT_URI = 'https://wondrous-dasik-a58240.netlify.app/data.html';
         
-        // 初期化時にキャッシュされたデータがあれば表示
+        // 初期化
         if (activities.length > 0) {
             displayActivities(activities);
             generateSummary(activities);
-            updateConnectionStatus('connected', `${activities.length}件のキャッシュされたアクティビティを表示中`);
+            updateSyncInfo();
             showSyncSection();
+            
+            if (stravaToken) {
+                updateConnectionStatus('connected', `${activities.length}件のアクティビティを管理中`);
+                
+                // 自動更新が有効で前回同期から1時間以上経過している場合
+                if (autoSyncEnabled && shouldAutoSync()) {
+                    performIncrementalSync();
+                }
+            }
         }
         
-        // Strava認証開始関数
+        // 自動同期判定
+        function shouldAutoSync() {
+            if (!lastSyncTime) return true;
+            const oneHour = 60 * 60 * 1000; // 1時間
+            return Date.now() - parseInt(lastSyncTime) > oneHour;
+        }
+        
+        // 同期情報更新
+        function updateSyncInfo() {
+            const syncInfo = document.getElementById('syncInfo');
+            if (!syncInfo) return;
+            
+            const activityCount = activities.length;
+            const lastSync = lastSyncTime ? new Date(parseInt(lastSyncTime)).toLocaleString('ja-JP') : '未同期';
+            const syncType = isFirstTimeUser ? '初回同期完了' : '差分同期完了';
+            
+            syncInfo.innerHTML = `
+                <strong>同期状況:</strong> ${syncType}<br>
+                <strong>アクティビティ数:</strong> ${activityCount}件<br>
+                <strong>最終同期:</strong> ${lastSync}<br>
+                <strong>自動更新:</strong> ${autoSyncEnabled ? '有効' : '無効'}
+            `;
+        }
+        
+        // Strava認証開始
         function connectStrava() {
             console.log('connectStrava called');
             
@@ -420,22 +509,26 @@
             }, 500);
         }
         
-        // アクティビティ同期関数
-        function syncActivities() {
-            console.log('syncActivities called');
-            
+        // 差分同期実行
+        function performIncrementalSync() {
             if (!stravaToken) {
                 console.error('No Strava token available');
                 return;
             }
             
-            updateSyncStatus('loading', 'アクティビティを同期中...');
+            updateSyncStatus('loading', '新しいアクティビティをチェック中...');
             
-            // 実際のStrava API呼び出し
+            // 最後の同期時刻または1年前
+            const after = lastSyncTime ? Math.floor(parseInt(lastSyncTime) / 1000) : Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000);
+            
             fetch('/.netlify/functions/strava-activities', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: stravaToken })
+                body: JSON.stringify({ 
+                    token: stravaToken,
+                    after: after,
+                    isIncremental: !isFirstTimeUser
+                })
             })
             .then(response => {
                 if (!response.ok) {
@@ -447,14 +540,43 @@
                 console.log('Activities received:', data);
                 
                 if (data.activities) {
-                    activities = data.activities;
+                    const newActivities = data.activities;
+                    let addedCount = 0;
+                    
+                    if (isFirstTimeUser) {
+                        // 初回は全て新規
+                        activities = newActivities;
+                        addedCount = newActivities.length;
+                        isFirstTimeUser = false;
+                        localStorage.setItem('is_first_time_user', 'false');
+                    } else {
+                        // 差分追加
+                        const existingIds = new Set(activities.map(a => a.id));
+                        const newItems = newActivities.filter(a => !existingIds.has(a.id));
+                        
+                        activities = [...newItems, ...activities].sort((a, b) => 
+                            new Date(b.start_date) - new Date(a.start_date)
+                        );
+                        
+                        addedCount = newItems.length;
+                    }
+                    
+                    // キャッシュ更新
                     localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    localStorage.setItem('last_sync_time', Date.now().toString());
                     
-                    displayActivities(activities);
+                    // 表示更新
+                    displayActivities(activities, addedCount);
                     generateSummary(activities);
-                    updateSyncStatus('connected', `${activities.length}件のアクティビティを同期しました`);
+                    updateSyncInfo();
                     
-                    console.log('Real Strava activities synced and cached');
+                    if (addedCount > 0) {
+                        updateSyncStatus('connected', `${addedCount}件の新しいアクティビティを追加しました`);
+                    } else {
+                        updateSyncStatus('connected', '新しいアクティビティはありませんでした');
+                    }
+                    
+                    console.log(`Sync completed: ${addedCount} new activities added`);
                 } else {
                     throw new Error('No activities in response');
                 }
@@ -463,7 +585,6 @@
                 console.error('Sync error:', error);
                 updateSyncStatus('error', '同期に失敗しました: ' + (error.error || error.message));
                 
-                // トークンが無効な場合はクリア
                 if (error.status === 401) {
                     localStorage.removeItem('strava_access_token');
                     stravaToken = null;
@@ -472,184 +593,110 @@
             });
         }
         
-        // サマリー生成（全期間 + 最近30日の統計）
-        function generateSummary(activitiesData) {
-            const container = document.getElementById('summaryContent');
-            
-            if (activitiesData.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティがありません</div>';
+        // 全データ再取得
+        function performFullSync() {
+            if (!stravaToken) {
+                console.error('No Strava token available');
                 return;
             }
             
-            // 最近30日のアクティビティを抽出
-            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-            const recent30Days = activitiesData.filter(a => new Date(a.start_date) >= thirtyDaysAgo);
+            updateSyncStatus('loading', '全データを再取得中...');
             
-            // 統計計算関数
-            function calculateStats(activities) {
-                const totalTime = activities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
-                const totalDistance = activities.reduce((sum, a) => sum + (a.distance || 0), 0);
-                const avgHeartRate = activities
-                    .filter(a => a.average_heartrate)
-                    .reduce((sum, a, _, arr) => sum + a.average_heartrate / arr.length, 0);
+            // 1年前からのデータを取得
+            const after = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000);
+            
+            fetch('/.netlify/functions/strava-activities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    token: stravaToken,
+                    after: after,
+                    isFullSync: true
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Full sync activities received:', data);
                 
-                const sportStats = {};
-                activities.forEach(activity => {
-                    const sport = activity.sport_type || activity.type;
-                    if (!sportStats[sport]) {
-                        sportStats[sport] = { count: 0, time: 0, distance: 0 };
-                    }
-                    sportStats[sport].count++;
-                    sportStats[sport].time += activity.moving_time || 0;
-                    sportStats[sport].distance += activity.distance || 0;
-                });
-                
-                return { totalTime, totalDistance, avgHeartRate, sportStats, count: activities.length };
+                if (data.activities) {
+                    activities = data.activities.sort((a, b) => 
+                        new Date(b.start_date) - new Date(a.start_date)
+                    );
+                    
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    localStorage.setItem('last_sync_time', Date.now().toString());
+                    localStorage.setItem('is_first_time_user', 'false');
+                    
+                    displayActivities(activities, 0, true);
+                    generateSummary(activities);
+                    updateSyncInfo();
+                    
+                    updateSyncStatus('connected', `${activities.length}件のアクティビティを再取得しました`);
+                    
+                    console.log('Full sync completed');
+                } else {
+                    throw new Error('No activities in response');
+                }
+            })
+            .catch(error => {
+                console.error('Full sync error:', error);
+                updateSyncStatus('error', '全データ再取得に失敗しました: ' + (error.error || error.message));
+            });
+        }
+        
+        // 自動同期設定切り替え
+        function toggleAutoSync() {
+            autoSyncEnabled = !autoSyncEnabled;
+            localStorage.setItem('auto_sync_enabled', autoSyncEnabled.toString());
+            updateSyncInfo();
+            
+            const btn = document.getElementById('autoSyncBtn');
+            if (autoSyncEnabled) {
+                btn.textContent = '自動更新中';
+                btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            } else {
+                btn.textContent = '自動更新';
+                btn.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
             }
-            
-            const allTimeStats = calculateStats(activitiesData);
-            const recentStats = calculateStats(recent30Days);
-            
-            // 全期間の統計表示
-            let html = `
-                <div style="margin-bottom: 30px;">
-                    <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
-                        <span style="margin-right: 8px;">📊</span>全期間統計
-                        <span style="margin-left: 10px; font-size: 0.8em; color: #666; font-weight: normal;">(${activitiesData.length}件)</span>
-                    </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${formatDuration(allTimeStats.totalTime)}
-                            </div>
-                            <div style="color: #666; font-size: 0.9em;">総トレーニング時間</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${(allTimeStats.totalDistance / 1000).toFixed(1)}km
-                            </div>
-                            <div style="color: #666; font-size: 0.9em;">総距離</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${Math.round(allTimeStats.avgHeartRate) || '-'}bpm
-                            </div>
-                            <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
-                                ${allTimeStats.count}
-                            </div>
-                            <div style="color: #666; font-size: 0.9em;">総セッション数</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // 最近30日の統計表示
-            if (recent30Days.length > 0) {
-                html += `
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
-                            <span style="margin-right: 8px;">🗓️</span>最近30日
-                            <span style="margin-left: 10px; font-size: 0.8em; color: #666; font-weight: normal;">(${recent30Days.length}件)</span>
-                        </h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
-                                    ${formatDuration(recentStats.totalTime)}
-                                </div>
-                                <div style="color: #666; font-size: 0.9em;">トレーニング時間</div>
-                            </div>
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
-                                    ${(recentStats.totalDistance / 1000).toFixed(1)}km
-                                </div>
-                                <div style="color: #666; font-size: 0.9em;">距離</div>
-                            </div>
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
-                                    ${Math.round(recentStats.avgHeartRate) || '-'}bpm
-                                </div>
-                                <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
-                            </div>
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 1.3em; font-weight: bold; color: #28a745; margin-bottom: 5px;">
-                                    ${recentStats.count}
-                                </div>
-                                <div style="color: #666; font-size: 0.9em;">セッション数</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // 種目別統計表示（全期間ベース）
-            html += `
-                <div style="margin-bottom: 25px;">
-                    <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center;">
-                        <span style="margin-right: 8px;">🏃‍♂️</span>種目別統計
-                    </h3>
-                    ${Object.entries(allTimeStats.sportStats).map(([sport, stats]) => `
-                        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; align-items: center;">
-                                    <span style="font-size: 1.2em; margin-right: 8px;">${getActivityIcon(sport)}</span>
-                                    <span style="font-weight: 600;">${getSportDisplayName(sport)}</span>
-                                </div>
-                                <div style="text-align: right; font-size: 0.9em;">
-                                    <div style="color: #4facfe; font-weight: 600;">${formatDuration(stats.time)}</div>
-                                    <div style="color: #666;">${stats.count}回 • ${(stats.distance/1000).toFixed(1)}km</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            container.innerHTML = html;
         }
         
-        // ユーティリティ関数
-        function updateConnectionStatus(className, message) {
-            const status = document.getElementById('connectionStatus');
-            status.className = `status ${className}`;
-            status.textContent = message;
-        }
-        
-        function updateSyncStatus(className, message) {
-            const status = document.getElementById('syncStatus');
-            status.className = `status ${className}`;
-            status.textContent = message;
-        }
-        
-        function showSyncSection() {
-            document.getElementById('syncSection').style.display = 'block';
-            document.getElementById('stravaInstructions').style.display = 'none';
-        }
-        
-        function displayActivities(activitiesData) {
+        // アクティビティ表示
+        function displayActivities(activitiesData, newCount = 0, isFullRefresh = false) {
             const container = document.getElementById('activityList');
+            const periodElement = document.getElementById('activityPeriod');
             
             if (activitiesData.length === 0) {
                 container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティが見つかりません</div>';
                 return;
             }
             
+            // 期間表示を更新
+            if (periodElement) {
+                periodElement.textContent = `過去1年のトレーニング（${activitiesData.length}件）`;
+            }
+            
             const sortedActivities = activitiesData.sort((a, b) => {
                 return new Date(b.start_date) - new Date(a.start_date);
             });
             
-            const html = sortedActivities.map(activity => {
+            const html = sortedActivities.map((activity, index) => {
                 const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
                 const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
                 const heartRate = activity.average_heartrate ? `${Math.round(activity.average_heartrate)}bpm` : '-';
                 
+                // 新規アクティビティかどうかをチェック
+                const isNew = !isFullRefresh && index < newCount;
+                
                 return `
-                    <div class="activity-item" data-activity-id="${activity.id}" style="cursor: pointer;">
+                    <div class="activity-item ${isNew ? 'new' : ''}" data-activity-id="${activity.id}" style="cursor: pointer;">
                         <div class="activity-header">
-                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
+                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name} ${isNew ? '🆕' : ''}</span>
                             <span class="activity-date">${date}</span>
                         </div>
                         <div class="activity-stats">
@@ -672,24 +719,125 @@
             
             container.innerHTML = html;
             
-            // クリックイベントリスナーを追加
+            // クリックイベントリスナー追加
             document.querySelectorAll('.activity-item').forEach(item => {
                 const activityId = item.getAttribute('data-activity-id');
                 
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Activity clicked:', activityId);
-                    console.log('Opening activity detail page...');
-                    
-                    // activity-detail.htmlに遷移
                     const detailUrl = `activity-detail.html?id=${activityId}`;
-                    console.log('Detail URL:', detailUrl);
-                    
                     window.open(detailUrl, '_blank');
                 });
             });
             
             console.log('Activity items displayed with click handlers');
+        }
+        
+        // サマリー生成
+        function generateSummary(activitiesData) {
+            const container = document.getElementById('summaryContent');
+            
+            if (activitiesData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティがありません</div>';
+                return;
+            }
+            
+            // 基本統計
+            const totalTime = activitiesData.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+            const totalDistance = activitiesData.reduce((sum, a) => sum + (a.distance || 0), 0);
+            const avgHeartRate = activitiesData
+                .filter(a => a.average_heartrate)
+                .reduce((sum, a, _, arr) => sum + a.average_heartrate / arr.length, 0);
+            
+            // 種目別統計
+            const sportStats = {};
+            activitiesData.forEach(activity => {
+                const sport = activity.sport_type || activity.type;
+                if (!sportStats[sport]) {
+                    sportStats[sport] = { count: 0, time: 0, distance: 0 };
+                }
+                sportStats[sport].count++;
+                sportStats[sport].time += activity.moving_time || 0;
+                sportStats[sport].distance += activity.distance || 0;
+            });
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">総合統計（過去1年）</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${formatDuration(totalTime)}
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総トレーニング時間</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${(totalDistance / 1000).toFixed(1)}km
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総距離</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${Math.round(avgHeartRate) || '-'}bpm
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">平均心拍数</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
+                                ${activitiesData.length}
+                            </div>
+                            <div style="color: #666; font-size: 0.9em;">総セッション数</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">種目別統計</h3>
+                    ${Object.entries(sportStats).map(([sport, stats]) => `
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-size: 1.2em; margin-right: 8px;">${getActivityIcon(sport)}</span>
+                                    <span style="font-weight: 600;">${getSportDisplayName(sport)}</span>
+                                </div>
+                                <div style="text-align: right; font-size: 0.9em;">
+                                    <div style="color: #4facfe; font-weight: 600;">${formatDuration(stats.time)}</div>
+                                    <div style="color: #666;">${stats.count}回 • ${(stats.distance/1000).toFixed(1)}km</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // ユーティリティ関数
+        function updateConnectionStatus(className, message) {
+            const status = document.getElementById('connectionStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function updateSyncStatus(className, message) {
+            const status = document.getElementById('syncStatus');
+            status.className = `status ${className}`;
+            status.textContent = message;
+        }
+        
+        function showSyncSection() {
+            document.getElementById('syncSection').style.display = 'block';
+            document.getElementById('stravaInstructions').style.display = 'none';
+            
+            // 自動同期ボタンの表示を更新
+            const autoSyncBtn = document.getElementById('autoSyncBtn');
+            if (autoSyncEnabled) {
+                autoSyncBtn.textContent = '自動更新中';
+                autoSyncBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            } else {
+                autoSyncBtn.textContent = '自動更新';
+                autoSyncBtn.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+            }
         }
         
         function formatDuration(seconds) {
@@ -734,7 +882,6 @@
             if (code && !stravaToken) {
                 updateConnectionStatus('loading', '認証処理中...');
                 
-                // 実際のStrava API呼び出し
                 fetch('/.netlify/functions/strava-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -757,7 +904,12 @@
                         showSyncSection();
                         window.history.replaceState({}, document.title, window.location.pathname);
                         
-                        console.log('Real Strava token received, ready for sync');
+                        // 初回接続時は自動で同期開始
+                        setTimeout(() => {
+                            performIncrementalSync();
+                        }, 1000);
+                        
+                        console.log('Real Strava token received, starting initial sync');
                     } else {
                         throw new Error('No access token received');
                     }
@@ -771,36 +923,42 @@
         
         // ページ読み込み時の初期化
         window.addEventListener('load', function() {
-            console.log('Page loaded, initializing...');
+            console.log('Enhanced page loaded, initializing...');
             
-            // 既にトークンがあるかチェック
             if (stravaToken) {
                 updateConnectionStatus('connected', 'Strava接続済み');
                 showSyncSection();
+                updateSyncInfo();
             }
             
             handleStravaCallback();
             
+            // イベントリスナー設定
             const connectBtn = document.getElementById('connectBtn');
-            const syncBtn = document.getElementById('syncBtn');
-            const clearCacheBtn = document.getElementById('clearCacheBtn');
+            const autoSyncBtn = document.getElementById('autoSyncBtn');
+            const manualSyncBtn = document.getElementById('manualSyncBtn');
+            const fullSyncBtn = document.getElementById('fullSyncBtn');
             
             if (connectBtn) {
                 connectBtn.addEventListener('click', connectStrava);
             }
             
-            if (syncBtn) {
-                syncBtn.addEventListener('click', syncActivities);
+            if (autoSyncBtn) {
+                autoSyncBtn.addEventListener('click', toggleAutoSync);
             }
             
-            if (clearCacheBtn) {
-                clearCacheBtn.addEventListener('click', clearCache);
+            if (manualSyncBtn) {
+                manualSyncBtn.addEventListener('click', performIncrementalSync);
             }
             
-            console.log('Initialization complete!');
+            if (fullSyncBtn) {
+                fullSyncBtn.addEventListener('click', performFullSync);
+            }
+            
+            console.log('Enhanced initialization complete!');
         });
         
-        console.log('JavaScript loading completed');
+        console.log('Enhanced JavaScript loading completed');
     </script>
 </body>
 </html>

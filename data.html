@@ -383,11 +383,11 @@
                     <div id="syncInfo" class="sync-info"></div>
                     
                     <div style="background: #e8f5e8; color: #2d5a2d; border: 1px solid #a8d5a8; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
-                        <strong>✅ 時間範囲分割対応版:</strong><br>
-                        • 1年間を3ヶ月単位に分割して取得<br>
-                        • 各期間で最大200件の制限を回避<br>
-                        • 4月4日以降のデータも正しく取得可能<br>
-                        • 段階的な進捗表示で取得状況を確認
+                        <strong>✅ before/after方式実装:</strong><br>
+                        • <code>page</code>パラメータは使用せず<code>before</code>/<code>after</code>のみ使用<br>
+                        • 最初は最新200件、次は最古の日時より前の200件を取得<br>
+                        • これでStrava APIの制限を正しく回避<br>
+                        • 4月5日以降の最新データも取得可能
                     </div>
                     
                     <div class="sync-controls">

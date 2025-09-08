@@ -383,11 +383,11 @@
                     <div id="syncInfo" class="sync-info"></div>
                     
                     <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
-                        <strong>⚠️ Strava API制限:</strong><br>
-                        • 15分間で100リクエスト<br>
-                        • 1日で1000リクエスト<br>
-                        • 1回の取得で最大200件<br>
-                        • 大量データは複数回に分けて取得
+                        <strong>⚠️ 重要な修正:</strong><br>
+                        • Netlify Functionsを使わず直接Strava APIを呼び出し<br>
+                        • 正しいページネーション実装<br>
+                        • レート制限: 15分/100, 1日/1000リクエスト<br>
+                        • 1回最大200件、複数ページで全データ取得
                     </div>
                     
                     <div class="sync-controls">

@@ -382,6 +382,14 @@
                 <div id="syncSection" style="display: none;">
                     <div id="syncInfo" class="sync-info"></div>
                     
+                    <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
+                        <strong>⚠️ Strava API制限:</strong><br>
+                        • 15分間で100リクエスト<br>
+                        • 1日で1000リクエスト<br>
+                        • 1回の取得で最大200件<br>
+                        • 大量データは複数回に分けて取得
+                    </div>
+                    
                     <div class="sync-controls">
                         <button id="autoSyncBtn" class="auto-sync-btn">
                             自動更新
@@ -392,7 +400,7 @@
                     </div>
                     
                     <button id="fullSyncBtn" class="connect-btn full-sync-btn">
-                        全データ再取得
+                        全データ再取得（1年分）
                     </button>
                     
                     <div id="syncStatus"></div>

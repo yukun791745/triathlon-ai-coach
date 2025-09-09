@@ -300,77 +300,168 @@
             }, 1000);
         }
         
-        // データ同期（シンプル版）
+        // データ同期（診断機能付き）
         async function syncAllData() {
             if (!stravaToken) {
                 updateStatus('error', 'Stravaトークンがありません');
                 return;
             }
             
-            console.log('Starting data sync...');
-            updateStatus('loading', 'データ同期中...');
+            console.log('=== 診断開始 ===');
+            updateStatus('loading', '診断中...');
             updateDebug('同期開始 - トークン確認OK');
             
             try {
-                // 1年前の基準日
+                // まず現在のトークンでテスト
+                updateDebug('トークン有効性テスト中...');
+                
+                const testResponse = await fetch('/.netlify/functions/strava-activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: stravaToken,
+                        per_page: 10 // 小さなテスト
+                    })
+                });
+                
+                updateDebug(`テストレスポンス: ${testResponse.status}`);
+                
+                if (testResponse.status === 401) {
+                    updateDebug('トークンが無効 - 再認証が必要');
+                    updateStatus('error', 'Stravaトークンが無効です。「Stravaに接続」をクリックして再認証してください。');
+                    
+                    // 無効なトークンを削除
+                    localStorage.removeItem('strava_access_token');
+                    stravaToken = null;
+                    return;
+                }
+                
+                if (!testResponse.ok) {
+                    const errorText = await testResponse.text();
+                    updateDebug(`テストエラー: ${errorText}`);
+                    throw new Error(`テスト失敗: ${testResponse.status}`);
+                }
+                
+                updateDebug('トークン有効 - 本格同期開始');
+                updateStatus('loading', 'データ同期中...');
+                
+                // 本格的な同期（段階的に実行）
+                let allActivities = [];
+                let beforeTimestamp = null;
+                let batchCount = 0;
+                const maxBatches = 5; // 安全装置
+                
                 const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000);
                 updateDebug(`基準日: ${new Date(oneYearAgo * 1000).toLocaleDateString('ja-JP')}`);
                 
-                // シンプルなAPI呼び出し
-                const requestData = {
-                    token: stravaToken,
-                    after: oneYearAgo,
-                    per_page: 200
-                };
-                
-                updateDebug('APIリクエスト送信中...');
-                
-                const response = await fetch('/.netlify/functions/strava-activities', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
-                });
-                
-                updateDebug(`レスポンス受信: ${response.status}`);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    updateDebug(`エラー: ${errorText}`);
+                while (batchCount < maxBatches) {
+                    batchCount++;
+                    updateStatus('loading', `バッチ ${batchCount}/${maxBatches} 実行中... (${allActivities.length}件取得済み)`);
+                    updateDebug(`バッチ ${batchCount} 開始`);
                     
-                    if (response.status === 401) {
-                        // トークン無効
-                        localStorage.removeItem('strava_access_token');
-                        stravaToken = null;
-                        updateStatus('error', 'Stravaトークンが無効です。再接続してください');
-                        return;
+                    const requestData = {
+                        token: stravaToken,
+                        after: oneYearAgo,
+                        per_page: 200
+                    };
+                    
+                    if (beforeTimestamp) {
+                        requestData.before = beforeTimestamp;
+                        updateDebug(`Before設定: ${new Date(beforeTimestamp * 1000).toLocaleDateString('ja-JP')}`);
                     }
                     
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    const response = await fetch('/.netlify/functions/strava-activities', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    updateDebug(`バッチ ${batchCount} レスポンス: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        updateDebug(`バッチ ${batchCount} エラー: ${errorText}`);
+                        
+                        if (response.status === 401) {
+                            localStorage.removeItem('strava_access_token');
+                            stravaToken = null;
+                            updateStatus('error', 'トークンが無効になりました。再接続してください。');
+                            return;
+                        }
+                        
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    const batchActivities = data.activities || [];
+                    
+                    updateDebug(`バッチ ${batchCount} 取得: ${batchActivities.length}件`);
+                    
+                    if (batchActivities.length === 0) {
+                        updateDebug('データなし - 終了');
+                        break;
+                    }
+                    
+                    // 日付範囲をログ出力
+                    if (batchActivities.length > 0) {
+                        const firstDate = new Date(batchActivities[0].start_date);
+                        const lastDate = new Date(batchActivities[batchActivities.length - 1].start_date);
+                        updateDebug(`日付範囲: ${firstDate.toLocaleDateString('ja-JP')} 〜 ${lastDate.toLocaleDateString('ja-JP')}`);
+                        
+                        allActivities = [...allActivities, ...batchActivities];
+                        
+                        // 次のbeforeを設定（最後のアクティビティの1秒前）
+                        beforeTimestamp = Math.floor(lastDate.getTime() / 1000) - 1;
+                        
+                        // 200件未満なら終了
+                        if (batchActivities.length < 200) {
+                            updateDebug('最終バッチ検出（200件未満）');
+                            break;
+                        }
+                    }
+                    
+                    // 次のバッチまで待機
+                    if (batchCount < maxBatches) {
+                        updateDebug('2秒待機...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
                 
-                const data = await response.json();
-                updateDebug(`データ受信: ${data.activities?.length || 0}件`);
+                updateDebug(`=== 同期完了 ===`);
+                updateDebug(`総バッチ数: ${batchCount}`);
+                updateDebug(`総アクティビティ数: ${allActivities.length}`);
                 
-                if (data.activities && Array.isArray(data.activities)) {
-                    activities = data.activities;
+                if (allActivities.length > 0) {
+                    // 日付でソート
+                    allActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
                     
                     // キャッシュ保存
-                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    localStorage.setItem('cached_activities', JSON.stringify(allActivities));
                     localStorage.setItem('last_sync_time', Date.now().toString());
                     
-                    // 表示更新
-                    displayActivities(activities);
-                    generateSummary(activities);
+                    // グローバル変数更新
+                    activities = allActivities;
                     
-                    updateStatus('connected', `${activities.length}件のアクティビティを取得しました`);
-                    updateDebug('同期完了');
+                    // 表示更新
+                    displayActivities(allActivities);
+                    generateSummary(allActivities);
+                    
+                    // 日付範囲を計算
+                    const oldestDate = new Date(allActivities[allActivities.length - 1].start_date);
+                    const newestDate = new Date(allActivities[0].start_date);
+                    
+                    updateStatus('connected', `${allActivities.length}件のアクティビティを取得しました`);
+                    updateDebug(`期間: ${oldestDate.toLocaleDateString('ja-JP')} 〜 ${newestDate.toLocaleDateString('ja-JP')}`);
                 } else {
-                    throw new Error('無効なデータ形式');
+                    updateStatus('error', 'アクティビティが取得できませんでした');
+                    updateDebug('アクティビティ数: 0');
                 }
                 
             } catch (error) {
                 console.error('Sync error:', error);
-                updateDebug(`エラー発生: ${error.message}`);
+                updateDebug(`=== エラー発生 ===`);
+                updateDebug(`エラータイプ: ${error.name}`);
+                updateDebug(`エラーメッセージ: ${error.message}`);
                 updateStatus('error', `同期に失敗しました: ${error.message}`);
             }
         }

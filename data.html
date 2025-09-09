@@ -484,9 +484,7 @@
             }).join('');
             
             container.innerHTML = html;
-            if (activitiesData.length > 50) {
-                container.innerHTML += `<div style="text-align: center; color: #666; margin-top: 20px; font-style: italic;">最新50件を表示中（全${activitiesData.length}件）</div>`;
-            }
+            // 全件表示のため50件制限コメントを削除
             container.style.maxHeight = '600px';
             container.style.overflowY = 'auto';
         }

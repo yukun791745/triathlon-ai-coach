@@ -1,37 +1,45 @@
-// 実用的なデータ同期（現実的なアプローチ）
+// 最新データ優先の完全同期（200件超対応）
         async function syncAllData() {
             if (!stravaToken) {
                 updateStatus('error', 'Stravaトークンがありません');
                 return;
             }
             
-            console.log('=== 実用版同期開始 ===');
-            updateStatus('loading', '利用可能なデータを取得中...');
-            updateDebug('同期開始 - 現実的なアプローチで実行');
+            console.log('=== 最新データ優先同期開始 ===');
+            updateStatus('loading', '最新データを取得中...');
+            updateDebug('同期開始 - 最新データ優先で実行');
             
             try {
                 let allActivities = [];
-                let page = 1;
-                let hasMoreData = true;
-                const maxPages = 10; // 安全装置：最大10ページ
+                let beforeTimestamp = null; // 最新から開始
+                let batchCount = 0;
+                const maxBatches = 20; // より多くのバッチを許可
                 
-                updateDebug('ページベース取得を開始（Strava APIの実際の制限に対応）');
+                updateDebug('最新データから遡って取得開始');
                 
-                while (hasMoreData && page <= maxPages) {
-                    updateStatus('loading', `ページ ${page} を取得中... (${allActivities.length}件取得済み)`);
-                    updateDebug(`ページ ${page} リクエスト開始`);
+                while (batchCount < maxBatches) {
+                    batchCount++;
+                    updateStatus('loading', `バッチ ${batchCount} を取得中... (${allActivities.length}件取得済み)`);
+                    updateDebug(`バッチ ${batchCount} 開始`);
+                    
+                    const requestData = {
+                        token: stravaToken,
+                        per_page: 200
+                    };
+                    
+                    // 2回目以降はbeforeパラメータを追加
+                    if (beforeTimestamp) {
+                        requestData.before = beforeTimestamp;
+                        updateDebug(`Before設定: ${new Date(beforeTimestamp * 1000).toLocaleDateString('ja-JP')}`);
+                    }
                     
                     const response = await fetch('/.netlify/functions/strava-activities', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            token: stravaToken,
-                            per_page: 30, // 標準的なページサイズ
-                            page: page
-                        })
+                        body: JSON.stringify(requestData)
                     });
                     
-                    updateDebug(`ページ ${page} レスポンス: ${response.status}`);
+                    updateDebug(`バッチ ${batchCount} レスポンス: ${response.status}`);
                     
                     if (!response.ok) {
                         if (response.status === 401) {
@@ -46,51 +54,88 @@
                     }
                     
                     const data = await response.json();
-                    const pageActivities = data.activities || [];
+                    const batchActivities = data.activities || [];
                     
-                    updateDebug(`ページ ${page} 取得: ${pageActivities.length}件`);
+                    updateDebug(`バッチ ${batchCount} 取得: ${batchActivities.length}件`);
                     
-                    if (pageActivities.length === 0) {
-                        updateDebug('空のページ - 終了');
-                        hasMoreData = false;
+                    if (batchActivities.length === 0) {
+                        updateDebug('データなし - 全データ取得完了');
                         break;
                     }
                     
                     // 日付範囲をログ
-                    if (pageActivities.length > 0) {
-                        const firstDate = new Date(pageActivities[0].start_date).toLocaleDateString('ja-JP');
-                        const lastDate = new Date(pageActivities[pageActivities.length - 1].start_date).toLocaleDateString('ja-JP');
-                        updateDebug(`ページ ${page} 期間: ${lastDate} 〜 ${firstDate}`);
+                    if (batchActivities.length > 0) {
+                        const firstDate = new Date(batchActivities[0].start_date).toLocaleDateString('ja-JP');
+                        const lastDate = new Date(batchActivities[batchActivities.length - 1].start_date).toLocaleDateString('ja-JP');
+                        updateDebug(`バッチ ${batchCount} 期間: ${lastDate} 〜 ${firstDate}`);
+                        
+                        // 重複チェックしながら追加
+                        const existingIds = new Set(allActivities.map(a => a.id));
+                        const newActivities = batchActivities.filter(activity => !existingIds.has(activity.id));
+                        
+                        allActivities = [...allActivities, ...newActivities];
+                        updateDebug(`新規追加: ${newActivities.length}件, 累計: ${allActivities.length}件`);
+                        
+                        // 次のbeforeを設定（最後のアクティビティの1秒前）
+                        const lastActivity = batchActivities[batchActivities.length - 1];
+                        beforeTimestamp = Math.floor(new Date(lastActivity.start_date).getTime() / 1000) - 1;
+                        
+                        // 200件未満なら最後
+                        if (batchActivities.length < 200) {
+                            updateDebug('最終バッチ検出');
+                            break;
+                        }
                     }
-                    
-                    // 重複チェックしながら追加
-                    const existingIds = new Set(allActivities.map(a => a.id));
-                    const newActivities = pageActivities.filter(activity => !existingIds.has(activity.id));
-                    
-                    allActivities = [...allActivities, ...newActivities];
-                    updateDebug(`新規追加: ${newActivities.length}件, 累計: ${allActivities.length}件`);
-                    
-                    // ページサイズより少ない場合は最後のページ
-                    if (pageActivities.length < 30) {
-                        updateDebug('最終ページ検出');
-                        hasMoreData = false;
-                    }
-                    
-                    page++;
                     
                     // Rate limit対策
-                    if (hasMoreData && page <= maxPages) {
-                        updateDebug('1秒待機...');
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    if (batchCount < maxBatches) {
+                        updateDebug('2秒待機...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     }
                 }
                 
                 updateDebug('=== 同期結果 ===');
-                updateDebug(`総ページ数: ${page - 1}`);
+                updateDebug(`総バッチ数: ${batchCount}`);
                 updateDebug(`総アクティビティ数: ${allActivities.length}`);
                 
-                if (allActivities.length === 0) {
-                    updateStatus('error', 'アクティビティが取得でき<!DOCTYPE html>
+                if (allActivities.length > 0) {
+                    // 日付でソート（新しい順）
+                    allActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+                    
+                    // 期間を確認
+                    const newestDate = new Date(allActivities[0].start_date);
+                    const oldestDate = new Date(allActivities[allActivities.length - 1].start_date);
+                    updateDebug(`最終期間: ${oldestDate.toLocaleDateString('ja-JP')} 〜 ${newestDate.toLocaleDateString('ja-JP')}`);
+                    
+                    // 今日の日付と比較
+                    const today = new Date();
+                    const daysDiff = Math.floor((today - newestDate) / (1000 * 60 * 60 * 24));
+                    updateDebug(`最新データとの差: ${daysDiff}日前`);
+                    
+                    // グローバル変数更新
+                    activities = allActivities;
+                    
+                    // キャッシュ保存
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    localStorage.setItem('last_sync_time', Date.now().toString());
+                    
+                    // 表示更新
+                    displayActivities(activities);
+                    generateSummary(activities);
+                    
+                    updateStatus('connected', `${activities.length}件のアクティビティを同期しました`);
+                    updateDebug('同期完了');
+                    
+                } else {
+                    updateStatus('error', 'アクティビティが取得できませんでした');
+                }
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateDebug(`エラー発生: ${error.message}`);
+                updateStatus('error', `同期に失敗しました: ${error.message}`);
+            }
+        }<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">

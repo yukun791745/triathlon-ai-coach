@@ -924,6 +924,7 @@
                 // 基本ボタン
                 const connectBtn = document.getElementById('connectBtn');
                 const syncBtn = document.getElementById('syncBtn');
+                const clearDataBtn = document.getElementById('clearDataBtn');
                 
                 if (connectBtn) {
                     connectBtn.onclick = connectToStrava;
@@ -933,6 +934,11 @@
                 if (syncBtn) {
                     syncBtn.onclick = performCompleteSync;
                     addDebugLog('同期ボタン設定完了');
+                }
+                
+                if (clearDataBtn) {
+                    clearDataBtn.onclick = clearAllData;
+                    addDebugLog('データクリアボタン設定完了');
                 }
                 
                 // フィルター

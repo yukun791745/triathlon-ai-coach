@@ -802,6 +802,29 @@
             return icons[type] || '💪';
         }
         
+        // アクティビティ詳細ページを開く
+        function openActivityDetail(activityId) {
+            try {
+                addDebugLog(`アクティビティ詳細を開く: ID ${activityId}`);
+                
+                // 新しいウィンドウでアクティビティ詳細ページを開く
+                const detailUrl = `activity-detail.html?id=${activityId}`;
+                const popup = window.open(detailUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+                
+                if (popup) {
+                    popup.focus();
+                    addDebugLog(`詳細ページを新しいウィンドウで開きました: ${detailUrl}`);
+                } else {
+                    // ポップアップがブロックされた場合、同じウィンドウで開く
+                    addDebugLog('ポップアップがブロックされました。同じウィンドウで開きます。');
+                    window.open(detailUrl, '_self');
+                }
+            } catch (error) {
+                addDebugLog(`詳細ページオープンエラー: ${error.message}`);
+                console.error('Error opening activity detail:', error);
+            }
+        }
+        
         // フィルタリング機能
         function applyFilters() {
             try {

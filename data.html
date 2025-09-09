@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>トライアスロン AIコーチ | 完成版</title>
+    <title>トライアスロン AIコーチ | 実際のStrava API版</title>
     <style>
         * {
             margin: 0;
@@ -87,6 +87,10 @@
         
         .sync-btn {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
         
         .status {
@@ -292,11 +296,15 @@
         <div class="panel">
             <div class="header strava-header">
                 <h1>Strava連携</h1>
-                <p>完成版 - 全件表示対応</p>
+                <p>実際のAPI - 全データ取得対応</p>
             </div>
             
             <div class="content">
                 <div id="connectionStatus" class="status">未接続</div>
+                
+                <button id="clearDataBtn" class="connect-btn clear-btn">
+                    全データクリア
+                </button>
                 
                 <button id="connectBtn" class="connect-btn">
                     Stravaに接続
@@ -304,7 +312,7 @@
                 
                 <div id="syncSection" style="display: none;">
                     <button id="syncBtn" class="connect-btn sync-btn">
-                        完全同期実行
+                        全データ同期実行
                     </button>
                 </div>
                 
@@ -322,7 +330,6 @@
             </div>
             
             <div class="content">
-                <!-- フィルタリング機能 -->
                 <div class="filter-section">
                     <div class="filter-group">
                         <label class="filter-label">アクティビティタイプ</label>
@@ -387,83 +394,37 @@
     </div>
 
     <script>
-        console.log('Complete Strava Integration Started');
+        console.log('Real Strava API Mode - No Demo Data');
         
-        // グローバル変数
+        // グローバル変数 - 実際のStrava APIのみ
         let stravaToken = null;
         let activities = [];
         let filteredActivities = [];
         
-        // Strava設定（デモ用）
+        // 初期化時にlocalStorageをチェック（デモデータ除外）
+        try {
+            stravaToken = localStorage.getItem('strava_access_token');
+            const cachedActivities = localStorage.getItem('cached_activities');
+            if (cachedActivities) {
+                const parsed = JSON.parse(cachedActivities);
+                // デモデータ（ID < 10000）を除外
+                activities = parsed.filter(activity => !activity.id || activity.id >= 10000);
+                if (activities.length !== parsed.length) {
+                    console.log('デモデータを除外しました');
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                }
+            }
+        } catch (error) {
+            console.log('localStorage読み込みエラー:', error);
+            activities = [];
+        }
+        
+        // Strava設定
         const STRAVA_CLIENT_ID = '171117';
         const REDIRECT_URI = 'https://wondrous-dasik-a58240.netlify.app/data.html';
         
-        // デモ用サンプルデータ
-        const demoActivities = [
-            {
-                id: 1,
-                name: "朝のランニング",
-                sport_type: "Run",
-                type: "Run",
-                start_date: new Date(Date.now() - 86400000).toISOString(),
-                distance: 5000,
-                moving_time: 1800,
-                average_heartrate: 155
-            },
-            {
-                id: 2,
-                name: "プールスイム",
-                sport_type: "Swim",
-                type: "Swim",
-                start_date: new Date(Date.now() - 172800000).toISOString(),
-                distance: 1500,
-                moving_time: 2700,
-                average_heartrate: 140
-            },
-            {
-                id: 3,
-                name: "バイク練習",
-                sport_type: "Ride",
-                type: "Ride",
-                start_date: new Date(Date.now() - 259200000).toISOString(),
-                distance: 25000,
-                moving_time: 3600,
-                average_heartrate: 145
-            },
-            {
-                id: 4,
-                name: "週末ロングラン",
-                sport_type: "Run",
-                type: "Run", 
-                start_date: new Date(Date.now() - 604800000).toISOString(),
-                distance: 15000,
-                moving_time: 5400,
-                average_heartrate: 150
-            },
-            {
-                id: 5,
-                name: "筋力トレーニング",
-                sport_type: "WeightTraining",
-                type: "WeightTraining",
-                start_date: new Date(Date.now() - 691200000).toISOString(),
-                distance: 0,
-                moving_time: 3600,
-                average_heartrate: 120
-            },
-            {
-                id: 6,
-                name: "ヨガセッション",
-                sport_type: "Yoga",
-                type: "Yoga",
-                start_date: new Date(Date.now() - 777600000).toISOString(),
-                distance: 0,
-                moving_time: 4500,
-                average_heartrate: 85
-            }
-        ];
-        
         // 初期化
-        addDebugLog('システム初期化開始');
+        addDebugLog('システム初期化開始 - 実際のStrava APIのみ');
         
         // ユーティリティ関数
         function addDebugLog(message) {
@@ -503,23 +464,64 @@
             }
         }
         
-        // Strava接続（デモ用）
-        function connectToStrava() {
-            console.log('Connecting to Strava...');
-            addDebugLog('Strava接続開始（デモモード）');
-            
-            updateStatus('loading', 'Strava認証ページに移動中...');
-            addDebugLog('デモ用認証処理開始');
-            
-            setTimeout(() => {
-                stravaToken = 'demo_token_12345';
-                updateStatus('connected', 'Strava接続完了（デモモード）');
-                showSyncSection();
-                addDebugLog('デモ用Strava認証完了');
-            }, 2000);
+        // 全データクリア機能
+        function clearAllData() {
+            if (confirm('全てのデータ（キャッシュ、トークン）を削除しますか？この操作は元に戻せません。')) {
+                addDebugLog('=== 全データクリア開始 ===');
+                
+                // localStorage を完全にクリア
+                localStorage.removeItem('strava_access_token');
+                localStorage.removeItem('cached_activities');
+                localStorage.removeItem('last_sync_time');
+                
+                // メモリ上の変数もクリア
+                stravaToken = null;
+                activities = [];
+                filteredActivities = [];
+                
+                // 表示をリセット
+                const container = document.getElementById('activityList');
+                const countElement = document.getElementById('activityCount');
+                const summaryContainer = document.getElementById('summaryContent');
+                
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">Stravaに接続してデータを取得してください</div>';
+                }
+                if (countElement) {
+                    countElement.textContent = 'データ未取得';
+                }
+                if (summaryContainer) {
+                    summaryContainer.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">データ同期後にサマリーを表示</div>';
+                }
+                
+                // 同期セクションを非表示
+                const syncSection = document.getElementById('syncSection');
+                if (syncSection) {
+                    syncSection.style.display = 'none';
+                }
+                
+                updateStatus('未接続', 'データクリア完了 - Stravaに再接続してください');
+                addDebugLog('=== 全データクリア完了 ===');
+            }
         }
         
-        // 完全同期実行（デモ用）
+        // Strava接続
+        function connectToStrava() {
+            console.log('Connecting to Real Strava API...');
+            addDebugLog('実際のStrava API接続開始');
+            
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
+            
+            updateStatus('loading', '実際のStrava認証ページに移動中...');
+            addDebugLog('実際のStrava認証ページに移動');
+            addDebugLog(`認証URL: ${authUrl.substring(0, 100)}...`);
+            
+            setTimeout(() => {
+                window.location.href = authUrl;
+            }, 1000);
+        }
+        
+        // 全データ同期実行
         async function performCompleteSync() {
             if (!stravaToken) {
                 updateStatus('error', 'Stravaトークンがありません');
@@ -527,80 +529,155 @@
                 return;
             }
             
-            console.log('Starting complete sync...');
-            updateStatus('loading', '完全同期実行中...');
-            addDebugLog('=== 完全同期開始（デモモード） ===');
+            console.log('Starting complete sync with real Strava API...');
+            updateStatus('loading', '全データ同期実行中...');
+            addDebugLog('=== 実際のStrava API 全データ同期開始 ===');
+            addDebugLog(`使用トークン: ${stravaToken.substring(0, 15)}...`);
             
             try {
-                const additionalDemoActivities = [
-                    {
-                        id: 7,
-                        name: "インターバル走",
-                        sport_type: "Run", 
-                        type: "Run",
-                        start_date: new Date(Date.now() - 345600000).toISOString(),
-                        distance: 8000,
-                        moving_time: 2400,
-                        average_heartrate: 165
-                    },
-                    {
-                        id: 8,
-                        name: "ロングライド",
-                        sport_type: "Ride",
-                        type: "Ride", 
-                        start_date: new Date(Date.now() - 432000000).toISOString(),
-                        distance: 50000,
-                        moving_time: 7200,
-                        average_heartrate: 140
-                    },
-                    {
-                        id: 9,
-                        name: "オープンウォータースイム",
-                        sport_type: "Swim",
-                        type: "Swim",
-                        start_date: new Date(Date.now() - 518400000).toISOString(),
-                        distance: 2000,
-                        moving_time: 3300,
-                        average_heartrate: 150
-                    }
-                ];
+                let allActivities = [];
+                let beforeTimestamp = null;
+                let batchCount = 0;
+                const maxBatches = 500; // 大幅に増加
+                let consecutiveEmptyBatches = 0;
                 
-                for (let i = 0; i < 3; i++) {
-                    updateStatus('loading', `バッチ ${i + 1}/3 実行中... (${activities.length + i}件取得済み)`);
-                    addDebugLog(`--- デモバッチ ${i + 1} 開始 ---`);
+                while (batchCount < maxBatches && consecutiveEmptyBatches < 3) {
+                    batchCount++;
+                    updateStatus('loading', `バッチ ${batchCount}/${maxBatches} 実行中... (${allActivities.length}件取得済み)`);
+                    addDebugLog(`--- 実際のAPIバッチ ${batchCount} 開始 ---`);
                     
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const requestData = {
+                        token: stravaToken,
+                        per_page: 200
+                    };
                     
-                    if (i < additionalDemoActivities.length) {
-                        activities.push(additionalDemoActivities[i]);
-                        addDebugLog(`デモバッチ ${i + 1}: 1件追加`);
+                    if (beforeTimestamp) {
+                        requestData.before = beforeTimestamp;
+                        const beforeDate = new Date(beforeTimestamp * 1000);
+                        addDebugLog(`Before指定: ${beforeDate.toLocaleDateString('ja-JP')} ${beforeDate.toLocaleTimeString('ja-JP')}`);
+                    } else {
+                        addDebugLog('初回リクエスト（全データ取得開始）');
                     }
+                    
+                    addDebugLog(`リクエストデータ: per_page=${requestData.per_page}, before=${requestData.before || 'なし'}`);
+                    
+                    let response;
+                    try {
+                        addDebugLog('実際のStrava APIにリクエスト送信中...');
+                        response = await fetch('/.netlify/functions/strava-activities', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestData)
+                        });
+                    } catch (fetchError) {
+                        addDebugLog(`ネットワークエラー: ${fetchError.message}`);
+                        throw new Error(`ネットワークエラー: ${fetchError.message}`);
+                    }
+                    
+                    addDebugLog(`APIレスポンス: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            localStorage.removeItem('strava_access_token');
+                            stravaToken = null;
+                            updateStatus('error', 'トークンが無効です。再接続してください。');
+                            addDebugLog('エラー: 401 Unauthorized - トークン無効');
+                            return;
+                        }
+                        const errorText = await response.text();
+                        addDebugLog(`APIエラー詳細: ${errorText}`);
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (jsonError) {
+                        addDebugLog(`JSONパースエラー: ${jsonError.message}`);
+                        throw new Error(`レスポンス解析エラー: ${jsonError.message}`);
+                    }
+                    
+                    const batchActivities = data.activities || [];
+                    addDebugLog(`実際のAPIから ${batchActivities.length}件取得`);
+                    
+                    if (batchActivities.length === 0) {
+                        consecutiveEmptyBatches++;
+                        addDebugLog(`空のバッチ ${consecutiveEmptyBatches}/3`);
+                        if (consecutiveEmptyBatches >= 3) {
+                            addDebugLog('連続して空のバッチ - 全データ取得完了');
+                            break;
+                        }
+                        continue;
+                    } else {
+                        consecutiveEmptyBatches = 0;
+                    }
+                    
+                    // 重複除去
+                    const existingIds = new Set(allActivities.map(a => a.id));
+                    const newActivities = batchActivities.filter(activity => !existingIds.has(activity.id));
+                    
+                    allActivities = [...allActivities, ...newActivities];
+                    addDebugLog(`累計: ${allActivities.length}件 (新規: ${newActivities.length}件, 重複: ${batchActivities.length - newActivities.length}件)`);
+                    
+                    if (batchActivities.length > 0) {
+                        const firstActivity = batchActivities[0];
+                        const lastActivity = batchActivities[batchActivities.length - 1];
+                        
+                        const firstDate = new Date(firstActivity.start_date).toLocaleDateString('ja-JP');
+                        const lastDate = new Date(lastActivity.start_date).toLocaleDateString('ja-JP');
+                        addDebugLog(`取得期間: ${lastDate} 〜 ${firstDate}`);
+                        
+                        // サンプルアクティビティの詳細を表示（最初の2バッチのみ）
+                        if (batchCount <= 2) {
+                            addDebugLog(`サンプル: ID=${firstActivity.id}, Name="${firstActivity.name}", Type="${firstActivity.sport_type || firstActivity.type}"`);
+                        }
+                        
+                        // beforeパラメータを最古のアクティビティの1秒前に設定
+                        const lastActivityDate = new Date(lastActivity.start_date);
+                        beforeTimestamp = Math.floor(lastActivityDate.getTime() / 1000) - 1;
+                        
+                        const beforeDate = new Date(beforeTimestamp * 1000);
+                        addDebugLog(`次回Before: ${beforeDate.toLocaleDateString('ja-JP')} ${beforeDate.toLocaleTimeString('ja-JP')}`);
+                    }
+                    
+                    // レート制限対策
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 }
                 
-                addDebugLog(`=== デモ同期完了: ${activities.length}件 ===`);
+                addDebugLog(`=== 実際のAPI同期完了 ===`);
+                addDebugLog(`最終結果: ${allActivities.length}件取得`);
+                addDebugLog(`使用バッチ数: ${batchCount}`);
+                addDebugLog(`連続空バッチ: ${consecutiveEmptyBatches}`);
                 
-                if (activities.length > 0) {
-                    activities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
-                    filteredActivities = [...activities];
+                if (allActivities.length > 0) {
+                    allActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+                    activities = allActivities;
                     
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
+                    localStorage.setItem('last_sync_time', Date.now().toString());
+                    
+                    filteredActivities = [...activities];
                     displayActivities(filteredActivities);
                     generateSummary(filteredActivities);
                     
                     const newest = new Date(activities[0].start_date).toLocaleDateString('ja-JP');
                     const oldest = new Date(activities[activities.length - 1].start_date).toLocaleDateString('ja-JP');
                     
-                    updateStatus('connected', `${activities.length}件同期完了 (${oldest}〜${newest}) - デモモード`);
-                    addDebugLog(`期間: ${oldest} 〜 ${newest}`);
+                    updateStatus('connected', `${activities.length}件の実際のStravaデータ同期完了 (${oldest}〜${newest})`);
+                    addDebugLog(`実際のStravaデータ全期間: ${oldest} 〜 ${newest}`);
                     
                     setTimeout(() => {
                         resetFilters();
                     }, 100);
+                } else {
+                    updateStatus('error', '実際のAPIからアクティビティが取得できませんでした');
+                    addDebugLog('エラー: 実際のAPIからアクティビティ取得なし');
                 }
                 
             } catch (error) {
-                console.error('Sync error:', error);
-                addDebugLog(`エラー: ${error.message}`);
-                updateStatus('error', `同期失敗: ${error.message}`);
+                console.error('Real API Sync error:', error);
+                addDebugLog(`実際のAPI同期エラー: ${error.name}: ${error.message}`);
+                updateStatus('error', `実際のAPI同期失敗: ${error.message}`);
             }
         }
         
@@ -616,7 +693,7 @@
                 }
                 
                 if (!activitiesData || activitiesData.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">アクティビティがありません</div>';
+                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">実際のStravaアクティビティがありません</div>';
                     countElement.textContent = 'データなし';
                     return;
                 }
@@ -626,7 +703,7 @@
                 if (sortedActivities.length > 0) {
                     const newestDate = new Date(sortedActivities[0].start_date).toLocaleDateString('ja-JP');
                     const oldestDate = new Date(sortedActivities[sortedActivities.length - 1].start_date).toLocaleDateString('ja-JP');
-                    countElement.textContent = `${activitiesData.length}件 (${oldestDate} 〜 ${newestDate})`;
+                    countElement.textContent = `${activitiesData.length}件の実際のStravaデータ (${oldestDate} 〜 ${newestDate})`;
                 }
                 
                 const html = sortedActivities.map(activity => {
@@ -663,7 +740,7 @@
                 container.style.maxHeight = '600px';
                 container.style.overflowY = 'auto';
                 
-                addDebugLog(`全${activitiesData.length}件のアクティビティを表示`);
+                addDebugLog(`実際のStravaデータ ${activitiesData.length}件を表示`);
             } catch (error) {
                 addDebugLog(`アクティビティ表示エラー: ${error.message}`);
             }
@@ -676,7 +753,7 @@
                 if (!container) return;
                 
                 if (!activitiesData || activitiesData.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">データがありません</div>';
+                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">実際のStravaデータがありません</div>';
                     return;
                 }
                 
@@ -708,7 +785,7 @@
                 
                 container.innerHTML = `
                     <div style="margin-bottom: 25px;">
-                        <h3 style="margin-bottom: 15px; color: #333;">基本統計</h3>
+                        <h3 style="margin-bottom: 15px; color: #333;">基本統計（実際のStrava）</h3>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
@@ -777,7 +854,7 @@
                 const periodFilter = document.getElementById('periodFilter');
                 
                 if (!activityTypeFilter || !periodFilter) {
-                    addDebugLog('フィルター要素が見つかりません - 処理をスキップ');
+                    addDebugLog('フィルター要素が見つかりません');
                     return;
                 }
                 
@@ -916,15 +993,60 @@
             }
         }
         
-        // 安全なイベントリスナー設定
+        // Stravaコールバック処理
+        function handleStravaCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code && !stravaToken) {
+                updateStatus('loading', '実際のStrava認証処理中...');
+                addDebugLog('実際のStravaコールバック処理開始');
+                
+                fetch('/.netlify/functions/strava-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.access_token) {
+                        stravaToken = data.access_token;
+                        localStorage.setItem('strava_access_token', stravaToken);
+                        
+                        updateStatus('connected', '実際のStrava接続完了');
+                        showSyncSection();
+                        addDebugLog('実際のStrava認証成功');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } else {
+                        throw new Error('アクセストークンなし');
+                    }
+                })
+                .catch(error => {
+                    console.error('Real Auth error:', error);
+                    addDebugLog(`実際の認証エラー: ${error.message}`);
+                    updateStatus('error', '実際のStrava認証に失敗しました');
+                });
+            }
+        }
+        
+        // イベントリスナー設定
         function setupEventListeners() {
             try {
                 addDebugLog('イベントリスナー設定開始');
                 
-                // 基本ボタン
+                const clearDataBtn = document.getElementById('clearDataBtn');
                 const connectBtn = document.getElementById('connectBtn');
                 const syncBtn = document.getElementById('syncBtn');
-                const clearDataBtn = document.getElementById('clearDataBtn');
+                
+                if (clearDataBtn) {
+                    clearDataBtn.onclick = clearAllData;
+                    addDebugLog('データクリアボタン設定完了');
+                }
                 
                 if (connectBtn) {
                     connectBtn.onclick = connectToStrava;
@@ -936,12 +1058,7 @@
                     addDebugLog('同期ボタン設定完了');
                 }
                 
-                if (clearDataBtn) {
-                    clearDataBtn.onclick = clearAllData;
-                    addDebugLog('データクリアボタン設定完了');
-                }
-                
-                // フィルター
+                // フィルター設定
                 const activityTypeFilter = document.getElementById('activityTypeFilter');
                 const periodFilter = document.getElementById('periodFilter');
                 const startDate = document.getElementById('startDate');
@@ -984,17 +1101,29 @@
         
         // 初期化処理
         function initialize() {
-            addDebugLog('アプリケーション初期化開始');
+            addDebugLog('アプリケーション初期化開始 - 実際のStrava API専用');
             
-            // デモデータ設定
-            activities = [...demoActivities];
-            filteredActivities = [...activities];
+            // キャッシュされた実際のStravaデータがある場合は表示
+            if (activities.length > 0) {
+                filteredActivities = [...activities];
+                displayActivities(filteredActivities);
+                generateSummary(filteredActivities);
+                updateStatus('connected', `${activities.length}件の実際のStravaデータを表示中`);
+                showSyncSection();
+                addDebugLog(`実際のStravaデータ ${activities.length}件を復元`);
+            } else {
+                addDebugLog('実際のStravaデータなし - 新規接続が必要');
+                updateStatus('未接続', 'Stravaアカウントに接続してください');
+            }
             
-            // 表示更新
-            displayActivities(filteredActivities);
-            generateSummary(filteredActivities);
-            updateStatus('connected', `${activities.length}件のデモデータを表示中`);
-            showSyncSection();
+            // Stravaトークンがある場合
+            if (stravaToken) {
+                updateStatus('connected', 'Strava接続済み - 実際のAPIモード');
+                showSyncSection();
+                addDebugLog('実際のStravaトークン確認済み');
+            } else {
+                addDebugLog('Stravaトークンなし - 接続が必要');
+            }
             
             // 日付入力初期化
             initializeDateInputs();
@@ -1002,7 +1131,10 @@
             // イベントリスナー設定
             setupEventListeners();
             
-            addDebugLog(`初期化完了: ${activities.length}件のデータを表示`);
+            // Stravaコールバック処理
+            handleStravaCallback();
+            
+            addDebugLog('初期化完了 - 実際のStrava API専用モード');
         }
         
         // DOM読み込み完了時に初期化実行
@@ -1012,7 +1144,7 @@
             initialize();
         }
         
-        console.log('Complete version initialized successfully - Real Strava API Mode');
+        console.log('Real Strava API Mode initialized - No Demo Data');
     </script>
 </body>
 </html>

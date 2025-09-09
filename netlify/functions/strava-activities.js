@@ -1,10 +1,7 @@
 // netlify/functions/strava-activities.js
-// シンプル版：基本機能のみ
-
 exports.handler = async (event, context) => {
-  console.log('=== Simple Strava Function ===');
+  console.log('=== Enhanced Strava Function ===');
   
-  // CORS設定
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -12,11 +9,10 @@ exports.handler = async (event, context) => {
     'Content-Type': 'application/json'
   };
 
-  // プリフライト対応
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
-
+  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -26,8 +22,8 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // リクエスト解析
-    const { token, after, per_page = 200 } = JSON.parse(event.body || '{}');
+    // beforeとafter両方に対応
+    const { token, before, after, per_page = 200 } = JSON.parse(event.body || '{}');
     
     if (!token) {
       return {
@@ -36,26 +32,32 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ error: 'Token required' })
       };
     }
-
-    console.log('Request params:', { after, per_page });
-
-    // Strava API URL構築
+    
+    console.log('Request params:', { before, after, per_page });
+    
+    // URL構築 - beforeとafter両方に対応
     let url = `https://www.strava.com/api/v3/athlete/activities?per_page=${per_page}`;
+    
+    if (before) {
+      url += `&before=${before}`;
+      console.log('Using BEFORE parameter:', before);
+    }
+    
     if (after) {
       url += `&after=${after}`;
+      console.log('Using AFTER parameter:', after);
     }
-
+    
     console.log('Strava API URL:', url);
-
-    // Strava API呼び出し
+    
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-
+    
     console.log('Strava response status:', response.status);
-
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Strava API error:', errorText);
@@ -69,10 +71,17 @@ exports.handler = async (event, context) => {
         })
       };
     }
-
+    
     const activities = await response.json();
     console.log('Activities received:', activities.length);
-
+    
+    // デバッグ情報追加
+    if (activities.length > 0) {
+      const firstDate = activities[0].start_date;
+      const lastDate = activities[activities.length - 1].start_date;
+      console.log('Date range:', firstDate, 'to', lastDate);
+    }
+    
     return {
       statusCode: 200,
       headers,
@@ -82,7 +91,7 @@ exports.handler = async (event, context) => {
         count: activities.length
       })
     };
-
+    
   } catch (error) {
     console.error('Function error:', error);
     

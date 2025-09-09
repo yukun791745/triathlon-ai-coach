@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>トライアスロン AIコーチ | beforeパラメータ修正版</title>
+    <title>トライアスロン AIコーチ | 完成版</title>
     <style>
         * {
             margin: 0;
@@ -181,7 +181,7 @@
             margin-top: 15px;
             max-height: 200px;
             overflow-y: auto;
-            display: block; /* 常に表示するように変更 */
+            display: block;
         }
         
         @media (max-width: 1024px) {
@@ -197,7 +197,7 @@
         <div class="panel">
             <div class="header strava-header">
                 <h1>Strava連携</h1>
-                <p>beforeパラメータ修正版</p>
+                <p>完成版 - 全件表示対応</p>
             </div>
             
             <div class="content">
@@ -209,7 +209,7 @@
                 
                 <div id="syncSection" style="display: none;">
                     <button id="syncBtn" class="connect-btn sync-btn">
-                        完全同期実行（afterパラメータ版）
+                        完全同期実行
                     </button>
                 </div>
                 
@@ -252,7 +252,7 @@
     </div>
 
     <script>
-        console.log('Fixed Strava Integration Started - beforeパラメータ修正版');
+        console.log('Complete Strava Integration Started');
         
         // グローバル変数
         let stravaToken = localStorage.getItem('strava_access_token');
@@ -294,7 +294,7 @@
             }, 1000);
         }
         
-        // 完全同期実行（修正版）
+        // 完全同期実行
         async function performCompleteSync() {
             if (!stravaToken) {
                 updateStatus('error', 'Stravaトークンがありません');
@@ -302,15 +302,19 @@
                 return;
             }
             
-            console.log('Starting complete sync with fixed before parameter...');
+            console.log('Starting complete sync...');
             updateStatus('loading', '完全同期実行中...');
-            addDebugLog('=== 完全同期開始（修正版）===');
+            addDebugLog('=== 完全同期開始 ===');
             
             try {
                 let allActivities = [];
                 let beforeTimestamp = null;
                 let batchCount = 0;
-                const maxBatches = 50; // バッチ数を増加
+                const maxBatches = 50;
+                
+                // 1年前の日付を計算
+                const oneYearAgo = new Date();
+                oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
                 
                 while (batchCount < maxBatches) {
                     batchCount++;
@@ -362,11 +366,6 @@
                     // 重複除去
                     const existingIds = new Set(allActivities.map(a => a.id));
                     const newActivities = batchActivities.filter(activity => !existingIds.has(activity.id));
-                    const duplicateCount = batchActivities.length - newActivities.length;
-                    
-                    if (duplicateCount > 0) {
-                        addDebugLog(`重複除去: ${duplicateCount}件`);
-                    }
                     
                     allActivities = [...allActivities, ...newActivities];
                     addDebugLog(`累計: ${allActivities.length}件`);
@@ -379,17 +378,14 @@
                         const lastDate = new Date(lastActivity.start_date).toLocaleDateString('ja-JP');
                         addDebugLog(`期間: ${lastDate} 〜 ${firstDate}`);
                         
-                        // 修正版: beforeパラメータを1日前に設定
+                        // beforeパラメータを最古のアクティビティの1秒前に設定
                         const lastActivityDate = new Date(lastActivity.start_date);
-                        beforeTimestamp = Math.floor(lastActivityDate.getTime() / 1000) - (24 * 60 * 60); // 1日前
+                        beforeTimestamp = Math.floor(lastActivityDate.getTime() / 1000) - 1;
                         
                         const beforeDate = new Date(beforeTimestamp * 1000);
                         addDebugLog(`次回Before: ${beforeDate.toLocaleDateString('ja-JP')} ${beforeDate.toLocaleTimeString('ja-JP')}`);
                         
                         // 1年前の日付をチェック
-                        const oneYearAgo = new Date();
-                        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                        
                         if (lastActivityDate < oneYearAgo) {
                             addDebugLog(`1年前到達: ${lastDate}`);
                             break;
@@ -434,7 +430,7 @@
             }
         }
         
-        // アクティビティ表示
+        // アクティビティ表示（全件表示対応）
         function displayActivities(activitiesData) {
             const container = document.getElementById('activityList');
             const countElement = document.getElementById('activityCount');
@@ -453,7 +449,8 @@
                 countElement.textContent = `${activitiesData.length}件 (${oldestDate} 〜 ${newestDate})`;
             }
             
-            const html = sortedActivities.slice(0, 50).map(activity => { // 表示を50件に制限
+            // 全件表示（制限なし）
+            const html = sortedActivities.map(activity => {
                 const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
                 const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
@@ -484,9 +481,10 @@
             }).join('');
             
             container.innerHTML = html;
-            // 全件表示のため50件制限コメントを削除
             container.style.maxHeight = '600px';
             container.style.overflowY = 'auto';
+            
+            addDebugLog(`全${activitiesData.length}件のアクティビティを表示`);
         }
         
         // サマリー生成
@@ -575,7 +573,7 @@
             const timestamp = new Date().toLocaleTimeString('ja-JP');
             debugContent.innerHTML += `${timestamp}: ${message}<br>`;
             debugContent.scrollTop = debugContent.scrollHeight;
-            console.log(`[${timestamp}] ${message}`); // コンソールにも出力
+            console.log(`[${timestamp}] ${message}`);
         }
         
         function showSyncSection() {
@@ -655,8 +653,8 @@
             
             handleStravaCallback();
             
-            addDebugLog('修正版システム初期化完了');
-            console.log('Fixed version initialized successfully');
+            addDebugLog('完成版システム初期化完了');
+            console.log('Complete version initialized successfully');
         });
     </script>
 </body>

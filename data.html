@@ -1,4 +1,96 @@
-<!DOCTYPE html>
+// 実用的なデータ同期（現実的なアプローチ）
+        async function syncAllData() {
+            if (!stravaToken) {
+                updateStatus('error', 'Stravaトークンがありません');
+                return;
+            }
+            
+            console.log('=== 実用版同期開始 ===');
+            updateStatus('loading', '利用可能なデータを取得中...');
+            updateDebug('同期開始 - 現実的なアプローチで実行');
+            
+            try {
+                let allActivities = [];
+                let page = 1;
+                let hasMoreData = true;
+                const maxPages = 10; // 安全装置：最大10ページ
+                
+                updateDebug('ページベース取得を開始（Strava APIの実際の制限に対応）');
+                
+                while (hasMoreData && page <= maxPages) {
+                    updateStatus('loading', `ページ ${page} を取得中... (${allActivities.length}件取得済み)`);
+                    updateDebug(`ページ ${page} リクエスト開始`);
+                    
+                    const response = await fetch('/.netlify/functions/strava-activities', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: stravaToken,
+                            per_page: 30, // 標準的なページサイズ
+                            page: page
+                        })
+                    });
+                    
+                    updateDebug(`ページ ${page} レスポンス: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            localStorage.removeItem('strava_access_token');
+                            stravaToken = null;
+                            updateStatus('error', 'トークンが無効です。再接続してください。');
+                            return;
+                        }
+                        
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    const pageActivities = data.activities || [];
+                    
+                    updateDebug(`ページ ${page} 取得: ${pageActivities.length}件`);
+                    
+                    if (pageActivities.length === 0) {
+                        updateDebug('空のページ - 終了');
+                        hasMoreData = false;
+                        break;
+                    }
+                    
+                    // 日付範囲をログ
+                    if (pageActivities.length > 0) {
+                        const firstDate = new Date(pageActivities[0].start_date).toLocaleDateString('ja-JP');
+                        const lastDate = new Date(pageActivities[pageActivities.length - 1].start_date).toLocaleDateString('ja-JP');
+                        updateDebug(`ページ ${page} 期間: ${lastDate} 〜 ${firstDate}`);
+                    }
+                    
+                    // 重複チェックしながら追加
+                    const existingIds = new Set(allActivities.map(a => a.id));
+                    const newActivities = pageActivities.filter(activity => !existingIds.has(activity.id));
+                    
+                    allActivities = [...allActivities, ...newActivities];
+                    updateDebug(`新規追加: ${newActivities.length}件, 累計: ${allActivities.length}件`);
+                    
+                    // ページサイズより少ない場合は最後のページ
+                    if (pageActivities.length < 30) {
+                        updateDebug('最終ページ検出');
+                        hasMoreData = false;
+                    }
+                    
+                    page++;
+                    
+                    // Rate limit対策
+                    if (hasMoreData && page <= maxPages) {
+                        updateDebug('1秒待機...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                updateDebug('=== 同期結果 ===');
+                updateDebug(`総ページ数: ${page - 1}`);
+                updateDebug(`総アクティビティ数: ${allActivities.length}`);
+                
+                if (allActivities.length === 0) {
+                    updateStatus('error', 'アクティビティが取得でき<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -470,7 +562,7 @@
             }
         }
         
-        // アクティビティ表示
+        // アクティビティ表示（全件表示対応）
         function displayActivities(activitiesData) {
             const container = document.getElementById('activityList');
             const countElement = document.getElementById('activityCount');
@@ -481,22 +573,32 @@
                 return;
             }
             
+            console.log('Displaying activities:', activitiesData.length);
             countElement.textContent = `${activitiesData.length}件のアクティビティ`;
             
+            // 日付でソート
             const sortedActivities = activitiesData.sort((a, b) => {
                 return new Date(b.start_date) - new Date(a.start_date);
             });
             
-            const html = sortedActivities.slice(0, 10).map(activity => {
+            // 期間を計算して表示
+            if (sortedActivities.length > 0) {
+                const newestDate = new Date(sortedActivities[0].start_date).toLocaleDateString('ja-JP');
+                const oldestDate = new Date(sortedActivities[sortedActivities.length - 1].start_date).toLocaleDateString('ja-JP');
+                countElement.textContent = `${activitiesData.length}件 (${oldestDate} 〜 ${newestDate})`;
+            }
+            
+            // 全てのアクティビティを表示（制限なし）
+            const html = sortedActivities.map((activity, index) => {
                 const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
                 const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
                 const heartRate = activity.average_heartrate ? `${Math.round(activity.average_heartrate)}bpm` : '-';
                 
                 return `
-                    <div class="activity-item">
+                    <div class="activity-item" data-index="${index}">
                         <div class="activity-header">
-                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name}</span>
+                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name || 'アクティビティ'}</span>
                             <span class="activity-date">${date}</span>
                         </div>
                         <div class="activity-stats">
@@ -518,6 +620,25 @@
             }).join('');
             
             container.innerHTML = html;
+            
+            // スクロール可能であることを確認
+            container.style.maxHeight = '600px';
+            container.style.overflowY = 'auto';
+            
+            console.log('Activities displayed:', container.children.length);
+            
+            // 最初の10件と最後の10件をログ出力して確認
+            console.log('First 5 activities:', sortedActivities.slice(0, 5).map(a => ({
+                name: a.name,
+                date: a.start_date
+            })));
+            
+            if (sortedActivities.length > 10) {
+                console.log('Last 5 activities:', sortedActivities.slice(-5).map(a => ({
+                    name: a.name,
+                    date: a.start_date
+                })));
+            }
         }
         
         // サマリー生成

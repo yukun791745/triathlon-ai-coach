@@ -526,7 +526,7 @@
     </div>
 
     <script>
-        console.log('Real Strava API Mode - With Unified Navigation');
+        console.log('Real Strava API Mode - Fixed Monthly Table');
         
         // グローバル変数
         let stravaToken = null;
@@ -804,7 +804,7 @@
             }
         }
         
-        // サマリー生成
+        // サマリー生成（完全書き換え版）
         function generateSummary(activitiesData) {
             try {
                 const container = document.getElementById('summaryContent');
@@ -818,43 +818,73 @@
                 const totalTime = activitiesData.reduce((sum, a) => sum + (a.moving_time || 0), 0);
                 const totalDistance = activitiesData.reduce((sum, a) => sum + (a.distance || 0), 0);
                 
-                // 種目別統計
-                const sportStats = {};
+                // 月別・種目別回数のみの集計
+                const monthlyCount = {};
+                
                 activitiesData.forEach(activity => {
+                    const date = new Date(activity.start_date);
+                    const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
                     const type = activity.sport_type || activity.type;
-                    let sportType;
                     
+                    let sport;
                     if (['Run', 'TrailRun'].includes(type)) {
-                        sportType = 'ラン';
+                        sport = 'ラン';
                     } else if (['Ride', 'VirtualRide'].includes(type)) {
-                        sportType = 'バイク';
+                        sport = 'バイク';  
                     } else if (type === 'Swim') {
-                        sportType = 'スイム';
+                        sport = 'スイム';
                     } else {
-                        sportType = 'その他';
+                        return; // その他は除外
                     }
                     
-                    if (!sportStats[sportType]) {
-                        sportStats[sportType] = { count: 0, distance: 0, time: 0 };
+                    if (!monthlyCount[monthKey]) {
+                        monthlyCount[monthKey] = { 'スイム': 0, 'バイク': 0, 'ラン': 0 };
                     }
-                    sportStats[sportType].count++;
-                    sportStats[sportType].distance += activity.distance || 0;
-                    sportStats[sportType].time += activity.moving_time || 0;
+                    monthlyCount[monthKey][sport]++;
                 });
                 
-                const sportStatsHtml = Object.entries(sportStats)
-                    .map(([sport, stats]) => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-radius: 5px; margin-bottom: 5px;">
-                            <span style="font-weight: 600;">${sport}</span>
-                            <span style="color: #666;">${stats.count}回</span>
-                            <span style="color: #4facfe; font-weight: 600;">${(stats.distance / 1000).toFixed(1)}km</span>
-                            <span style="color: #667eea; font-weight: 600;">${formatDuration(stats.time)}</span>
-                        </div>
-                    `).join('');
+                // 月を降順でソート
+                const months = Object.keys(monthlyCount).sort((a, b) => b.localeCompare(a));
                 
+                // テーブルHTML生成
+                let tableRows = '';
+                months.forEach((month, index) => {
+                    const counts = monthlyCount[month];
+                    const [year, monthNum] = month.split('-');
+                    const displayMonth = `${year}年${parseInt(monthNum)}月`;
+                    const bgColor = index % 2 === 0 ? '#fafafa' : 'white';
+                    
+                    tableRows += `
+                        <tr style="border-bottom: 1px solid #e0e0e0; background: ${bgColor};">
+                            <td style="padding: 10px 8px; font-weight: 500; color: #333; border-right: 1px solid #e0e0e0;">${displayMonth}</td>
+                            <td style="padding: 10px 8px; text-align: center; color: #4facfe; font-weight: 600; border-right: 1px solid #e0e0e0;">${counts['スイム']}</td>
+                            <td style="padding: 10px 8px; text-align: center; color: #764ba2; font-weight: 600; border-right: 1px solid #e0e0e0;">${counts['バイク']}</td>
+                            <td style="padding: 10px 8px; text-align: center; color: #059669; font-weight: 600;">${counts['ラン']}</td>
+                        </tr>`;
+                });
+                
+                const monthlyTable = months.length > 0 ? `
+                    <div style="overflow-x: auto; max-height: 400px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                            <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                                <tr style="border-bottom: 2px solid #e0e0e0;">
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #333; border-right: 1px solid #e0e0e0;">月</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #4facfe; border-right: 1px solid #e0e0e0;">スイム</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #764ba2; border-right: 1px solid #e0e0e0;">バイク</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #059669;">ラン</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : '<div style="text-align: center; color: #666; padding: 20px;">月別データがありません</div>';
+                
+                // 最終HTML出力
                 container.innerHTML = `
                     <div style="margin-bottom: 25px;">
-                        <h3 style="margin-bottom: 15px; color: #333;">フィルター済み統計</h3>
+                        <h3 style="margin-bottom: 15px; color: #333;">基本統計</h3>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 1.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px;">
@@ -884,10 +914,11 @@
                     </div>
                     
                     <div>
-                        <h3 style="margin-bottom: 15px; color: #333;">月別・種目別トレーニング回数</h3>
-                        ${sportStatsHtml}
+                        <h3 style="margin-bottom: 15px; color: #333;">月別トレーニング回数</h3>
+                        ${monthlyTable}
                     </div>
                 `;
+                
             } catch (error) {
                 addDebugLog(`サマリー生成エラー: ${error.message}`);
             }
@@ -964,7 +995,7 @@
         
         // 初期化処理
         function initialize() {
-            addDebugLog('アプリケーション初期化開始 - 統一ナビゲーション版');
+            addDebugLog('アプリケーション初期化開始 - 月別テーブル修正版');
             
             if (activities.length > 0) {
                 filteredActivities = [...activities];
@@ -989,7 +1020,7 @@
             // イベントリスナー設定
             setupEventListeners();
             
-            addDebugLog('初期化完了 - 統一ナビゲーション付きStrava API専用モード');
+            addDebugLog('初期化完了 - 月別テーブル修正版Strava API専用モード');
         }
         
         // DOM読み込み完了時に初期化実行
@@ -999,7 +1030,7 @@
             initialize();
         }
         
-        console.log('Unified Navigation Strava API Mode initialized');
+        console.log('Fixed Monthly Table Strava API Mode initialized');
     </script>
 </body>
 </html>

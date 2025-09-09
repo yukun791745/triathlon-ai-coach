@@ -89,10 +89,6 @@
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
         
-        .clear-btn {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        }
-        
         .status {
             padding: 10px;
             border-radius: 5px;
@@ -302,10 +298,6 @@
             <div class="content">
                 <div id="connectionStatus" class="status">未接続</div>
                 
-                <button id="clearDataBtn" class="connect-btn clear-btn">
-                    全データクリア
-                </button>
-                
                 <button id="connectBtn" class="connect-btn">
                     Stravaに接続
                 </button>
@@ -464,47 +456,6 @@
             }
         }
         
-        // 全データクリア機能
-        function clearAllData() {
-            if (confirm('全てのデータ（キャッシュ、トークン）を削除しますか？この操作は元に戻せません。')) {
-                addDebugLog('=== 全データクリア開始 ===');
-                
-                // localStorage を完全にクリア
-                localStorage.removeItem('strava_access_token');
-                localStorage.removeItem('cached_activities');
-                localStorage.removeItem('last_sync_time');
-                
-                // メモリ上の変数もクリア
-                stravaToken = null;
-                activities = [];
-                filteredActivities = [];
-                
-                // 表示をリセット
-                const container = document.getElementById('activityList');
-                const countElement = document.getElementById('activityCount');
-                const summaryContainer = document.getElementById('summaryContent');
-                
-                if (container) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">Stravaに接続してデータを取得してください</div>';
-                }
-                if (countElement) {
-                    countElement.textContent = 'データ未取得';
-                }
-                if (summaryContainer) {
-                    summaryContainer.innerHTML = '<div style="text-align: center; color: #666; margin-top: 50px;">データ同期後にサマリーを表示</div>';
-                }
-                
-                // 同期セクションを非表示
-                const syncSection = document.getElementById('syncSection');
-                if (syncSection) {
-                    syncSection.style.display = 'none';
-                }
-                
-                updateStatus('未接続', 'データクリア完了 - Stravaに再接続してください');
-                addDebugLog('=== 全データクリア完了 ===');
-            }
-        }
-        
         // Strava接続
         function connectToStrava() {
             console.log('Connecting to Real Strava API...');
@@ -538,7 +489,7 @@
                 let allActivities = [];
                 let beforeTimestamp = null;
                 let batchCount = 0;
-                const maxBatches = 500; // 大幅に増加
+                const maxBatches = 500;
                 let consecutiveEmptyBatches = 0;
                 
                 while (batchCount < maxBatches && consecutiveEmptyBatches < 3) {
@@ -839,10 +790,14 @@
         function getActivityIcon(type) {
             const icons = {
                 'Run': '🏃',
+                'TrailRun': '🏃', // トレイルランもランカテゴリー
                 'Ride': '🚴', 
+                'VirtualRide': '🚴', // Zwiftなどのインドアバイクもバイクカテゴリー
                 'Swim': '🏊',
                 'WeightTraining': '🏋️',
-                'Yoga': '🧘'
+                'Yoga': '🧘',
+                'Workout': '💪',
+                'CrossTraining': '💪'
             };
             return icons[type] || '💪';
         }
@@ -867,7 +822,19 @@
                     if (activityTypeValue === 'other') {
                         filtered = filtered.filter(activity => {
                             const type = activity.sport_type || activity.type;
-                            return !['Swim', 'Ride', 'Run'].includes(type);
+                            return !['Swim', 'Ride', 'VirtualRide', 'Run', 'TrailRun'].includes(type);
+                        });
+                    } else if (activityTypeValue === 'Ride') {
+                        // バイクカテゴリー（通常のRideとVirtualRideを含む）
+                        filtered = filtered.filter(activity => {
+                            const type = activity.sport_type || activity.type;
+                            return ['Ride', 'VirtualRide'].includes(type);
+                        });
+                    } else if (activityTypeValue === 'Run') {
+                        // ランカテゴリー（通常のRunとTrailRunを含む）
+                        filtered = filtered.filter(activity => {
+                            const type = activity.sport_type || activity.type;
+                            return ['Run', 'TrailRun'].includes(type);
                         });
                     } else {
                         filtered = filtered.filter(activity => {
@@ -1039,14 +1006,8 @@
             try {
                 addDebugLog('イベントリスナー設定開始');
                 
-                const clearDataBtn = document.getElementById('clearDataBtn');
                 const connectBtn = document.getElementById('connectBtn');
                 const syncBtn = document.getElementById('syncBtn');
-                
-                if (clearDataBtn) {
-                    clearDataBtn.onclick = clearAllData;
-                    addDebugLog('データクリアボタン設定完了');
-                }
                 
                 if (connectBtn) {
                     connectBtn.onclick = connectToStrava;

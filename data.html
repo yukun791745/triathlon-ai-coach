@@ -300,19 +300,19 @@
             }, 1000);
         }
         
-        // データ同期（診断機能付き）
+        // データ同期（重複問題修正版）
         async function syncAllData() {
             if (!stravaToken) {
                 updateStatus('error', 'Stravaトークンがありません');
                 return;
             }
             
-            console.log('=== 診断開始 ===');
+            console.log('=== 修正版同期開始 ===');
             updateStatus('loading', '診断中...');
             updateDebug('同期開始 - トークン確認OK');
             
             try {
-                // まず現在のトークンでテスト
+                // トークン有効性テスト
                 updateDebug('トークン有効性テスト中...');
                 
                 const testResponse = await fetch('/.netlify/functions/strava-activities', {
@@ -320,17 +320,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         token: stravaToken,
-                        per_page: 10 // 小さなテスト
+                        per_page: 30 // テスト用
                     })
                 });
-                
-                updateDebug(`テストレスポンス: ${testResponse.status}`);
                 
                 if (testResponse.status === 401) {
                     updateDebug('トークンが無効 - 再認証が必要');
                     updateStatus('error', 'Stravaトークンが無効です。「Stravaに接続」をクリックして再認証してください。');
-                    
-                    // 無効なトークンを削除
                     localStorage.removeItem('strava_access_token');
                     stravaToken = null;
                     return;
@@ -338,130 +334,138 @@
                 
                 if (!testResponse.ok) {
                     const errorText = await testResponse.text();
-                    updateDebug(`テストエラー: ${errorText}`);
                     throw new Error(`テスト失敗: ${testResponse.status}`);
                 }
                 
                 updateDebug('トークン有効 - 本格同期開始');
-                updateStatus('loading', 'データ同期中...');
                 
-                // 本格的な同期（段階的に実行）
-                let allActivities = [];
-                let beforeTimestamp = null;
-                let batchCount = 0;
-                const maxBatches = 5; // 安全装置
+                // 重複を避けるため、シンプルに1回だけ大量取得
+                updateStatus('loading', 'データ取得中...');
                 
                 const oneYearAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000);
                 updateDebug(`基準日: ${new Date(oneYearAgo * 1000).toLocaleDateString('ja-JP')}`);
                 
-                while (batchCount < maxBatches) {
-                    batchCount++;
-                    updateStatus('loading', `バッチ ${batchCount}/${maxBatches} 実行中... (${allActivities.length}件取得済み)`);
-                    updateDebug(`バッチ ${batchCount} 開始`);
-                    
-                    const requestData = {
+                // 1回の大量取得（重複を避ける）
+                const response = await fetch('/.netlify/functions/strava-activities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         token: stravaToken,
                         after: oneYearAgo,
                         per_page: 200
-                    };
-                    
-                    if (beforeTimestamp) {
-                        requestData.before = beforeTimestamp;
-                        updateDebug(`Before設定: ${new Date(beforeTimestamp * 1000).toLocaleDateString('ja-JP')}`);
+                    })
+                });
+                
+                updateDebug(`レスポンス: ${response.status}`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    if (response.status === 401) {
+                        localStorage.removeItem('strava_access_token');
+                        stravaToken = null;
+                        updateStatus('error', 'トークンが無効になりました。再接続してください。');
+                        return;
                     }
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                let fetchedActivities = data.activities || [];
+                
+                updateDebug(`初回取得: ${fetchedActivities.length}件`);
+                
+                if (fetchedActivities.length === 0) {
+                    updateStatus('error', 'アクティビティが取得できませんでした');
+                    return;
+                }
+                
+                // 重複を排除（ID基準）
+                const uniqueActivities = [];
+                const seenIds = new Set();
+                
+                fetchedActivities.forEach(activity => {
+                    if (!seenIds.has(activity.id)) {
+                        seenIds.add(activity.id);
+                        uniqueActivities.push(activity);
+                    }
+                });
+                
+                updateDebug(`重複排除後: ${uniqueActivities.length}件`);
+                
+                // 日付でソート
+                uniqueActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+                
+                // 日付範囲を確認
+                if (uniqueActivities.length > 0) {
+                    const newestDate = new Date(uniqueActivities[0].start_date);
+                    const oldestDate = new Date(uniqueActivities[uniqueActivities.length - 1].start_date);
+                    updateDebug(`期間: ${oldestDate.toLocaleDateString('ja-JP')} 〜 ${newestDate.toLocaleDateString('ja-JP')}`);
+                }
+                
+                // 200件の制限で古いデータが取得できない場合の追加取得
+                if (uniqueActivities.length === 200) {
+                    updateDebug('200件制限 - 追加データ取得を試行');
+                    updateStatus('loading', '追加データ取得中...');
                     
-                    const response = await fetch('/.netlify/functions/strava-activities', {
+                    const oldestActivity = uniqueActivities[uniqueActivities.length - 1];
+                    const beforeTimestamp = Math.floor(new Date(oldestActivity.start_date).getTime() / 1000) - 1;
+                    
+                    updateDebug(`Before設定: ${new Date(beforeTimestamp * 1000).toLocaleDateString('ja-JP')}`);
+                    
+                    const additionalResponse = await fetch('/.netlify/functions/strava-activities', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestData)
+                        body: JSON.stringify({
+                            token: stravaToken,
+                            after: oneYearAgo,
+                            before: beforeTimestamp,
+                            per_page: 200
+                        })
                     });
                     
-                    updateDebug(`バッチ ${batchCount} レスポンス: ${response.status}`);
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        updateDebug(`バッチ ${batchCount} エラー: ${errorText}`);
+                    if (additionalResponse.ok) {
+                        const additionalData = await additionalResponse.json();
+                        const additionalActivities = additionalData.activities || [];
                         
-                        if (response.status === 401) {
-                            localStorage.removeItem('strava_access_token');
-                            stravaToken = null;
-                            updateStatus('error', 'トークンが無効になりました。再接続してください。');
-                            return;
-                        }
+                        updateDebug(`追加取得: ${additionalActivities.length}件`);
                         
-                        throw new Error(`HTTP ${response.status}: ${errorText}`);
-                    }
-                    
-                    const data = await response.json();
-                    const batchActivities = data.activities || [];
-                    
-                    updateDebug(`バッチ ${batchCount} 取得: ${batchActivities.length}件`);
-                    
-                    if (batchActivities.length === 0) {
-                        updateDebug('データなし - 終了');
-                        break;
-                    }
-                    
-                    // 日付範囲をログ出力
-                    if (batchActivities.length > 0) {
-                        const firstDate = new Date(batchActivities[0].start_date);
-                        const lastDate = new Date(batchActivities[batchActivities.length - 1].start_date);
-                        updateDebug(`日付範囲: ${firstDate.toLocaleDateString('ja-JP')} 〜 ${lastDate.toLocaleDateString('ja-JP')}`);
+                        // 重複チェックして追加
+                        additionalActivities.forEach(activity => {
+                            if (!seenIds.has(activity.id)) {
+                                seenIds.add(activity.id);
+                                uniqueActivities.push(activity);
+                            }
+                        });
                         
-                        allActivities = [...allActivities, ...batchActivities];
+                        // 再ソート
+                        uniqueActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
                         
-                        // 次のbeforeを設定（最後のアクティビティの1秒前）
-                        beforeTimestamp = Math.floor(lastDate.getTime() / 1000) - 1;
-                        
-                        // 200件未満なら終了
-                        if (batchActivities.length < 200) {
-                            updateDebug('最終バッチ検出（200件未満）');
-                            break;
-                        }
-                    }
-                    
-                    // 次のバッチまで待機
-                    if (batchCount < maxBatches) {
-                        updateDebug('2秒待機...');
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        updateDebug(`追加後の合計: ${uniqueActivities.length}件`);
                     }
                 }
                 
-                updateDebug(`=== 同期完了 ===`);
-                updateDebug(`総バッチ数: ${batchCount}`);
-                updateDebug(`総アクティビティ数: ${allActivities.length}`);
-                
-                if (allActivities.length > 0) {
-                    // 日付でソート
-                    allActivities.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+                if (uniqueActivities.length > 0) {
+                    // グローバル変数更新
+                    activities = uniqueActivities;
                     
                     // キャッシュ保存
-                    localStorage.setItem('cached_activities', JSON.stringify(allActivities));
+                    localStorage.setItem('cached_activities', JSON.stringify(activities));
                     localStorage.setItem('last_sync_time', Date.now().toString());
                     
-                    // グローバル変数更新
-                    activities = allActivities;
-                    
                     // 表示更新
-                    displayActivities(allActivities);
-                    generateSummary(allActivities);
+                    displayActivities(activities);
+                    generateSummary(activities);
                     
-                    // 日付範囲を計算
-                    const oldestDate = new Date(allActivities[allActivities.length - 1].start_date);
-                    const newestDate = new Date(allActivities[0].start_date);
-                    
-                    updateStatus('connected', `${allActivities.length}件のアクティビティを取得しました`);
-                    updateDebug(`期間: ${oldestDate.toLocaleDateString('ja-JP')} 〜 ${newestDate.toLocaleDateString('ja-JP')}`);
+                    updateStatus('connected', `${activities.length}件のユニークなアクティビティを取得しました`);
+                    updateDebug('=== 同期完了 ===');
                 } else {
-                    updateStatus('error', 'アクティビティが取得できませんでした');
-                    updateDebug('アクティビティ数: 0');
+                    updateStatus('error', 'ユニークなアクティビティが見つかりませんでした');
                 }
                 
             } catch (error) {
                 console.error('Sync error:', error);
                 updateDebug(`=== エラー発生 ===`);
-                updateDebug(`エラータイプ: ${error.name}`);
-                updateDebug(`エラーメッセージ: ${error.message}`);
+                updateDebug(`エラー: ${error.message}`);
                 updateStatus('error', `同期に失敗しました: ${error.message}`);
             }
         }

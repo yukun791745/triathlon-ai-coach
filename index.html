@@ -598,7 +598,7 @@
 
             var systemPrompt = 'あなたは運動生理学博士であり、トライアスロンの専門コーチです。トレーニング計画、栄養、リカバリー、レース戦略、機材選びなど、トライアスロンに関するあらゆる質問に対して、科学的根拠に基づいた実践的なアドバイスを提供してください。回答は400-600字程度で簡潔にまとめてください。';
 
-            fetch('/api/openai', {
+            fetch('/.netlify/functions/openai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -583,11 +583,11 @@
             text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 18px 0 10px; color: #333;">$1</h3>');
             text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 20px 0 12px; color: #333; font-size: 1.2em;">$1</h3>');
             
-            // 番号付きリスト: 1. text → <div>1. text</div>
-            text = text.replace(/^(\d+)\. (.+)$/gm, '<div style="margin: 5px 0 5px 10px;"><strong>$1.</strong> $2</div>');
+            // 番号付きリスト: 1. text または 1 text → 変換（ピリオドあり/なし両対応）
+            text = text.replace(/^(\d+)\.?\s+(.+)$/gm, '<div style="margin: 8px 0 8px 10px;"><strong>$1.</strong> $2</div>');
             
             // 箇条書き: - text → <div>• text</div>
-            text = text.replace(/^- (.+)$/gm, '<div style="margin: 3px 0 3px 15px;">• $1</div>');
+            text = text.replace(/^- (.+)$/gm, '<div style="margin: 3px 0 3px 20px;">• $1</div>');
             
             // コード: `text` → <code>text</code>
             text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');

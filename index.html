@@ -573,6 +573,30 @@
     </div>
 
     <script>
+        // Markdown → HTML 変換関数
+        function markdownToHtml(text) {
+            // 太字: **text** → <strong>text</strong>
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // 見出し: ### text → <h4>text</h4>
+            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 15px 0 8px; color: #333;">$1</h4>');
+            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 18px 0 10px; color: #333;">$1</h3>');
+            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 20px 0 12px; color: #333; font-size: 1.2em;">$1</h3>');
+            
+            // 番号付きリスト: 1. text → <div>1. text</div>
+            text = text.replace(/^(\d+)\. (.+)$/gm, '<div style="margin: 5px 0 5px 10px;"><strong>$1.</strong> $2</div>');
+            
+            // 箇条書き: - text → <div>• text</div>
+            text = text.replace(/^- (.+)$/gm, '<div style="margin: 3px 0 3px 15px;">• $1</div>');
+            
+            // コード: `text` → <code>text</code>
+            text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');
+            
+            // 改行
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
+        }
         var isAIConnected = false;
         var apiKey = '';
         var conversationHistory = [];  // 会話履歴を保持
@@ -836,18 +860,14 @@
 【回答ガイドライン - 必ず守ること】
 あなたは世界トップレベルの運動生理学者です。以下の形式で、学術論文レベルの深さで回答してください：
 
-【重要】Markdown記法は使用禁止です。**太字**、##見出し、- リストなどは使わないでください。
-代わりに、以下のように番号や記号を使ってプレーンテキストで回答してください：
+1. **概要**: 質問への直接的な回答を最初に述べる
+2. **科学的背景**: 関連する生理学的メカニズム、研究知見を詳述
+3. **具体的方法/数値**: 計算式、測定プロトコル、具体的な数値範囲を必ず含める
+4. **実践への応用**: トライアスリートが実際に使える具体的なアドバイス
+5. **注意点/限界**: 個人差、環境要因、測定誤差などの考慮事項
+6. **まとめ**: 重要ポイントの要約
 
-1. 概要: 質問への直接的な回答を最初に述べる
-2. 科学的背景: 関連する生理学的メカニズム、研究知見を詳述
-3. 具体的方法/数値: 計算式、測定プロトコル、具体的な数値範囲を必ず含める
-4. 実践への応用: トライアスリートが実際に使える具体的なアドバイス
-5. 注意点/限界: 個人差、環境要因、測定誤差などの考慮事項
-6. まとめ: 重要ポイントの要約
-
-- 強調したい箇所は「」で囲むか、単に明確な言葉で表現する
-- 表形式での比較が有効な場合は、スペースで揃えたテキスト表を使用
+- 重要な用語は**太字**で強調してください
 - 数式は読みやすいテキスト形式で記載（例: 発汗量 = 運動前体重 - 運動後体重 + 摂取水分量）
 - 「〜と言われています」ではなく「〜である（研究により実証）」のように断定的に
 - 一般論ではなく、トライアスロン特有の文脈で回答
@@ -899,7 +919,7 @@
                                 var content = json.choices[0]?.delta?.content || '';
                                 if (content) {
                                     fullContent += content;
-                                    contentSpan.innerHTML = fullContent.replace(/\n/g, '<br>');
+                                    contentSpan.innerHTML = markdownToHtml(fullContent);
                                     // 自動スクロール
                                     document.getElementById('chatMessages').scrollTop = 999999;
                                 }
@@ -909,9 +929,10 @@
                         }
                     }
                 }
-                // ストリーミング完了 - カーソルを消す
+                // ストリーミング完了 - カーソルを消す＆最終変換
                 contentSpan.classList.remove('streaming-content');
                 contentSpan.classList.add('streaming-done');
+                contentSpan.innerHTML = markdownToHtml(fullContent);
                 
                 // AIの回答を履歴に追加
                 conversationHistory.push({ role: 'assistant', content: fullContent });

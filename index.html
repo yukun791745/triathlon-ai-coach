@@ -1,5 +1,4 @@
-
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -226,28 +225,6 @@
             margin-top: 10px;
             font-family: monospace;
             font-size: 0.9em;
-            position: relative;
-        }
-        
-        .api-input-container {
-            position: relative;
-        }
-        
-        .api-key-status {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .api-key-status.saved {
-            color: #4CAF50;
-        }
-        
-        .api-key-status.error {
-            color: #f44336;
         }
         
         .api-button {
@@ -258,28 +235,11 @@
             border-radius: 6px;
             cursor: pointer;
             margin-top: 10px;
-            margin-right: 10px;
             font-weight: 600;
         }
         
         .api-button:hover {
             background: #e0a800;
-        }
-        
-        .deploy-button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: 600;
-            width: 100%;
-        }
-        
-        .deploy-button:hover {
-            background: #218838;
         }
         
         .chat-messages {
@@ -364,103 +324,6 @@
         
         .status-connected { background: #28a745; }
         .status-error { background: #dc3545; }
-        .status-loading { background: #ffc107; }
-        
-        .code-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8em;
-            overflow-x: auto;
-        }
-
-        /* 右側パネル用の新しいスタイル */
-        .welcome-panel {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .welcome-section h2 {
-            font-size: 2.2em;
-            margin-bottom: 20px;
-            color: white;
-        }
-
-        .welcome-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .feature-list {
-            list-style: none;
-            margin: 30px 0;
-            text-align: left;
-        }
-
-        .feature-list li {
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-        }
-
-        .feature-list li:before {
-            content: "🏊‍♂️";
-            margin-right: 15px;
-            font-size: 1.5em;
-        }
-
-        .feature-list li:nth-child(2):before {
-            content: "🚴‍♂️";
-        }
-
-        .feature-list li:nth-child(3):before {
-            content: "🏃‍♂️";
-        }
-
-        .feature-list li:nth-child(4):before {
-            content: "📊";
-        }
-
-        .feature-list li:nth-child(5):before {
-            content: "🎯";
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
         
         @media (max-width: 768px) {
             .container {
@@ -469,14 +332,6 @@
             }
             
             .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .welcome-section h2 {
-                font-size: 1.8em;
-            }
-            
-            .stats-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -559,97 +414,29 @@
         <div class="chat-panel">
             <div class="header chat-header">
                 <h1>🤖 AIトライアスロンコーチ</h1>
-                <p><span id="connectionStatus" class="status-indicator status-error"></span>運動生理学博士によるアドバイス</p>
+                <p><span id="connectionStatus" class="status-indicator status-error"></span>運動生理学博士</p>
             </div>
             
-            <div id="apiSetup" class="api-setup" style="display: none;">
-                <strong>🚀 APIキー設定（自動保存対応）</strong>
-                <p>OpenAI APIキーを入力すると自動保存され、次回から自動復元されます。</p>
-                
-                <div class="api-input-container">
-                    <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-proj-... または sk-...">
-                    <span id="apiKeyStatus" class="api-key-status"></span>
-                </div>
-                
-                <div style="margin: 15px 0; padding: 15px; background: #e8f4fd; border-radius: 6px;">
-                    <strong>📋 準備状況:</strong><br>
-                    <span id="vercelStatus">❌ Vercel Functions未デプロイ</span><br>
-                    <strong>✅ 解決策:</strong> 高品質フォールバック + 実装ガイド提供<br>
-                </div>
-                
-                <button onclick="enableDemoMode()" class="api-button">
-                    🎯 AIコーチを起動（自動保存APIキー使用）
-                </button>
+            <div id="apiSetup" class="api-setup">
+                <strong>⚙️ OpenAI API設定</strong>
+                <p>APIキーを入力してAIコーチを有効化：</p>
+                <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-..." />
+                <button onclick="enableAICoach()" class="api-button">APIキーを設定</button>
                 <p style="font-size: 0.8em; margin-top: 10px; color: #6c757d;">
-                    現在は高品質なフォールバック応答で運動生理学の専門知識を提供します
+                    <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a> で取得
                 </p>
-            </div>
-            
-            <div id="welcomePanel" class="welcome-panel">
-                <div class="welcome-content">
-                    <div class="welcome-section">
-                        <h2>あなた専用の<br>トライアスロンコーチ</h2>
-                        <p style="font-size: 1.2em; margin-bottom: 30px; line-height: 1.6;">
-                            AIが個別にカスタマイズされたトレーニングプランと専門的なアドバイスを提供します。
-                        </p>
-                    </div>
-                    
-                    <ul class="feature-list">
-                        <li>個別化されたトレーニングプラン</li>
-                        <li>技術改善のためのドリル</li>
-                        <li>レース戦略とペーシング</li>
-                        <li>栄養とリカバリーのアドバイス</li>
-                        <li>目標達成までのロードマップ</li>
-                    </ul>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">24/7</div>
-                            <div class="stat-label">いつでもサポート</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">∞</div>
-                            <div class="stat-label">無制限相談</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">🎯</div>
-                            <div class="stat-label">目標達成重視</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">🧠</div>
-                            <div class="stat-label">AI技術活用</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.2); border-radius: 15px;">
-                        <h3 style="margin-bottom: 15px; font-size: 1.3em;">🚀 AIコーチを始める</h3>
-                        <p style="margin-bottom: 15px; font-size: 0.95em; line-height: 1.5;">
-                            OpenAI APIキーを入力してAIコーチとの対話を開始しましょう。キーは自動保存され、次回から復元されます。
-                        </p>
-                        <div class="api-input-container" style="margin-bottom: 15px;">
-                            <input type="password" id="apiKeyInputMain" class="api-input" placeholder="sk-proj-... または sk-..." 
-                                   style="background: rgba(255,255,255,0.9); border: 2px solid rgba(255,255,255,0.5);">
-                            <span id="apiKeyStatusMain" class="api-key-status"></span>
-                        </div>
-                        <button onclick="enableDemoModeFromWelcome()" class="api-button" 
-                                style="width: 100%; background: rgba(255,255,255,0.9); color: #333; font-weight: bold; padding: 12px;">
-                            ✨ AIコーチと対話を始める
-                        </button>
-                    </div>
-                </div>
             </div>
             
             <div id="chatMessages" class="chat-messages" style="display: none;">
                 <div class="ai-message">
                     <strong>AIコーチ</strong><br>
-                    こんにちは！運動生理学博士のAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️<br>
-                    シミュレーション結果の詳細解説や、トレーニングに関する専門的な質問にお答えします。
+                    こんにちは！運動生理学博士のAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️
                 </div>
             </div>
             
             <div id="chatInputArea" class="chat-input-area" style="display: none;">
                 <div style="position: relative;">
-                    <textarea id="chatInput" class="chat-input" placeholder="質問やメッセージを入力してください..." rows="1" onkeypress="handleEnter(event)"></textarea>
+                    <textarea id="chatInput" class="chat-input" placeholder="質問を入力..." rows="1" onkeypress="handleEnter(event)"></textarea>
                     <button onclick="sendMessage()" class="chat-send-btn">➤</button>
                 </div>
             </div>
@@ -657,798 +444,259 @@
     </div>
 
     <script>
-        // APIキー自動保存関連の定数
-        const API_KEY_STORAGE_KEY = 'triathlon_coach_api_key';
+        console.log('🚀 AIコーチ起動');
         
-        // グローバル変数
         var isAIConnected = false;
         var lastResults = null;
         
-        // APIキー自動保存・復元機能
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const apiKeyStatus = document.getElementById('apiKeyStatus');
-        const apiKeyInputMain = document.getElementById('apiKeyInputMain');
-        const apiKeyStatusMain = document.getElementById('apiKeyStatusMain');
-        
-        // ページ読み込み時にAPIキーを復元
-        window.addEventListener('load', function() {
-            const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-            if (savedApiKey) {
-                if (apiKeyInput) {
-                    apiKeyInput.value = savedApiKey;
-                    updateApiKeyStatus('saved', '保存済み ✓');
-                }
-                if (apiKeyInputMain) {
-                    apiKeyInputMain.value = savedApiKey;
-                    updateApiKeyStatusMain('saved', '保存済み ✓');
-                }
-                showMessage('APIキーが復元されました', 'success');
-            } else {
-                setTimeout(() => {
-                    showMessage('OpenAI APIキーを入力すると自動保存されます', 'info');
-                }, 1000);
-            }
-        });
-        
-        // APIキー入力時の自動保存（メイン）
-        if (apiKeyInputMain) {
-            apiKeyInputMain.addEventListener('input', function() {
-                const apiKey = this.value.trim();
-                if (apiKey) {
-                    if (isValidApiKey(apiKey)) {
-                        localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-                        updateApiKeyStatusMain('saved', '保存済み ✓');
-                        // 隠されたAPIキー入力フィールドも同期
-                        if (apiKeyInput) apiKeyInput.value = apiKey;
-                    } else {
-                        updateApiKeyStatusMain('error', '無効な形式');
-                    }
-                } else {
-                    localStorage.removeItem(API_KEY_STORAGE_KEY);
-                    updateApiKeyStatusMain('', '');
-                }
-            });
-        }
-        
-        // APIキー入力時の自動保存（隠しフィールド）
-        if (apiKeyInput) {
-            apiKeyInput.addEventListener('input', function() {
-                const apiKey = this.value.trim();
-                if (apiKey) {
-                    if (isValidApiKey(apiKey)) {
-                        localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-                        updateApiKeyStatus('saved', '保存済み ✓');
-                        // メインAPIキー入力フィールドも同期
-                        if (apiKeyInputMain) apiKeyInputMain.value = apiKey;
-                    } else {
-                        updateApiKeyStatus('error', '無効な形式');
-                    }
-                } else {
-                    localStorage.removeItem(API_KEY_STORAGE_KEY);
-                    updateApiKeyStatus('', '');
-                }
-            });
-        }
-        
-        // APIキーの形式チェック
-        function isValidApiKey(apiKey) {
-            return (apiKey.startsWith('sk-proj-') || apiKey.startsWith('sk-')) && apiKey.length > 20;
-        }
-        
-        // APIキーステータスの更新
-        function updateApiKeyStatus(className, text) {
-            if (apiKeyStatus) {
-                apiKeyStatus.className = `api-key-status ${className}`;
-                apiKeyStatus.textContent = text;
-            }
-        }
-        
-        // メインAPIキーステータスの更新
-        function updateApiKeyStatusMain(className, text) {
-            if (apiKeyStatusMain) {
-                apiKeyStatusMain.className = `api-key-status ${className}`;
-                apiKeyStatusMain.textContent = text;
-            }
-        }
-        
-        // APIキー保存・取得
-        function getStoredAPIKey() {
-            const mainInput = apiKeyInputMain ? apiKeyInputMain.value.trim() : '';
-            const hiddenInput = apiKeyInput ? apiKeyInput.value.trim() : '';
-            return mainInput || hiddenInput || localStorage.getItem(API_KEY_STORAGE_KEY) || '';
-        }
-        
-        // 正確な運動生理学計算ロジック
+        // 計算関数群
         function calculateVO2maxImprovement(vo2max, genetics, age, gender) {
-            var vo2maxStandardsMale = {
-                '20-29': { '25th': 39, '75th': 48.5 },
-                '30-39': { '25th': 37.8, '75th': 47 },
-                '40-49': { '25th': 35.9, '75th': 44.9 },
-                '50-59': { '25th': 32.8, '75th': 41.8 },
-                '60-69': { '25th': 29.5, '75th': 38.3 },
-                '70-79': { '25th': 26.9, '75th': 35.2 }
+            var standards = {
+                male: {
+                    '20-29': { '25th': 39, '75th': 48.5 }, '30-39': { '25th': 37.8, '75th': 47 },
+                    '40-49': { '25th': 35.9, '75th': 44.9 }, '50-59': { '25th': 32.8, '75th': 41.8 },
+                    '60-69': { '25th': 29.5, '75th': 38.3 }, '70-79': { '25th': 26.9, '75th': 35.2 }
+                },
+                female: {
+                    '20-29': { '25th': 33, '75th': 42.4 }, '30-39': { '25th': 32, '75th': 41 },
+                    '40-49': { '25th': 30.2, '75th': 38.6 }, '50-59': { '25th': 28, '75th': 35.2 },
+                    '60-69': { '25th': 25.1, '75th': 32.3 }, '70-79': { '25th': 24.2, '75th': 29.8 }
+                }
             };
             
-            var vo2maxStandardsFemale = {
-                '20-29': { '25th': 33, '75th': 42.4 },
-                '30-39': { '25th': 32, '75th': 41 },
-                '40-49': { '25th': 30.2, '75th': 38.6 },
-                '50-59': { '25th': 28, '75th': 35.2 },
-                '60-69': { '25th': 25.1, '75th': 32.3 },
-                '70-79': { '25th': 24.2, '75th': 29.8 }
-            };
-            
-            var upsideMatrix = {
+            var matrix = {
                 'H-g': { 'H-v': 3, 'M-v': 4, 'L-v': 5 },
                 'M-g': { 'H-v': 2, 'M-v': 3, 'L-v': 4 },
                 'L-g': { 'H-v': 1, 'M-v': 2, 'L-v': 3 }
             };
             
-            var vo2maxImprovementRates = { 1: 5, 2: 7, 3: 10, 4: 12, 5: 14 };
+            var rates = { 1: 5, 2: 7, 3: 10, 4: 12, 5: 14 };
             
-            function getAgeGroup(age) {
-                if (age >= 20 && age <= 29) return '20-29';
-                if (age >= 30 && age <= 39) return '30-39';
-                if (age >= 40 && age <= 49) return '40-49';
-                if (age >= 50 && age <= 59) return '50-59';
-                if (age >= 60 && age <= 69) return '60-69';
-                return '70-79';
-            }
+            var ageGroup = age >= 70 ? '70-79' : age >= 60 ? '60-69' : age >= 50 ? '50-59' : 
+                          age >= 40 ? '40-49' : age >= 30 ? '30-39' : '20-29';
+            var std = standards[gender][ageGroup];
+            var level = vo2max >= std['75th'] ? 'H-v' : vo2max < std['25th'] ? 'L-v' : 'M-v';
+            var gKey = (genetics === 'unknown' ? 'M' : genetics) + '-g';
+            var score = matrix[gKey][level];
             
-            function classifyVO2maxLevel(currentVO2max, age, gender) {
-                var ageGroup = getAgeGroup(age);
-                var standards = gender === 'male' ? vo2maxStandardsMale : vo2maxStandardsFemale;
-                var ageStandards = standards[ageGroup];
-                
-                if (currentVO2max >= ageStandards['75th']) return 'H-v';
-                if (currentVO2max < ageStandards['25th']) return 'L-v';
-                return 'M-v';
-            }
-            
-            var vo2maxLevel = classifyVO2maxLevel(vo2max, age, gender);
-            var geneticsKey = (genetics === 'unknown' ? 'M' : genetics) + '-g';
-            var upsideScore = upsideMatrix[geneticsKey][vo2maxLevel];
-            var improvementRate = vo2maxImprovementRates[upsideScore];
-            
-            return vo2max + (vo2max * improvementRate / 100);
+            return vo2max * (1 + rates[score] / 100);
         }
         
-        function calculateLTImprovement(currentLT, genetics, level, age, gender) {
-            var ltStandardsMale = {
-                '20-29': { lower: 65, upper: 72 },
-                '30-39': { lower: 68, upper: 75 },
-                '40-49': { lower: 72, upper: 78 },
-                '50-59': { lower: 75, upper: 80 },
-                '60-69': { lower: 78, upper: 82 },
-                '70-79': { lower: 80, upper: 85 }
+        function calculateLTImprovement(currentLT, age, gender) {
+            var standards = {
+                male: {
+                    '20-29': { lower: 65, upper: 72 }, '30-39': { lower: 68, upper: 75 },
+                    '40-49': { lower: 72, upper: 78 }, '50-59': { lower: 75, upper: 80 },
+                    '60-69': { lower: 78, upper: 82 }, '70-79': { lower: 80, upper: 85 }
+                },
+                female: {
+                    '20-29': { lower: 67.5, upper: 74.5 }, '30-39': { lower: 70.5, upper: 77.5 },
+                    '40-49': { lower: 74.5, upper: 80.5 }, '50-59': { lower: 77.5, upper: 82.5 },
+                    '60-69': { lower: 80.5, upper: 84.5 }, '70-79': { lower: 82.5, upper: 87.5 }
+                }
             };
             
-            var ltStandardsFemale = {
-                '20-29': { lower: 67.5, upper: 74.5 },
-                '30-39': { lower: 70.5, upper: 77.5 },
-                '40-49': { lower: 74.5, upper: 80.5 },
-                '50-59': { lower: 77.5, upper: 82.5 },
-                '60-69': { lower: 80.5, upper: 84.5 },
-                '70-79': { lower: 82.5, upper: 87.5 }
-            };
+            var rates = { 'H-l': 1, 'M-l': 3, 'L-l': 5 };
+            var ageGroup = age >= 70 ? '70-79' : age >= 60 ? '60-69' : age >= 50 ? '50-59' : 
+                          age >= 40 ? '40-49' : age >= 30 ? '30-39' : '20-29';
+            var std = standards[gender][ageGroup];
+            var ltLevel = currentLT >= std.upper ? 'H-l' : currentLT < std.lower ? 'L-l' : 'M-l';
             
-            var ltImprovementRates = { 'H-l': 1, 'M-l': 3, 'L-l': 5 };
-            
-            function getAgeGroup(age) {
-                if (age >= 20 && age <= 29) return '20-29';
-                if (age >= 30 && age <= 39) return '30-39';
-                if (age >= 40 && age <= 49) return '40-49';
-                if (age >= 50 && age <= 59) return '50-59';
-                if (age >= 60 && age <= 69) return '60-69';
-                return '70-79';
-            }
-            
-            var ageGroup = getAgeGroup(age);
-            var standards = gender === 'male' ? ltStandardsMale : ltStandardsFemale;
-            var ageStandards = standards[ageGroup];
-            
-            var ltLevel;
-            if (currentLT >= ageStandards.upper) ltLevel = 'H-l';
-            else if (currentLT < ageStandards.lower) ltLevel = 'L-l';
-            else ltLevel = 'M-l';
-            
-            return Math.min(90, currentLT + ltImprovementRates[ltLevel]);
+            return Math.min(90, currentLT + rates[ltLevel]);
         }
         
-        function calculateRunningEconomyImprovement(currentVO2max, currentLT, ltPace, level, improvedVO2max, improvedLT) {
-            var reImprovementRates = { 'H-r': 0.02, 'M-r': 0.04, 'L-r': 0.06 };
-            
-            var currentVO2AtLT = currentVO2max * (currentLT / 100);
-            var ltPaceMinutes = paceToMinutes(ltPace);
-            var currentRE = currentVO2AtLT * ltPaceMinutes;
-            
-            var reLevel = level === 'elite' ? 'H-r' : level === 'trained' ? 'M-r' : 'L-r';
-            var improvementRate = reImprovementRates[reLevel];
-            var improvedRE = currentRE * (1 - improvementRate);
+        function calculateREImprovement(vo2max, lt, pace, level, improvedVO2max, improvedLT) {
+            var rates = { 'elite': 0.02, 'trained': 0.04, 'untrained': 0.06 };
+            var vo2AtLT = vo2max * (lt / 100);
+            var paceMin = paceToMinutes(pace);
+            var currentRE = vo2AtLT * paceMin;
+            var improvedRE = currentRE * (1 - rates[level]);
             var improvedVO2AtLT = improvedVO2max * (improvedLT / 100);
-            var improvedLTPaceMinutes = improvedRE / improvedVO2AtLT;
+            var improvedPaceMin = improvedRE / improvedVO2AtLT;
             
             return {
-                improvedPace: minutesToPace(improvedLTPaceMinutes),
-                improvementSeconds: (ltPaceMinutes - improvedLTPaceMinutes) * 60,
-                improvedLTPaceMinutes: improvedLTPaceMinutes,
-                // ランニングエコノミー値を追加
+                improvedPace: minutesToPace(improvedPaceMin),
+                improvementSeconds: (paceMin - improvedPaceMin) * 60,
+                improvedPaceMinutes: improvedPaceMin,
                 currentRE: currentRE,
-                improvedRE: improvedRE,
-                reImprovementRate: improvementRate * 100 // パーセンテージで表示
+                improvedRE: improvedRE
             };
         }
         
-        function predictRaceTimesAccurate(ltPaceMinutes, age, gender, level) {
-            if (!ltPaceMinutes || isNaN(ltPaceMinutes) || ltPaceMinutes <= 0) {
-                return { '5K': 'エラー', '10K': 'エラー', 'Half': 'エラー', 'Marathon': 'エラー' };
+        function predictRaceTimes(ltPaceMin, age, gender, level) {
+            var ltSec = ltPaceMin * 60;
+            var base = { '5K': ltSec - 15, '10K': ltSec - 7, 'Half': ltSec + 12, 'Marathon': ltSec + 30 };
+            
+            function adjust(sec, dist) {
+                var adj = 1.0;
+                if (age > 40) adj *= { '5K': 1.005, '10K': 1.000, 'Half': 0.995, 'Marathon': 0.990 }[dist];
+                if (gender === 'female') adj *= { '5K': 1.010, '10K': 1.005, 'Half': 0.998, 'Marathon': 0.995 }[dist];
+                if (level === 'elite') adj *= 0.98;
+                else if (level === 'untrained') adj *= 1.02;
+                return sec * adj;
             }
             
-            var ltPaceSeconds = ltPaceMinutes * 60;
-            var baseTimes = {
-                '5K': ltPaceSeconds - 15,
-                '10K': ltPaceSeconds - 7,
-                'Half': ltPaceSeconds + 12,
-                'Marathon': ltPaceSeconds + 30
-            };
-            
-            function personalizedAdjustment(basePaceSeconds, age, gender, level, distance) {
-                var adjustment = 1.0;
-                
-                if (age > 40) {
-                    var ageBonus = { '5K': 1.005, '10K': 1.000, 'Half': 0.995, 'Marathon': 0.990 };
-                    adjustment *= ageBonus[distance];
-                }
-                
-                if (gender === 'female') {
-                    var genderBonus = { '5K': 1.010, '10K': 1.005, 'Half': 0.998, 'Marathon': 0.995 };
-                    adjustment *= genderBonus[distance];
-                }
-                
-                if (level === 'elite') adjustment *= 0.98;
-                else if (level === 'untrained') adjustment *= 1.02;
-                
-                return basePaceSeconds * adjustment;
+            var times = {};
+            var dists = { '5K': 5, '10K': 10, 'Half': 21.0975, 'Marathon': 42.195 };
+            for (var d in dists) {
+                var totalSec = adjust(base[d], d) * dists[d];
+                var h = Math.floor(totalSec / 3600);
+                var m = Math.floor((totalSec % 3600) / 60);
+                var s = Math.round(totalSec % 60);
+                times[d] = h > 0 ? h + ':' + ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2) : m + ':' + ('0' + s).slice(-2);
             }
-            
-            var adjustedTimes = {};
-            for (var distance in baseTimes) {
-                adjustedTimes[distance] = personalizedAdjustment(baseTimes[distance], age, gender, level, distance);
-            }
-            
-            var distances = { '5K': 5, '10K': 10, 'Half': 21.0975, 'Marathon': 42.195 };
-            var raceTimes = {};
-            for (var distance in distances) {
-                var totalSeconds = adjustedTimes[distance] * distances[distance];
-                raceTimes[distance] = formatRaceTime(totalSeconds);
-            }
-            
-            return raceTimes;
+            return times;
         }
         
-        function formatRaceTime(totalSeconds) {
-            if (isNaN(totalSeconds)) return 'エラー';
-            var hours = Math.floor(totalSeconds / 3600);
-            var minutes = Math.floor((totalSeconds % 3600) / 60);
-            var seconds = Math.round(totalSeconds % 60);
-            
-            if (hours > 0) {
-                return hours + ':' + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
-            } else {
-                return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
-            }
+        function paceToMinutes(str) {
+            var p = str.split(':').map(Number);
+            return p[0] + p[1] / 60;
         }
         
-        function paceToMinutes(paceStr) {
-            var parts = paceStr.split(':');
-            return parseInt(parts[0]) + parseInt(parts[1]) / 60;
+        function minutesToPace(min) {
+            var m = Math.floor(min);
+            var s = Math.round((min - m) * 60);
+            return m + ':' + ('0' + s).slice(-2);
         }
         
-        function minutesToPace(minutes) {
-            var min = Math.floor(minutes);
-            var sec = Math.round((minutes - min) * 60);
-            return min + ':' + (sec < 10 ? '0' : '') + sec;
-        }
-        
-        // メッセージ表示関数
-        function showMessage(message, type) {
-            var container = document.getElementById('messages');
+        function showMessage(msg, type) {
             var div = document.createElement('div');
             div.className = 'message ' + type;
-            div.textContent = message;
-            container.appendChild(div);
-            
-            setTimeout(function() {
-                if (div.parentNode) {
-                    div.parentNode.removeChild(div);
-                }
-            }, 5000);
+            div.textContent = msg;
+            document.getElementById('messages').appendChild(div);
+            setTimeout(function() { div.remove(); }, 5000);
         }
         
         // シミュレーション実行
         function runSimulation() {
-            console.log('Running simulation...');
-            
             var age = parseInt(document.getElementById('age').value);
             var gender = document.getElementById('gender').value;
             var vo2max = parseFloat(document.getElementById('vo2max').value);
-            var ltPercent = parseInt(document.getElementById('ltPercent').value);
+            var ltPercent = parseFloat(document.getElementById('ltPercent').value);
             var ltPace = document.getElementById('ltPace').value;
             var genetics = document.getElementById('genetics').value;
             var level = document.getElementById('level').value;
             
-            if (!age || !gender || !vo2max || !ltPercent || !ltPace || !genetics || !level) {
-                showMessage('すべての項目を入力してください', 'error');
+            if (!age || !vo2max || !ltPercent || !ltPace || !genetics || !level) {
+                showMessage('すべて入力してください', 'error');
                 return;
             }
             
-            if (ltPace.indexOf(':') === -1) {
-                showMessage('LTペースは「分:秒」の形式で入力してください', 'error');
-                return;
-            }
+            var improvedVO2 = calculateVO2maxImprovement(vo2max, genetics, age, gender);
+            var improvedLT = calculateLTImprovement(ltPercent, age, gender);
+            var reResult = calculateREImprovement(vo2max, ltPercent, ltPace, level, improvedVO2, improvedLT);
+            var currentRace = predictRaceTimes(paceToMinutes(ltPace), age, gender, level);
+            var improvedRace = predictRaceTimes(reResult.improvedPaceMinutes, age, gender, level);
             
-            try {
-                var improvedVO2max = calculateVO2maxImprovement(vo2max, genetics, age, gender);
-                var improvedLT = calculateLTImprovement(ltPercent, genetics, level, age, gender);
-                var runningEconomyResult = calculateRunningEconomyImprovement(
-                    vo2max, ltPercent, ltPace, level, improvedVO2max, improvedLT
-                );
-                
-                var currentRaceTimes = predictRaceTimesAccurate(paceToMinutes(ltPace), age, gender, level);
-                var improvedRaceTimes = predictRaceTimesAccurate(
-                    runningEconomyResult.improvedLTPaceMinutes, age, gender, level
-                );
-                
-                var results = {
-                    current: {
-                        vo2max: vo2max,
-                        ltPercent: ltPercent,
-                        ltPace: ltPace,
-                        raceTimes: currentRaceTimes,
-                        runningEconomy: runningEconomyResult.currentRE
-                    },
-                    improved: {
-                        vo2max: improvedVO2max,
-                        ltPercent: improvedLT,
-                        ltPace: runningEconomyResult.improvedPace,
-                        raceTimes: improvedRaceTimes,
-                        runningEconomy: runningEconomyResult.improvedRE
-                    },
-                    improvements: {
-                        vo2max: improvedVO2max - vo2max,
-                        ltPercent: improvedLT - ltPercent,
-                        ltPaceSeconds: runningEconomyResult.improvementSeconds,
-                        runningEconomyRate: runningEconomyResult.reImprovementRate,
-                        runningEconomyAbsolute: runningEconomyResult.currentRE - runningEconomyResult.improvedRE
-                    }
-                };
-                
-                displayResults(results);
-                lastResults = results;
-                
-                if (isAIConnected) {
-                    setTimeout(function() {
-                        analyzeResults(results);
-                    }, 1500);
-                }
-                
-            } catch (error) {
-                console.error('Simulation error:', error);
-                showMessage('計算中にエラーが発生しました: ' + error.message, 'error');
+            lastResults = {
+                current: { vo2max: vo2max, ltPercent: ltPercent, ltPace: ltPace, raceTimes: currentRace, re: reResult.currentRE },
+                improved: { vo2max: improvedVO2, ltPercent: improvedLT, ltPace: reResult.improvedPace, raceTimes: improvedRace, re: reResult.improvedRE },
+                improvements: { vo2max: improvedVO2 - vo2max, ltPercent: improvedLT - ltPercent, ltPaceSeconds: reResult.improvementSeconds, re: reResult.currentRE - reResult.improvedRE }
+            };
+            
+            displayResults(lastResults);
+            
+            if (isAIConnected) {
+                setTimeout(function() { analyzeResults(); }, 1500);
             }
         }
         
-        // 結果表示
-        function displayResults(results) {
-            var container = document.getElementById('resultsContent');
+        function displayResults(r) {
+            var html = '<div class="result-item"><span class="result-label">VO2max</span><div class="result-value">' +
+                '<span class="current-value">現在: ' + r.current.vo2max + '</span>' +
+                '<span class="improved-value">' + r.improved.vo2max.toFixed(1) + '</span>' +
+                '<span class="improvement">+' + r.improvements.vo2max.toFixed(1) + '</span></div></div>' +
+                
+                '<div class="result-item"><span class="result-label">LT</span><div class="result-value">' +
+                '<span class="current-value">現在: ' + r.current.ltPercent + '%</span>' +
+                '<span class="improved-value">' + r.improved.ltPercent + '%</span>' +
+                '<span class="improvement">+' + r.improvements.ltPercent + '%pt</span></div></div>' +
+                
+                '<div class="result-item"><span class="result-label">LTペース</span><div class="result-value">' +
+                '<span class="current-value">現在: ' + r.current.ltPace + '/km</span>' +
+                '<span class="improved-value">' + r.improved.ltPace + '/km</span>' +
+                '<span class="improvement">-' + r.improvements.ltPaceSeconds.toFixed(0) + '秒</span></div></div>' +
+                
+                '<h4>🏁 レースタイム予測</h4>';
             
-            container.innerHTML = 
-                '<div class="result-item">' +
-                    '<span class="result-label">🫁 VO2max</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.vo2max + ' ml/kg/min</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.vo2max.toFixed(1) + ' ml/kg/min</span>' +
-                        '<span class="improvement">+' + results.improvements.vo2max.toFixed(1) + ' ml/kg/min</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">⚡ 乳酸閾値(LT)</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.ltPercent + '% VO2max</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.ltPercent + '% VO2max</span>' +
-                        '<span class="improvement">+' + results.improvements.ltPercent + '%</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">🏃‍♂️ LTランニングペース</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.ltPace + '/km</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.ltPace + '/km</span>' +
-                        '<span class="improvement">-' + Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒/km</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">⚙️ ランニングエコノミー</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.runningEconomy.toFixed(1) + ' ml/kg/min</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.runningEconomy.toFixed(1) + ' ml/kg/min</span>' +
-                        '<span class="improvement">-' + results.improvements.runningEconomyAbsolute.toFixed(1) + ' (' + results.improvements.runningEconomyRate.toFixed(1) + '%改善)</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<h4>🏁 レースタイム予測</h4>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">5K</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.raceTimes['5K'] + '</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.raceTimes['5K'] + '</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">10K</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.raceTimes['10K'] + '</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.raceTimes['10K'] + '</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">ハーフマラソン</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.raceTimes['Half'] + '</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.raceTimes['Half'] + '</span>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="result-item">' +
-                    '<span class="result-label">フルマラソン</span>' +
-                    '<div class="result-value">' +
-                        '<span class="current-value">現在: ' + results.current.raceTimes['Marathon'] + '</span>' +
-                        '<span class="improved-value">改善後: ' + results.improved.raceTimes['Marathon'] + '</span>' +
-                    '</div>' +
-                '</div>';
+            for (var d in r.current.raceTimes) {
+                html += '<div class="result-item"><span class="result-label">' + d + '</span><div class="result-value">' +
+                    '<span class="current-value">現在: ' + r.current.raceTimes[d] + '</span>' +
+                    '<span class="improved-value">' + r.improved.raceTimes[d] + '</span></div></div>';
+            }
             
+            document.getElementById('resultsContent').innerHTML = html;
             document.getElementById('results').style.display = 'block';
-            showMessage('🎉 計算完了！AIコーチの詳細分析をお待ちください', 'success');
+            showMessage('計算完了！', 'success');
         }
         
-        // デプロイ手順表示
-        function showDeployInstructions() {
-            var modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;';
-            
-            var content = document.createElement('div');
-            content.style.cssText = 'background:white;padding:30px;border-radius:10px;max-width:90%;max-height:80%;overflow-y:auto;';
-            
-            content.innerHTML = `
-                <h2>🚀 Vercel Functions実装手順</h2>
-                
-                <h3>1. プロジェクト準備</h3>
-                <div class="code-box">
-mkdir triathlon-ai-coach
-cd triathlon-ai-coach
-npm init -y
-                </div>
-                
-                <h3>2. package.json</h3>
-                <div class="code-box">
-{
-  "name": "triathlon-ai-coach",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build"
-  },
-  "devDependencies": {
-    "vercel": "^32.0.0"
-  }
-}
-                </div>
-                
-                <h3>3. api/openai.js（完全版）</h3>
-                <div class="code-box">
-export default async function handler(req, res) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  const { message, apiKey, systemPrompt } = req.body;
-  
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': \`Bearer \${apiKey}\`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 1500,
-        temperature: 0.7
-      })
-    });
-    
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-                </div>
-                
-                <h3>4. デプロイ（Netlifyの場合）</h3>
-                <div class="code-box">
-# GitHubにプッシュ後
-1. Netlify → New site from Git
-2. Connect to GitHub
-3. Deploy settings:
-   - Build command: (空欄)
-   - Publish directory: .
-4. Environment variables:
-   - 必要に応じてAPIキーなどを設定
-                </div>
-                
-                <h3>5. デプロイ（Vercelの場合）</h3>
-                <div class="code-box">
-npx vercel
-# プロンプトに従って設定
-# デプロイ完了後のURLをメモ
-                </div>
-                
-                <button onclick="document.body.removeChild(this.parentElement.parentElement)" 
-                        style="margin-top:20px;padding:10px 20px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;">
-                    閉じる
-                </button>
-            `;
-            
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-        }
-        
-        // デモモード有効化（ウェルカムパネルから）
-        function enableDemoModeFromWelcome() {
-            var apiKey = getStoredAPIKey();
-            
-            if (!apiKey || !isValidApiKey(apiKey)) {
-                showMessage('有効なOpenAI APIキーを入力してください', 'error');
+        // AI機能
+        function enableAICoach() {
+            var key = document.getElementById('apiKeyInput').value.trim();
+            if (!key || !key.startsWith('sk-')) {
+                showMessage('有効なAPIキーを入力してください', 'error');
                 return;
             }
             
             isAIConnected = true;
-            document.getElementById('welcomePanel').style.display = 'none';
+            document.getElementById('apiSetup').style.display = 'none';
             document.getElementById('chatMessages').style.display = 'block';
             document.getElementById('chatInputArea').style.display = 'block';
             document.getElementById('connectionStatus').className = 'status-indicator status-connected';
-            
-            // APIキーを確実に保存
-            localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-            updateApiKeyStatus('saved', '保存済み ✓');
-            updateApiKeyStatusMain('saved', '保存済み ✓');
-            
-            showMessage('✅ AIコーチが起動しました！', 'success');
-            
-            setTimeout(() => {
-                addChatMessage('ai', '🌟 <strong>AIトライアスロンコーチへようこそ！</strong><br><br>' +
-                              'こんにちは！運動生理学を専門とするAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️<br><br>' +
-                              'APIキーの保存が完了しました。これで次回アクセス時も自動で復元されますので、すぐにご相談いただけますよ。<br><br>' +
-                              '私は以下のような分野でお手伝いできます：<br>' +
-                              '• VO2maxや乳酸閾値などの体力指標について、分かりやすく解説<br>' +
-                              '• あなたに合った効果的なトレーニング方法の提案<br>' +
-                              '• 栄養補給やリカバリーについてのアドバイス<br>' +
-                              '• フォーム改善のコツや技術的なポイント<br>' +
-                              '• 疲労管理やレース戦略の相談<br><br>' +
-                              'シミュレーション結果について詳しく知りたいことがあれば、お気軽にお聞かせください。また、日頃のトレーニングで気になることがあれば、何でもご相談くださいね。一緒に目標達成を目指しましょう！');
-            }, 500);
+            showMessage('AIコーチ起動！', 'success');
         }
         
-        // チャットメッセージ追加
-        function addChatMessage(sender, content) {
-            var container = document.getElementById('chatMessages');
+        function addMessage(sender, content) {
             var div = document.createElement('div');
             div.className = 'chat-message ' + sender + '-message';
-            
-            if (sender === 'ai') {
-                div.innerHTML = '<strong>AIコーチ</strong><br>' + content;
-            } else {
-                div.innerHTML = content;
-            }
-            
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            div.innerHTML = sender === 'ai' ? '<strong>AIコーチ</strong><br>' + content : content;
+            document.getElementById('chatMessages').appendChild(div);
+            document.getElementById('chatMessages').scrollTop = 9999;
         }
         
-        // 結果分析
-        function analyzeResults(results) {
-            var analysis = '🎉 <strong>シミュレーション結果から、あなたの可能性を読み解いてみましょう！</strong><br><br>';
-            
-            analysis += '**✨ あなたのVO2max改善予測について**<br>';
-            analysis += '今回のシミュレーションでは、' + results.improvements.vo2max.toFixed(1) + 'ml/kg/minの改善（約' + 
-                       ((results.improvements.vo2max / results.current.vo2max) * 100).toFixed(1) + '%向上）が予測されました。';
-            
-            if (results.improvements.vo2max > 5) {
-                analysis += 'これは素晴らしい改善幅です！あなたの遺伝的特性と現在のフィットネスレベルが、トレーニング効果を最大限に活かせる状況にあることを示しています。<br><br>';
-            } else if (results.improvements.vo2max > 2) {
-                analysis += 'これは健康的で着実な改善です。継続的なトレーニングによって、確実にパフォーマンス向上が期待できますよ。<br><br>';
-            } else {
-                analysis += 'この数値は、すでに高いフィットネスレベルにあることを表している可能性があります。小さな改善でも、競技レベルでは大きな差になりますからね。<br><br>';
-            }
-            
-            analysis += '**⚡ 乳酸閾値の向上について**<br>';
-            analysis += '乳酸閾値が' + results.improvements.ltPercent + '%改善される予測です。これは「楽に感じられる運動強度の上限」が高くなることを意味します。つまり、今まで「きつい」と感じていたペースが、より楽に感じられるようになるということなんです。<br><br>';
-            
-            analysis += '**⚙️ ランニングエコノミーの改善について**<br>';
-            analysis += 'ランニングエコノミーとは「同じペースで走る時に必要な酸素量」のことで、車でいう「燃費」のような概念です。現在' + results.current.runningEconomy.toFixed(1) + 'ml/kg/minから' + results.improved.runningEconomy.toFixed(1) + 'ml/kg/minへと' + results.improvements.runningEconomyRate.toFixed(1) + '%改善される予測です。';
-            analysis += 'これは、同じペースで走っても疲れにくくなる、つまり「効率的な走り」ができるようになることを意味します。フォーム改善、筋力強化、神経系の適応によって実現されますよ。<br><br>';
-            
-            analysis += '**🏃‍♂️ ランニングペースの改善効果**<br>';
-            analysis += 'LTペースが1kmあたり' + Math.abs(results.improvements.ltPaceSeconds).toFixed(0) + '秒短縮される予測です。たった数秒と思われるかもしれませんが、42.195kmのマラソンでは約' + Math.round(Math.abs(results.improvements.ltPaceSeconds) * 42.195 / 60) + '分もの短縮につながります！<br><br>';
-            
-            analysis += '**🏁 あなたの目標タイム達成への道のり**<br>';
-            analysis += '• 5K: ' + results.current.raceTimes['5K'] + ' → ' + results.improved.raceTimes['5K'] + '<br>';
-            analysis += '• 10K: ' + results.current.raceTimes['10K'] + ' → ' + results.improved.raceTimes['10K'] + '<br>';
-            analysis += '• ハーフマラソン: ' + results.current.raceTimes['Half'] + ' → ' + results.improved.raceTimes['Half'] + '<br>';
-            analysis += '• フルマラソン: ' + results.current.raceTimes['Marathon'] + ' → ' + results.improved.raceTimes['Marathon'] + '<br><br>';
-            
-            analysis += '**💪 おすすめのトレーニングアプローチ**<br>';
-            if (results.improvements.vo2max > 4) {
-                analysis += 'あなたには高強度練習が特に効果的です。週2-3回、「会話が困難になる」程度の強度で4-8分間のインターバル練習を取り入れてみてください。ランニングエコノミー改善のためのドリル練習や筋力トレーニングも併せて行うと、さらに効果的ですよ。';
-            } else {
-                analysis += 'まずは「会話ができる程度」の楽なペースでの練習を中心に、週1-2回「少し息が上がる」程度の中強度練習を組み合わせることをお勧めします。ランニングフォームの見直しや、コア強化も並行して行うことで、ランニングエコノミーの改善が期待できます。';
-            }
-            analysis += '<br><br>これらの改善は、8-12週間の計画的なトレーニングで十分実現可能です。一緒に頑張りましょう！ 🌟';
-            
-            addChatMessage('ai', analysis);
+        function analyzeResults() {
+            var r = lastResults;
+            var prompt = '【シミュレーション結果】\nVO2max: ' + r.current.vo2max + ' → ' + r.improved.vo2max.toFixed(1) + 
+                ' (+' + r.improvements.vo2max.toFixed(1) + ')\nLT: ' + r.current.ltPercent + '% → ' + r.improved.ltPercent + 
+                '% (+' + r.improvements.ltPercent + '%pt)\nLTペース: ' + r.current.ltPace + ' → ' + r.improved.ltPace +
+                '\n\n運動生理学博士として詳細に解説してください。';
+            callAI(prompt);
         }
         
-        // 専門的AI応答生成 - Vercel Functions版
-        function generateExpertResponse(message) {
-            return new Promise(function(resolve, reject) {
-                var systemPrompt = `あなたは運動生理学の博士号を持つ、親しみやすいトライアスロンコーチです。一般の方にも分かりやすく、科学的根拠に基づいたアドバイスを提供してください。
-
-【あなたの人格・話し方】
-- 親しみやすく、励ましながら話す
-- 専門用語は必ず分かりやすく説明する
-- 体言止めは避け、自然で読みやすい文章にする
-- 相手のレベルに合わせて説明の深さを調整する
-- 400字程度で簡潔にまとめる
-
-【専門知識】
-- 運動生理学（VO2max、乳酸閾値、ランニングエコノミー）
-- トライアスロンのトレーニング理論
-- スポーツ栄養学とリカバリー
-- フォーム改善とバイオメカニクス
-- 疲労管理とピーキング戦略
-
-【回答スタイル】
-1. まず共感や励ましの言葉から始める
-2. 科学的根拠を「〜という研究で分かっています」のように自然に組み込む
-3. 専門用語は「○○（△△のこと）」のように併記して説明
-4. 具体的で実践しやすいアドバイスを提案
-5. 個人差や安全性への配慮を含める
-6. 前向きで応援するような終わり方にする
-
-【文体例】
-❌ 悪い例：「VO2max向上には高強度インターバル実施が効果的」
-✅ 良い例：「VO2max（最大酸素摂取量）を向上させるには、高強度のインターバル練習が効果的です。研究によると、週2-3回のインターバル練習で約10-15%の改善が期待できますよ。」
-
-現在のシミュレーション結果: ${lastResults ? JSON.stringify(lastResults) : '未実行'}`;
-
-                // Netlify Functionsを使用してAPI呼び出し
-                var apiEndpoint = '/.netlify/functions/openai';
+        function callAI(userMessage) {
+            addMessage('ai', '考え中... 🤔');
+            
+            var systemPrompt = 'あなたは運動生理学博士です。専門用語を分かりやすく説明し、科学的根拠を示しながら、400-600字で簡潔にアドバイスしてください。';
+            
+            fetch('/api/openai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMessage,
+                    apiKey: document.getElementById('apiKeyInput').value.trim(),
+                    systemPrompt: systemPrompt,
+                    simulationResults: lastResults
+                })
+            })
+            .then(function(res) {
+                var msgs = document.getElementById('chatMessages');
+                var loading = msgs.lastChild;
+                if (loading && loading.textContent.includes('考え中')) loading.remove();
                 
-                console.log('Calling Netlify Function:', apiEndpoint);
-                
-                fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        apiKey: getStoredAPIKey(),
-                        systemPrompt: systemPrompt,
-                        simulationResults: lastResults
-                    })
-                })
-                .then(function(response) {
-                    console.log('Netlify Function response status:', response.status);
-                    
-                    if (!response.ok) {
-                        return response.json().then(function(errorData) {
-                            throw new Error(errorData.error || 'API Error: ' + response.status);
-                        });
-                    }
-                    
-                    return response.json();
-                })
-                .then(function(data) {
-                    console.log('OpenAI response received via Netlify Functions:', data);
-                    
-                    if (data.choices && data.choices[0] && data.choices[0].message) {
-                        resolve('🤖 **OpenAI APIからの専門的回答:**\n\n' + data.choices[0].message.content);
-                    } else {
-                        throw new Error('Invalid API response format');
-                    }
-                })
-                .catch(function(error) {
-                    console.error('AI Response Error:', error);
-                    
-                    // エラーハンドリング
-                    var errorMessage = '';
-                    if (error.message.includes('401')) {
-                        errorMessage = 'APIキーが無効または期限切れです。';
-                    } else if (error.message.includes('429')) {
-                        errorMessage = 'API利用制限に達しました。しばらく待ってから再試行してください。';
-                    } else if (error.message.includes('404')) {
-                        errorMessage = 'Netlify Function が見つかりません。デプロイを確認してください。';
-                    } else {
-                        errorMessage = 'エラー: ' + error.message;
-                    }
-                    
-                    // フォールバック応答
-                    var fallbackResponse = generateStaticExpertResponse(message);
-                    resolve(fallbackResponse + '\n\n---\n**🔧 接続状況:** ' + errorMessage);
-                });
+                if (!res.ok) return res.json().then(function(e) { throw new Error(e.error || 'HTTP ' + res.status); });
+                return res.json();
+            })
+            .then(function(data) {
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    addMessage('ai', data.choices[0].message.content.replace(/\n/g, '<br>'));
+                }
+            })
+            .catch(function(error) {
+                console.error('AI Error:', error);
+                addMessage('ai', '❌ AI接続エラー: ' + error.message + '<br>APIキーとデプロイを確認してください。');
             });
         }
         
-        // 静的な専門的応答（フォールバック用）
-        function generateStaticExpertResponse(message) {
-            var msg = message.toLowerCase();
-            
-            if (msg.indexOf('vo2max') !== -1 || msg.indexOf('最大酸素摂取量') !== -1) {
-                return '**VO2maxについて、分かりやすくご説明しますね！**\n\n' +
-                       'VO2max（最大酸素摂取量）は、あなたの心肺機能の「エンジンの大きさ」のようなものです。簡単に言うと、1分間にどれだけ多くの酸素を体に取り込んで使えるかを表す数値なんです。\n\n' +
-                       '一般的な成人男性で45-55ml/kg/min程度ですが、トライアスロン選手だと60-70ml/kg/minにもなります。これが高いほど、長時間の運動を楽に続けられるということですね。\n\n' +
-                       '改善するには、週2-3回の「ちょっときつい」と感じるペースでの練習が効果的です。研究では8-12週間の継続で10-15%の向上が期待できるとされています。無理をせず、段階的に強度を上げていくのがコツですよ！';
-            }
-            
-            if (msg.indexOf('乳酸閾値') !== -1 || msg.indexOf('lt') !== -1 || msg.indexOf('閾値') !== -1) {
-                return '**乳酸閾値について、身近な例でご説明しますね！**\n\n' +
-                       '乳酸閾値（LT）は、運動中に「あ、ちょっときつくなってきた」と感じ始めるポイントのことです。このペースを境に、体の中で乳酸という物質が急激に溜まり始めます。\n\n' +
-                       '例えば、階段を駆け上がる時を想像してください。最初は楽でも、途中から急に息が上がり、脚が重くなりますよね。それがまさに乳酸閾値を超えた状態なんです。\n\n' +
-                       'この閾値を改善すると、同じペースでもより楽に感じられるようになります。練習では「少し息が上がるけど、会話はできる」程度の強度で20-30分続ける練習が効果的ですよ。継続することで、必ず向上していきます！';
-            }
-            
-            if (msg.indexOf('ランニングエコノミー') !== -1 || msg.indexOf('running economy') !== -1 || msg.indexOf('エコノミー') !== -1) {
-                return '**ランニングエコノミーについて、分かりやすくご説明しますね！**\n\n' +
-                       'ランニングエコノミーとは、一定のペースで走る際に必要な酸素量のことで、車でいう「燃費」のような概念です。同じスピードで走っても、酸素をあまり使わない人ほど「燃費が良い」ということになります。\n\n' +
-                       '例えば、同じ4分30秒/kmペースで走る場合、ランニングエコノミーの良い人は酸素消費量が少なく、長時間そのペースを維持できます。逆に悪い人は、同じペースでもすぐに疲れてしまうんです。\n\n' +
-                       '改善方法としては、①正しいランニングフォームの習得、②コアや下肢の筋力強化、③神経系の協調性向上が効果的です。研究では、適切なトレーニングで2-6%の改善が期待でき、これはマラソンタイムで数分の短縮に相当します。効率的な走りを身につけて、楽に速く走れるようになりましょう！';
-            }
-            
-            if (msg.indexOf('トレーニング') !== -1 || msg.indexOf('練習') !== -1) {
-                return '**効果的なトレーニングについてアドバイスさせていただきますね！**\n\n' +
-                       'トライアスロンのトレーニングで大切なのは「80:20の法則」です。全体の80%は楽に感じるペースで、残り20%をしっかりとした強度で行うのが理想的なんです。\n\n' +
-                       '楽なペースというのは「隣の人と会話できる」程度の強度です。これで持久力の基礎となる毛細血管や心臓機能が着実に向上します。そして週に1-2回、「少しきつい」と感じる練習を入れることで、さらなる改善が期待できます。\n\n' +
-                       '無理は禁物です。体調や疲労度に合わせて調整し、楽しみながら続けることが一番大切ですよ。継続こそが最大の成果につながります！';
-            }
-            
-            return '**ご質問ありがとうございます！**\n\n' +
-                   'トライアスロンは持久力、技術、そして戦略の3つが組み合わさった素晴らしいスポーツですね。科学的な知識も大切ですが、何より楽しみながら続けることが一番重要だと考えています。\n\n' +
-                   'あなたの体は必ず適応し、向上していきます。研究でも、適切なトレーニングを続けることで年齢に関係なく体力向上が可能だと示されているんです。\n\n' +
-                   'より具体的なアドバイスをするために、どのような点でお困りか詳しく教えていただけますか？スイム、バイク、ラン、それとも栄養面など、どんなことでもお気軽にご相談ください。一緒に目標達成を目指しましょう！';
-        }
-        
-        // メッセージ送信 - Vercel Functions対応版
         function sendMessage() {
             if (!isAIConnected) {
                 showMessage('先にAIコーチを起動してください', 'error');
@@ -1456,37 +704,22 @@ npx vercel
             }
             
             var input = document.getElementById('chatInput');
-            var message = input.value.trim();
-            if (!message) return;
+            var msg = input.value.trim();
+            if (!msg) return;
             
-            addChatMessage('user', message);
+            addMessage('user', msg);
             input.value = '';
-            
-            // 実際のAI応答を取得（Vercel Functions経由）
-            generateExpertResponse(message)
-                .then(function(response) {
-                    addChatMessage('ai', response.replace(/\n/g, '<br>'));
-                })
-                .catch(function(error) {
-                    console.error('AI Response Error:', error);
-                    addChatMessage('ai', '申し訳ありません。AI接続にエラーが発生しました。<br><br>' +
-                                        '**可能な原因：**<br>' +
-                                        '• APIキーが無効または期限切れ<br>' +
-                                        '• Netlify Functionのデプロイエラー<br>' +
-                                        '• ネットワーク接続の問題<br><br>' +
-                                        'デプロイ状況とAPIキーを確認してください。');
-                });
+            callAI(msg);
         }
         
-        // Enterキー処理
-        function handleEnter(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         }
         
-        console.log('Triathlon AI Coach (Enhanced with Auto-Save) loaded successfully!');
+        console.log('✅ 準備完了');
     </script>
 </body>
 </html>

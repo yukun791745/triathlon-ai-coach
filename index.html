@@ -750,7 +750,12 @@
 - 佐渡A: 国内最長、山岳バイク
 - IM Japan(北海道): 涼しい(15-25°C)、フラット
 
-回答は300-500字で、質問に直接関連する専門知識を使い、具体的な数値や科学的根拠を含めてください。`;
+【回答ガイドライン】
+- 質問に対して十分な深さで詳細に回答してください
+- 上記の専門知識を積極的に活用し、具体的な数値・計算式・科学的根拠を含めてください
+- 必要に応じて段階的なアドバイス、具体例、注意点を含めてください
+- トレーニング計画の質問には週間スケジュール例を示してください
+- 怪我や病気の質問には原因・予防・対処法を網羅してください`;
 
             try {
                 var response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -765,7 +770,7 @@
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: userMessage }
                         ],
-                        max_tokens: 800,
+                        max_tokens: 2000,
                         temperature: 0.7,
                         stream: true
                     })

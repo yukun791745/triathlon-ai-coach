@@ -384,6 +384,18 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* ストリーミングカーソル */
+        .streaming-content::after {
+            content: '▌';
+            animation: blink 0.7s infinite;
+            color: #667eea;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding-top: 60px;
@@ -593,37 +605,77 @@
             callAI(msg);
         }
 
-        function callAI(userMessage) {
-            addMessage('ai', '考え中... 🤔');
+        async function callAI(userMessage) {
+            // ストリーミング用のメッセージ要素を作成
+            var aiMessageDiv = document.createElement('div');
+            aiMessageDiv.className = 'chat-message ai-message';
+            aiMessageDiv.innerHTML = '<strong>AIコーチ</strong><br><span class="streaming-content"></span>';
+            document.getElementById('chatMessages').appendChild(aiMessageDiv);
+            var contentSpan = aiMessageDiv.querySelector('.streaming-content');
+            
+            var systemPrompt = 'あなたは運動生理学博士であり、トライアスロンの専門コーチです。トレーニング計画、栄養、リカバリー、レース戦略、機材選びなど、トライアスロンに関するあらゆる質問に対して、科学的根拠に基づいた実践的なアドバイスを提供してください。回答は300-400字程度で簡潔にまとめてください。';
 
-            var systemPrompt = 'あなたは運動生理学博士であり、トライアスロンの専門コーチです。トレーニング計画、栄養、リカバリー、レース戦略、機材選びなど、トライアスロンに関するあらゆる質問に対して、科学的根拠に基づいた実践的なアドバイスを提供してください。回答は400-600字程度で簡潔にまとめてください。';
+            try {
+                var response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
+                        max_tokens: 800,
+                        temperature: 0.7,
+                        stream: true
+                    })
+                });
 
-            fetch('/.netlify/functions/openai', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMessage,
-                    apiKey: apiKey,
-                    systemPrompt: systemPrompt
-                })
-            })
-            .then(function(res) {
-                var msgs = document.getElementById('chatMessages');
-                var loading = msgs.lastChild;
-                if (loading && loading.textContent.includes('考え中')) loading.remove();
-
-                if (!res.ok) return res.json().then(function(e) { throw new Error(e.error || 'HTTP ' + res.status); });
-                return res.json();
-            })
-            .then(function(data) {
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    addMessage('ai', data.choices[0].message.content.replace(/\n/g, '<br>'));
+                if (!response.ok) {
+                    var errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'API Error');
                 }
-            })
-            .catch(function(error) {
+
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder();
+                var fullContent = '';
+
+                while (true) {
+                    var result = await reader.read();
+                    if (result.done) break;
+
+                    var chunk = decoder.decode(result.value);
+                    var lines = chunk.split('\n');
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i].trim();
+                        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                            try {
+                                var json = JSON.parse(line.substring(6));
+                                var content = json.choices[0]?.delta?.content || '';
+                                if (content) {
+                                    fullContent += content;
+                                    contentSpan.innerHTML = fullContent.replace(/\n/g, '<br>');
+                                    // 自動スクロール
+                                    document.getElementById('chatMessages').scrollTop = 999999;
+                                }
+                            } catch (e) {
+                                // パースエラーは無視
+                            }
+                        }
+                    }
+                }
+                // ストリーミング完了 - カーソルを消す
+                contentSpan.classList.remove('streaming-content');
+                contentSpan.classList.add('streaming-done');
+            } catch (error) {
                 console.error('AI Error:', error);
-                addMessage('ai', '❌ エラー: ' + error.message + '<br>APIキーとサーバー設定を確認してください。');
-            });
+                contentSpan.classList.remove('streaming-content');
+                contentSpan.innerHTML = '❌ エラー: ' + error.message + '<br>APIキーを確認してください。';
+            }
         }
 
         function handleEnter(e) {

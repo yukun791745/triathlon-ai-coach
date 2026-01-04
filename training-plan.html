@@ -350,79 +350,6 @@
             opacity: 0.9;
         }
         
-        /* 棒グラフスタイル */
-        .chart-container {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-        
-        .chart-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            margin-bottom: 16px;
-        }
-        
-        .chart-svg {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .chart-legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-        }
-        
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
-        
-        .color-swim { background: #0891b2; }
-        .color-bike { background: #dc2626; }
-        .color-run { background: #059669; }
-        .color-strength { background: #7c3aed; }
-        
-        .discipline-swim {
-            color: #0891b2;
-            font-weight: 500;
-        }
-        
-        .discipline-bike {
-            color: #dc2626;
-            font-weight: 500;
-        }
-        
-        .discipline-run {
-            color: #059669;
-            font-weight: 500;
-        }
-        
-        .discipline-strength {
-            color: #7c3aed;
-            font-weight: 500;
-        }
-        
         .zone-distribution {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -530,13 +457,15 @@
         <div class="flow-nav-container">
             <div class="flow-nav-logo">AI Triathlon Coach</div>
             <div class="flow-nav-steps">
-                <a href="landing-page.html" class="flow-nav-step home">ホーム</a>
+                <a href="index.html" class="flow-nav-step home">ホーム</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="race-selection.html" class="flow-nav-step available">レース選択</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="goal-setting.html" class="flow-nav-step available">目標設定</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="#" class="flow-nav-step current">トレーニング計画</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="Landing-Page.html" class="flow-nav-step available">シミュレーター</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="data.html" class="flow-nav-step available">トレーニング進捗</a>
                 <span class="flow-nav-arrow">→</span>
@@ -735,34 +664,6 @@
             <div class="zone-distribution" id="zone-distribution">
                 <!-- JavaScript で動的に生成 -->
             </div>
-
-            <!-- 週別トレーニングチャート -->
-            <div class="chart-container">
-                <div class="chart-title">週別トレーニング時間</div>
-                <div class="chart-wrapper">
-                    <svg class="chart-svg" id="hours-chart">
-                        <!-- JavaScript で動的に生成 -->
-                    </svg>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <div class="legend-color color-swim"></div>
-                        <span>スイム</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-bike"></div>
-                        <span>バイク</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-run"></div>
-                        <span>ラン</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-strength"></div>
-                        <span>筋トレ</span>
-                    </div>
-                </div>
-            </div>
         </div>
         
         <!-- フッター -->
@@ -929,30 +830,4 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-</html><div class="legend-color color-swim"></div>
-                        <span>スイム</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-bike"></div>
-                        <span>バイク</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-run"></div>
-                        <span>ラン</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color color-strength"></div>
-                        <span>筋トレ</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <div class="chart-title">週別TSS</div>
-                <div class="chart-wrapper">
-                    <svg class="chart-svg" id="tss-chart">
-                        <!-- JavaScript で動的に生成 -->
-                    </svg>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
+</html>

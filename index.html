@@ -575,6 +575,20 @@
     <script>
         // Markdown → HTML 変換関数
         function markdownToHtml(text) {
+            // LaTeX形式を除去（\[ \] で囲まれた部分を簡略化）
+            text = text.replace(/\\\[[\s\S]*?\\\]/g, function(match) {
+                // \text{xxx} から xxx を抽出
+                var simplified = match.replace(/\\text\{([^}]+)\}/g, '$1');
+                // \frac{a}{b} を a/b に変換
+                simplified = simplified.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
+                // 残りのLaTeX記号を削除
+                simplified = simplified.replace(/\\\[|\\\]|\\|{|}/g, '');
+                return simplified.trim();
+            });
+            
+            // インラインLaTeX \text{} を除去
+            text = text.replace(/\\text\{([^}]+)\}/g, '$1');
+            
             // 太字: **text** → <strong>text</strong>
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
@@ -871,7 +885,8 @@
 6. **まとめ**: 重要ポイントの要約
 
 - 重要な用語は**太字**で強調してください
-- 数式は読みやすいテキスト形式で記載（例: 発汗量 = 運動前体重 - 運動後体重 + 摂取水分量）
+- 【重要】数式はLaTeX形式（\\text, \\frac, \\[, \\]など）を絶対に使わないでください
+- 数式はプレーンテキストで記載してください（例: 「発汗量(L) = 運動前体重 - 運動後体重 + 摂取水分量 - 尿量」）
 - 「〜と言われています」ではなく「〜である（研究により実証）」のように断定的に
 - 一般論ではなく、トライアスロン特有の文脈で回答
 - 最低1000字以上で詳細に回答すること`;

@@ -610,7 +610,7 @@
                 <span class="flow-nav-arrow">→</span>
                 <a href="training-plan.html" class="flow-nav-step available">トレーニング計画</a>
                 <span class="flow-nav-arrow">→</span>
-                <a href="Landing-Page.html" class="flow-nav-step available">シミュレーター</a>
+                <a href="simulator.html" class="flow-nav-step available">シミュレーター</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="data.html" class="flow-nav-step available">トレーニング進捗</a>
                 <span class="flow-nav-arrow">→</span>
@@ -622,7 +622,6 @@
     </nav>
 
     <div class="container">
-        <!-- ヘッダー -->
         <div class="header">
             <h1 class="title">🏊‍♂️🚴‍♂️🏃‍♂️ Triathlon AI Coach</h1>
             <p class="subtitle">トライアスロン大会データベース</p>
@@ -648,7 +647,6 @@
             </div>
         </div>
         
-        <!-- 選択状況パネル -->
         <div class="selection-panel">
             <h2 class="selection-title">
                 🎯 参加大会選択
@@ -675,7 +673,6 @@
             </button>
         </div>
         
-        <!-- 検索・フィルター -->
         <div class="search-panel">
             <h2 class="search-title">🔍 検索・フィルター</h2>
             
@@ -739,12 +736,8 @@
             <div class="search-result" id="search-result">0 件の大会</div>
         </div>
         
-        <!-- 大会一覧 -->
-        <div class="races-grid" id="races-container">
-            <!-- JavaScript で動的に生成 -->
-        </div>
+        <div class="races-grid" id="races-container"></div>
         
-        <!-- フッター -->
         <div class="footer">
             <p>🚀 完全版 - 51大会収録完了！</p>
             <p style="margin-top: 8px;">全国の主要トライアスロン大会を網羅</p>
@@ -752,158 +745,48 @@
     </div>
 
     <script>
-        console.log('🚀 スクリプト開始');
+        let selectedRaces = { aRaces: new Set(), otherRaces: new Set() };
 
-        // 選択状態管理
-        let selectedRaces = {
-            aRaces: new Set(),
-            otherRaces: new Set()
-        };
-
-        // 大会データ（51大会完全版から抜粋 - 5大会のみ表示）
         const races = [
-            {
-                id: 'miyakojima_2025',
-                name: '第39回全日本トライアスロン宮古島大会',
-                date: '2025-04-13',
-                location: '沖縄県宮古島市',
-                prefecture: '沖縄県',
-                distance: 'ロング',
-                level: 'エイジ',
-                category: '主要大会',
-                url: 'https://tri-miyako.com/',
-                description: '39年の歴史を誇る国内最高峰のロングディスタンス大会',
-                features: ['39年の歴史', '宮古ブルー', 'ロング'],
-                entryStartDate: '2024-10-01',
-                entryEndDate: '2025-01-31'
-            },
-            {
-                id: 'ishigaki_2025',
-                name: '石垣島トライアスロン大会',
-                date: '2025-04-20',
-                location: '沖縄県石垣市',
-                prefecture: '沖縄県',
-                distance: 'ロング',
-                level: 'エイジ',
-                category: '主要大会',
-                url: 'https://ishigaki-triathlon.jp/',
-                description: '石垣島の美しい自然の中で行われる人気のロング大会',
-                features: ['石垣島', '美しい海', 'エイジ'],
-                entryStartDate: '2024-11-01',
-                entryEndDate: '2024-12-05'
-            },
-            {
-                id: 'jtu_yokohama_wts_2025',
-                name: 'ワールドトライアスロンシリーズ横浜大会',
-                date: '2025-05-17',
-                location: '神奈川県横浜市',
-                prefecture: '神奈川県',
-                distance: ['スタンダード', 'スプリント', 'パラ'],
-                level: 'エリート・エイジ',
-                category: 'JTU国際大会',
-                url: 'https://yokohamatriathlon.jp/',
-                description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催',
-                features: ['世界選手権', 'TV中継', 'パラ併催'],
-                entryStartDate: '2024-10-24',
-                entryEndDate: '2025-03-10'
-            },
-            {
-                id: 'shonan_2025',
-                name: '湘南国際トライアスロン大会',
-                date: '2025-05-18',
-                location: '神奈川県藤沢市',
-                prefecture: '神奈川県',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '関東最大級のトライアスロン大会',
-                features: ['関東最大級', '湘南', '国際大会'],
-                entryStartDate: '2025-01-15',
-                entryEndDate: '2025-03-31'
-            },
-            {
-                id: 'gamagori_2025',
-                name: '蒲郡オレンジトライアスロン',
-                date: '2025-05-11',
-                location: '愛知県蒲郡市',
-                prefecture: '愛知県',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '三河湾の美しい景色を楽しめる大会',
-                features: ['三河湾', '景色', 'オレンジ'],
-                entryStartDate: '2025-02-01',
-                entryEndDate: '2025-04-10'
-            }
+            { id: 'miyakojima_2025', name: '第39回全日本トライアスロン宮古島大会', date: '2025-04-13', location: '沖縄県宮古島市', prefecture: '沖縄県', distance: 'ロング', level: 'エイジ', category: '主要大会', url: 'https://tri-miyako.com/', description: '39年の歴史を誇る国内最高峰のロングディスタンス大会', features: ['39年の歴史', '宮古ブルー', 'ロング'], entryStartDate: '2024-10-01', entryEndDate: '2025-01-31' },
+            { id: 'ishigaki_2025', name: '石垣島トライアスロン大会', date: '2025-04-20', location: '沖縄県石垣市', prefecture: '沖縄県', distance: 'ロング', level: 'エイジ', category: '主要大会', url: 'https://ishigaki-triathlon.jp/', description: '石垣島の美しい自然の中で行われる人気のロング大会', features: ['石垣島', '美しい海', 'エイジ'], entryStartDate: '2024-11-01', entryEndDate: '2024-12-05' },
+            { id: 'jtu_yokohama_wts_2025', name: 'ワールドトライアスロンシリーズ横浜大会', date: '2025-05-17', location: '神奈川県横浜市', prefecture: '神奈川県', distance: ['スタンダード', 'スプリント', 'パラ'], level: 'エリート・エイジ', category: 'JTU国際大会', url: 'https://yokohamatriathlon.jp/', description: '世界最高峰のWTSシリーズ戦。エリート・パラエリート・エイジグループが同時開催', features: ['世界選手権', 'TV中継', 'パラ併催'], entryStartDate: '2024-10-24', entryEndDate: '2025-03-10' },
+            { id: 'shonan_2025', name: '湘南国際トライアスロン大会', date: '2025-05-18', location: '神奈川県藤沢市', prefecture: '神奈川県', distance: 'スタンダード', level: 'エイジ', category: '主要大会', url: '#', description: '関東最大級のトライアスロン大会', features: ['関東最大級', '湘南', '国際大会'], entryStartDate: '2025-01-15', entryEndDate: '2025-03-31' },
+            { id: 'gamagori_2025', name: '蒲郡オレンジトライアスロン', date: '2025-05-11', location: '愛知県蒲郡市', prefecture: '愛知県', distance: 'スタンダード', level: 'エイジ', category: '主要大会', url: '#', description: '三河湾の美しい景色を楽しめる大会', features: ['三河湾', '景色', 'オレンジ'], entryStartDate: '2025-02-01', entryEndDate: '2025-04-10' }
         ];
-
-        console.log('📊 大会データ読み込み完了:', races.length, '件');
 
         function calculateEntryStatus(race) {
             const today = new Date();
             const eventDate = new Date(race.date);
             const entryStartDate = race.entryStartDate ? new Date(race.entryStartDate) : null;
             const entryEndDate = race.entryEndDate ? new Date(race.entryEndDate) : null;
-
-            if (race.isSelectionOnly) {
-                return '選考制';
-            }
-
-            if (eventDate < today) {
-                return '開催終了';
-            }
-
+            if (race.isSelectionOnly) return '選考制';
+            if (eventDate < today) return '開催終了';
             if (entryStartDate && entryEndDate) {
-                if (today < entryStartDate) {
-                    return 'エントリー開始前';
-                } else if (today >= entryStartDate && today <= entryEndDate) {
-                    return 'エントリー期間中';
-                } else if (today > entryEndDate) {
-                    return 'エントリー期間終了';
-                }
+                if (today < entryStartDate) return 'エントリー開始前';
+                else if (today >= entryStartDate && today <= entryEndDate) return 'エントリー期間中';
+                else if (today > entryEndDate) return 'エントリー期間終了';
             }
-
             return 'エントリー期間中';
         }
 
         function getStatusClass(status) {
-            switch (status) {
-                case 'エントリー期間中': return 'status-entry-open';
-                case 'エントリー開始前': return 'status-entry-soon';
-                case 'エントリー期間終了': return 'status-entry-closed';
-                case '開催終了': return 'status-event-finished';
-                case '選考制': return 'status-selection-only';
-                default: return 'status-entry-open';
-            }
+            const map = { 'エントリー期間中': 'status-entry-open', 'エントリー開始前': 'status-entry-soon', 'エントリー期間終了': 'status-entry-closed', '開催終了': 'status-event-finished', '選考制': 'status-selection-only' };
+            return map[status] || 'status-entry-open';
         }
 
         function getCategoryClass(category) {
-            switch (category) {
-                case 'JTU国際大会': return 'category-international';
-                case 'JTU選手権': return 'category-championship';
-                case 'LUMINA大会': return 'category-lumina';
-                default: return 'category-major';
-            }
+            const map = { 'JTU国際大会': 'category-international', 'JTU選手権': 'category-championship', 'LUMINA大会': 'category-lumina' };
+            return map[category] || 'category-major';
         }
 
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ja-JP', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric', 
-                weekday: 'short'
-            });
+            return new Date(dateString).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
         }
 
         function getSelectionState(raceId) {
-            if (selectedRaces.aRaces.has(raceId)) {
-                return 'a-race';
-            } else if (selectedRaces.otherRaces.has(raceId)) {
-                return 'other-race';
-            }
+            if (selectedRaces.aRaces.has(raceId)) return 'a-race';
+            if (selectedRaces.otherRaces.has(raceId)) return 'other-race';
             return null;
         }
 
@@ -912,103 +795,31 @@
             const calculatedStatus = calculateEntryStatus(race);
             const statusClass = getStatusClass(calculatedStatus);
             const selectionState = getSelectionState(race.id);
-
-            const distanceBadges = Array.isArray(race.distance) 
-                ? race.distance.map(dist => `<span class="distance-badge">${dist}</span>`).join('')
-                : `<span class="distance-badge">${race.distance}</span>`;
-
-            const selectionBadge = selectionState ? 
-                `<div class="selection-badge ${selectionState}">
-                    ${selectionState === 'a-race' ? '🏆 Aレース' : '🎪 その他'}
-                </div>` : '';
-
+            const distanceBadges = Array.isArray(race.distance) ? race.distance.map(dist => `<span class="distance-badge">${dist}</span>`).join('') : `<span class="distance-badge">${race.distance}</span>`;
+            const selectionBadge = selectionState ? `<div class="selection-badge ${selectionState}">${selectionState === 'a-race' ? '🏆 Aレース' : '🎪 その他'}</div>` : '';
             const cardClass = selectionState ? `race-card selected-${selectionState}` : 'race-card';
-
-            return `
-                <div class="${cardClass}" data-id="${race.id}">
-                    ${selectionBadge}
-                    <div class="race-content">
-                        <div class="race-header">
-                            <span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span>
-                            <span class="status-badge ${statusClass}">${calculatedStatus}</span>
-                        </div>
-                        
-                        <h3 class="race-title">${race.name}</h3>
-                        
-                        <div class="race-info">
-                            <div class="race-info-item">📅 ${formattedDate}</div>
-                            <div class="race-info-item">📍 ${race.location}</div>
-                            <div class="race-info-item">👥 ${race.level}</div>
-                        </div>
-                        
-                        <p class="race-description">${race.description}</p>
-                        
-                        <div class="distance-badges">
-                            ${distanceBadges}
-                        </div>
-                        
-                        <div class="race-features">
-                            ${race.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
-                        </div>
-                        
-                        <div class="race-actions">
-                            <a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">
-                                🔗 公式サイト
-                            </a>
-                            
-                            <div class="selection-buttons">
-                                <button class="selection-button a-race ${selectionState === 'a-race' ? 'active' : ''}" 
-                                        onclick="selectRace('${race.id}', 'a-race')">
-                                    🏆 Aレース
-                                </button>
-                                <button class="selection-button other-race ${selectionState === 'other-race' ? 'active' : ''}" 
-                                        onclick="selectRace('${race.id}', 'other-race')">
-                                    🎪 その他
-                                </button>
-                                ${selectionState ? `
-                                <button class="selection-button remove" 
-                                        onclick="removeSelection('${race.id}')">
-                                    ❌ 解除
-                                </button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return `<div class="${cardClass}" data-id="${race.id}">${selectionBadge}<div class="race-content"><div class="race-header"><span class="category-badge ${getCategoryClass(race.category)}">${race.category}</span><span class="status-badge ${statusClass}">${calculatedStatus}</span></div><h3 class="race-title">${race.name}</h3><div class="race-info"><div class="race-info-item">📅 ${formattedDate}</div><div class="race-info-item">📍 ${race.location}</div><div class="race-info-item">👥 ${race.level}</div></div><p class="race-description">${race.description}</p><div class="distance-badges">${distanceBadges}</div><div class="race-features">${race.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}</div><div class="race-actions"><a href="${race.url}" target="_blank" rel="noopener noreferrer" class="race-button">🔗 公式サイト</a><div class="selection-buttons"><button class="selection-button a-race ${selectionState === 'a-race' ? 'active' : ''}" onclick="selectRace('${race.id}', 'a-race')">🏆 Aレース</button><button class="selection-button other-race ${selectionState === 'other-race' ? 'active' : ''}" onclick="selectRace('${race.id}', 'other-race')">🎪 その他</button>${selectionState ? `<button class="selection-button remove" onclick="removeSelection('${race.id}')">❌ 解除</button>` : ''}</div></div></div></div>`;
         }
 
         function updateSelectionStats() {
             const aRaceCount = selectedRaces.aRaces.size;
             const otherRaceCount = selectedRaces.otherRaces.size;
             const totalCount = aRaceCount + otherRaceCount;
-
             document.getElementById('a-race-count').textContent = aRaceCount;
             document.getElementById('other-race-count').textContent = otherRaceCount;
             document.getElementById('total-selected-count').textContent = totalCount;
-
             const goalButton = document.getElementById('goal-setting-button');
-            if (totalCount > 0) {
-                goalButton.disabled = false;
-                goalButton.textContent = `🎯 目標設定ページへ進む (${totalCount}大会選択済み)`;
-            } else {
-                goalButton.disabled = true;
-                goalButton.textContent = '🎯 目標設定ページへ進む';
-            }
+            goalButton.disabled = totalCount === 0;
+            goalButton.textContent = totalCount > 0 ? `🎯 目標設定ページへ進む (${totalCount}大会選択済み)` : '🎯 目標設定ページへ進む';
         }
 
         function selectRace(raceId, type) {
             selectedRaces.aRaces.delete(raceId);
             selectedRaces.otherRaces.delete(raceId);
-
-            if (type === 'a-race') {
-                selectedRaces.aRaces.add(raceId);
-            } else if (type === 'other-race') {
-                selectedRaces.otherRaces.add(raceId);
-            }
-
+            if (type === 'a-race') selectedRaces.aRaces.add(raceId);
+            else if (type === 'other-race') selectedRaces.otherRaces.add(raceId);
             updateSelectionStats();
             filterRaces();
-            console.log('✅ 選択更新:', { aRaces: [...selectedRaces.aRaces], otherRaces: [...selectedRaces.otherRaces] });
         }
 
         function removeSelection(raceId) {
@@ -1016,24 +827,12 @@
             selectedRaces.otherRaces.delete(raceId);
             updateSelectionStats();
             filterRaces();
-            console.log('❌ 選択解除:', raceId);
         }
 
         function goToGoalSetting() {
-            const selectedData = {
-                aRaces: [...selectedRaces.aRaces],
-                otherRaces: [...selectedRaces.otherRaces]
-            };
-
             const params = new URLSearchParams();
-            params.set('races', JSON.stringify(selectedData));
-            
-            const url = `goal-setting.html?${params.toString()}`;
-            
-            console.log('🎯 目標設定ページへ遷移:', url);
-            console.log('📊 選択されたデータ:', selectedData);
-            
-            window.location.href = url;
+            params.set('races', JSON.stringify({ aRaces: [...selectedRaces.aRaces], otherRaces: [...selectedRaces.otherRaces] }));
+            window.location.href = `goal-setting.html?${params.toString()}`;
         }
 
         const searchInput = document.getElementById('search-input');
@@ -1041,74 +840,25 @@
         const categorySelect = document.getElementById('category-select');
         const distanceSelect = document.getElementById('distance-select');
         const statusSelect = document.getElementById('status-select');
-        const searchResult = document.getElementById('search-result');
         const racesContainer = document.getElementById('races-container');
-        const filteredCount = document.getElementById('filtered-count');
-        const totalCount = document.getElementById('total-count');
 
         function filterRaces() {
-            console.log('🔄 フィルタリング実行開始');
-            
-            try {
-                const searchTerm = searchInput.value.toLowerCase();
-                const selectedMonth = monthSelect.value;
-                const selectedCategory = categorySelect.value;
-                const selectedDistance = distanceSelect.value;
-                const selectedStatus = statusSelect.value;
-
-                const filtered = races.filter(race => {
-                    const matchesSearch = !searchTerm || 
-                        race.name.toLowerCase().includes(searchTerm) ||
-                        race.location.toLowerCase().includes(searchTerm) ||
-                        race.description.toLowerCase().includes(searchTerm);
-                    
-                    const matchesMonth = !selectedMonth || 
-                        race.date.substring(5, 7) === selectedMonth;
-                    
-                    const matchesCategory = !selectedCategory || 
-                        race.category === selectedCategory;
-
-                    const matchesDistance = !selectedDistance || (
-                        Array.isArray(race.distance) 
-                            ? race.distance.includes(selectedDistance)
-                            : race.distance === selectedDistance
-                    );
-
-                    const calculatedStatus = calculateEntryStatus(race);
-                    const matchesStatus = !selectedStatus || 
-                        calculatedStatus === selectedStatus;
-
-                    return matchesSearch && matchesMonth && matchesCategory && 
-                           matchesDistance && matchesStatus;
-                });
-
-                console.log('✅ フィルタリング結果:', filtered.length, '件');
-
-                if (filtered.length === 0) {
-                    racesContainer.innerHTML = `
-                        <div class="no-results">
-                            <h3>該当する大会が見つかりませんでした</h3>
-                            <p>フィルター条件を変更してお試しください</p>
-                        </div>
-                    `;
-                } else {
-                    racesContainer.innerHTML = filtered.map(createRaceCard).join('');
-                }
-                
-                searchResult.textContent = `${filtered.length} 件の大会`;
-                filteredCount.textContent = filtered.length;
-                
-                console.log('✅ UI更新完了');
-                
-            } catch (error) {
-                console.error('❌ フィルタリングエラー:', error);
-                racesContainer.innerHTML = `
-                    <div class="no-results">
-                        <h3>❌ エラーが発生しました</h3>
-                        <p>${error.message}</p>
-                    </div>
-                `;
-            }
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedMonth = monthSelect.value;
+            const selectedCategory = categorySelect.value;
+            const selectedDistance = distanceSelect.value;
+            const selectedStatus = statusSelect.value;
+            const filtered = races.filter(race => {
+                const matchesSearch = !searchTerm || race.name.toLowerCase().includes(searchTerm) || race.location.toLowerCase().includes(searchTerm) || race.description.toLowerCase().includes(searchTerm);
+                const matchesMonth = !selectedMonth || race.date.substring(5, 7) === selectedMonth;
+                const matchesCategory = !selectedCategory || race.category === selectedCategory;
+                const matchesDistance = !selectedDistance || (Array.isArray(race.distance) ? race.distance.includes(selectedDistance) : race.distance === selectedDistance);
+                const matchesStatus = !selectedStatus || calculateEntryStatus(race) === selectedStatus;
+                return matchesSearch && matchesMonth && matchesCategory && matchesDistance && matchesStatus;
+            });
+            racesContainer.innerHTML = filtered.length === 0 ? '<div class="no-results"><h3>該当する大会が見つかりませんでした</h3><p>フィルター条件を変更してお試しください</p></div>' : filtered.map(createRaceCard).join('');
+            document.getElementById('search-result').textContent = `${filtered.length} 件の大会`;
+            document.getElementById('filtered-count').textContent = filtered.length;
         }
 
         searchInput.addEventListener('input', filterRaces);
@@ -1117,11 +867,9 @@
         distanceSelect.addEventListener('change', filterRaces);
         statusSelect.addEventListener('change', filterRaces);
 
-        totalCount.textContent = races.length;
+        document.getElementById('total-count').textContent = races.length;
         updateSelectionStats();
         filterRaces();
-
-        console.log('✅ 初期化完了 - ', races.length, '件の大会データ');
 
         window.selectRace = selectRace;
         window.removeSelection = removeSelection;

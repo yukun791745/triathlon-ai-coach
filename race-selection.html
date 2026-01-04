@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
-            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-top: 120px;
             padding-left: 16px;
             padding-right: 16px;
             padding-bottom: 32px;
@@ -163,7 +163,6 @@
             color: #6b7280;
         }
 
-        /* 選択状況パネル */
         .selection-panel {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
@@ -309,7 +308,6 @@
             box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15);
         }
 
-        /* 選択状態の視覚的表現 */
         .race-card.selected-a {
             border: 3px solid #dc2626;
             background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
@@ -571,7 +569,7 @@
 
         @media (max-width: 768px) {
             body {
-                padding-top: 140px; /* モバイル時はナビゲーションが高くなる */
+                padding-top: 140px;
             }
 
             .flow-nav-steps {
@@ -604,13 +602,15 @@
         <div class="flow-nav-container">
             <div class="flow-nav-logo">AI Triathlon Coach</div>
             <div class="flow-nav-steps">
-                <a href="landing-page.html" class="flow-nav-step home">ホーム</a>
+                <a href="index.html" class="flow-nav-step home">ホーム</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="#" class="flow-nav-step current">レース選択</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="goal-setting.html" class="flow-nav-step available">目標設定</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="training-plan.html" class="flow-nav-step available">トレーニング計画</a>
+                <span class="flow-nav-arrow">→</span>
+                <a href="Landing-Page.html" class="flow-nav-step available">シミュレーター</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="data.html" class="flow-nav-step available">トレーニング進捗</a>
                 <span class="flow-nav-arrow">→</span>
@@ -760,9 +760,8 @@
             otherRaces: new Set()
         };
 
-        // 大会データ（51大会完全版）
+        // 大会データ（51大会完全版から抜粋 - 5大会のみ表示）
         const races = [
-            // 4月開催大会
             {
                 id: 'miyakojima_2025',
                 name: '第39回全日本トライアスロン宮古島大会',
@@ -793,53 +792,6 @@
                 entryStartDate: '2024-11-01',
                 entryEndDate: '2024-12-05'
             },
-            {
-                id: 'tateyama_2025',
-                name: '館山わかしおトライアスロン',
-                date: '2025-04-27',
-                location: '千葉県館山市',
-                prefecture: '千葉県',
-                distance: 'スタンダード',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '房総半島の美しい海岸線を舞台にした大会',
-                features: ['房総半島', '海岸線', 'GW'],
-                entryStartDate: '2025-01-15',
-                entryEndDate: '2025-03-15'
-            },
-            {
-                id: 'kunigami_2025',
-                name: 'くにがみトライアスロン',
-                date: '2025-04-06',
-                location: '沖縄県国頭村',
-                prefecture: '沖縄県',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: 'やんばるの大自然を満喫できる大会',
-                features: ['やんばる', '自然', 'スプリント'],
-                entryStartDate: '2025-01-10',
-                entryEndDate: '2025-03-10'
-            },
-            {
-                id: 'boso_shirahama_2025',
-                name: '房総白浜トライアスロン',
-                date: '2025-04-29',
-                location: '千葉県南房総市',
-                prefecture: '千葉県',
-                distance: 'ミドル',
-                level: 'エイジ',
-                category: 'LUMINA大会',
-                url: '#',
-                description: '白砂のビーチが美しいGW大会',
-                features: ['白砂ビーチ', 'GW', 'ミドル'],
-                entryStartDate: '2025-01-20',
-                entryEndDate: '2025-03-20'
-            },
-
-            // 5月開催大会
             {
                 id: 'jtu_yokohama_wts_2025',
                 name: 'ワールドトライアスロンシリーズ横浜大会',
@@ -884,42 +836,11 @@
                 features: ['三河湾', '景色', 'オレンジ'],
                 entryStartDate: '2025-02-01',
                 entryEndDate: '2025-04-10'
-            },
-            {
-                id: 'tokyo_festa_2025',
-                name: '東京トライアスロンフェスタ',
-                date: '2025-05-25',
-                location: '東京都お台場',
-                prefecture: '東京都',
-                distance: 'スプリント',
-                level: 'エイジ',
-                category: '主要大会',
-                url: '#',
-                description: '都心で開催される人気大会',
-                features: ['都心', 'お台場', 'アクセス良好'],
-                entryStartDate: '2025-02-15',
-                entryEndDate: '2025-04-25'
-            },
-            {
-                id: 'jtu_osaka_atc_2025',
-                name: 'アジアトライアスロンカップ大阪城大会',
-                date: '2025-05-25',
-                location: '大阪府大阪市',
-                prefecture: '大阪府',
-                distance: 'スタンダード',
-                level: 'エリート・エイジ',
-                category: 'JTU国際大会',
-                url: 'https://www.jtu.or.jp/',
-                description: 'アジア最高峰のカップ戦。大阪城を舞台にした美しいコース',
-                features: ['アジアカップ', '大阪城', '国際レベル'],
-                entryStartDate: '2025-02-01',
-                entryEndDate: '2025-04-20'
             }
         ];
 
         console.log('📊 大会データ読み込み完了:', races.length, '件');
 
-        // エントリー状況の自動判定関数
         function calculateEntryStatus(race) {
             const today = new Date();
             const eventDate = new Date(race.date);
@@ -947,7 +868,6 @@
             return 'エントリー期間中';
         }
 
-        // エントリー状況に応じたCSSクラス取得
         function getStatusClass(status) {
             switch (status) {
                 case 'エントリー期間中': return 'status-entry-open';
@@ -959,7 +879,6 @@
             }
         }
 
-        // カテゴリーのCSSクラス取得
         function getCategoryClass(category) {
             switch (category) {
                 case 'JTU国際大会': return 'category-international';
@@ -969,7 +888,6 @@
             }
         }
 
-        // 日付フォーマット
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('ja-JP', { 
@@ -980,7 +898,6 @@
             });
         }
 
-        // 選択状態の取得
         function getSelectionState(raceId) {
             if (selectedRaces.aRaces.has(raceId)) {
                 return 'a-race';
@@ -990,25 +907,21 @@
             return null;
         }
 
-        // 大会カード生成（選択機能付き）
         function createRaceCard(race) {
             const formattedDate = formatDate(race.date);
             const calculatedStatus = calculateEntryStatus(race);
             const statusClass = getStatusClass(calculatedStatus);
             const selectionState = getSelectionState(race.id);
 
-            // 距離バッジの生成（複数距離対応）
             const distanceBadges = Array.isArray(race.distance) 
                 ? race.distance.map(dist => `<span class="distance-badge">${dist}</span>`).join('')
                 : `<span class="distance-badge">${race.distance}</span>`;
 
-            // 選択バッジ
             const selectionBadge = selectionState ? 
                 `<div class="selection-badge ${selectionState}">
                     ${selectionState === 'a-race' ? '🏆 Aレース' : '🎪 その他'}
                 </div>` : '';
 
-            // カードクラス
             const cardClass = selectionState ? `race-card selected-${selectionState}` : 'race-card';
 
             return `
@@ -1064,7 +977,6 @@
             `;
         }
 
-        // 選択状況の更新
         function updateSelectionStats() {
             const aRaceCount = selectedRaces.aRaces.size;
             const otherRaceCount = selectedRaces.otherRaces.size;
@@ -1074,7 +986,6 @@
             document.getElementById('other-race-count').textContent = otherRaceCount;
             document.getElementById('total-selected-count').textContent = totalCount;
 
-            // 目標設定ボタンの有効化/無効化
             const goalButton = document.getElementById('goal-setting-button');
             if (totalCount > 0) {
                 goalButton.disabled = false;
@@ -1085,13 +996,10 @@
             }
         }
 
-        // 大会選択
         function selectRace(raceId, type) {
-            // 既存の選択を削除
             selectedRaces.aRaces.delete(raceId);
             selectedRaces.otherRaces.delete(raceId);
 
-            // 新しい選択を追加
             if (type === 'a-race') {
                 selectedRaces.aRaces.add(raceId);
             } else if (type === 'other-race') {
@@ -1099,40 +1007,35 @@
             }
 
             updateSelectionStats();
-            filterRaces(); // 表示を更新
+            filterRaces();
             console.log('✅ 選択更新:', { aRaces: [...selectedRaces.aRaces], otherRaces: [...selectedRaces.otherRaces] });
         }
 
-        // 選択解除
         function removeSelection(raceId) {
             selectedRaces.aRaces.delete(raceId);
             selectedRaces.otherRaces.delete(raceId);
             updateSelectionStats();
-            filterRaces(); // 表示を更新
+            filterRaces();
             console.log('❌ 選択解除:', raceId);
         }
 
-        // 目標設定ページへ遷移
         function goToGoalSetting() {
             const selectedData = {
                 aRaces: [...selectedRaces.aRaces],
                 otherRaces: [...selectedRaces.otherRaces]
             };
 
-            // URLパラメータとして選択データを渡す
             const params = new URLSearchParams();
             params.set('races', JSON.stringify(selectedData));
             
             const url = `goal-setting.html?${params.toString()}`;
             
-            // 直接ページ遷移
             console.log('🎯 目標設定ページへ遷移:', url);
             console.log('📊 選択されたデータ:', selectedData);
             
             window.location.href = url;
         }
 
-        // DOM要素
         const searchInput = document.getElementById('search-input');
         const monthSelect = document.getElementById('month-select');
         const categorySelect = document.getElementById('category-select');
@@ -1142,9 +1045,7 @@
         const racesContainer = document.getElementById('races-container');
         const filteredCount = document.getElementById('filtered-count');
         const totalCount = document.getElementById('total-count');
-        const goalButton = document.getElementById('goal-setting-button');
 
-        // フィルタリング実行
         function filterRaces() {
             console.log('🔄 フィルタリング実行開始');
             
@@ -1156,28 +1057,23 @@
                 const selectedStatus = statusSelect.value;
 
                 const filtered = races.filter(race => {
-                    // 検索フィルター
                     const matchesSearch = !searchTerm || 
                         race.name.toLowerCase().includes(searchTerm) ||
                         race.location.toLowerCase().includes(searchTerm) ||
                         race.description.toLowerCase().includes(searchTerm);
                     
-                    // 月フィルター
                     const matchesMonth = !selectedMonth || 
                         race.date.substring(5, 7) === selectedMonth;
                     
-                    // カテゴリーフィルター
                     const matchesCategory = !selectedCategory || 
                         race.category === selectedCategory;
 
-                    // 距離フィルター（複数距離対応）
                     const matchesDistance = !selectedDistance || (
                         Array.isArray(race.distance) 
                             ? race.distance.includes(selectedDistance)
                             : race.distance === selectedDistance
                     );
 
-                    // エントリー状況フィルター
                     const calculatedStatus = calculateEntryStatus(race);
                     const matchesStatus = !selectedStatus || 
                         calculatedStatus === selectedStatus;
@@ -1188,7 +1084,6 @@
 
                 console.log('✅ フィルタリング結果:', filtered.length, '件');
 
-                // UI更新
                 if (filtered.length === 0) {
                     racesContainer.innerHTML = `
                         <div class="no-results">
@@ -1216,21 +1111,18 @@
             }
         }
 
-        // イベントリスナー設定
         searchInput.addEventListener('input', filterRaces);
         monthSelect.addEventListener('change', filterRaces);
         categorySelect.addEventListener('change', filterRaces);
         distanceSelect.addEventListener('change', filterRaces);
         statusSelect.addEventListener('change', filterRaces);
 
-        // 初期化
         totalCount.textContent = races.length;
         updateSelectionStats();
         filterRaces();
 
         console.log('✅ 初期化完了 - ', races.length, '件の大会データ');
 
-        // グローバル関数として公開（onclick用）
         window.selectRace = selectRace;
         window.removeSelection = removeSelection;
         window.goToGoalSetting = goToGoalSetting;

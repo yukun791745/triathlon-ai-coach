@@ -15,13 +15,12 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
-            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-top: 120px;
             padding-left: 16px;
             padding-right: 16px;
             padding-bottom: 32px;
         }
 
-        /* フロー型ナビゲーションバー */
         .flow-navbar {
             position: fixed;
             top: 0;
@@ -150,7 +149,6 @@
             font-weight: 600;
         }
 
-        /* ユーザー情報入力 */
         .user-input-section {
             background: white;
             border-radius: 12px;
@@ -266,7 +264,6 @@
             box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
         }
 
-        /* トレーニング計画サマリー */
         .training-summary-section {
             background: white;
             border-radius: 12px;
@@ -465,7 +462,7 @@
                 <span class="flow-nav-arrow">→</span>
                 <a href="#" class="flow-nav-step current">トレーニング計画</a>
                 <span class="flow-nav-arrow">→</span>
-                <a href="Landing-Page.html" class="flow-nav-step available">シミュレーター</a>
+                <a href="simulator.html" class="flow-nav-step available">シミュレーター</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="data.html" class="flow-nav-step available">トレーニング進捗</a>
                 <span class="flow-nav-arrow">→</span>
@@ -477,7 +474,6 @@
     </nav>
 
     <div class="container">
-        <!-- ヘッダー -->
         <div class="header">
             <h1 class="title">トレーニング計画</h1>
             <p class="subtitle">TSSベースのピリオダイゼーション計画</p>
@@ -497,7 +493,6 @@
             </div>
         </div>
 
-        <!-- ユーザー情報入力 -->
         <div class="user-input-section">
             <h2 class="section-title">
                 トレーニング設定
@@ -505,7 +500,6 @@
             </h2>
             
             <div class="input-grid">
-                <!-- 基本情報 -->
                 <div class="input-group">
                     <h3 class="input-group-title">基本情報</h3>
                     
@@ -518,7 +512,6 @@
                         <label class="form-label">メインレース（Aレース）日</label>
                         <select class="form-select" id="main-race-select">
                             <option value="">選択してください</option>
-                            <!-- JavaScript で動的に生成 -->
                         </select>
                     </div>
                     
@@ -531,7 +524,6 @@
                     </div>
                 </div>
 
-                <!-- スケジュール設定 -->
                 <div class="input-group">
                     <h3 class="input-group-title">スケジュール設定</h3>
                     
@@ -580,7 +572,6 @@
                     </div>
                 </div>
 
-                <!-- 現在のフィットネス -->
                 <div class="input-group">
                     <h3 class="input-group-title">現在のフィットネス</h3>
                     
@@ -610,7 +601,6 @@
                     </div>
                 </div>
 
-                <!-- 強度配分設定 -->
                 <div class="input-group">
                     <h3 class="input-group-title">強度配分設定</h3>
                     
@@ -641,39 +631,28 @@
             </button>
         </div>
 
-        <!-- トレーニング計画サマリー -->
         <div class="training-summary-section" id="training-summary-section">
             <div class="summary-header">
                 <h2 class="section-title">
                     トレーニング計画サマリー
                 </h2>
-                <div class="summary-stats" id="summary-stats">
-                    <!-- JavaScript で動的に生成 -->
-                </div>
+                <div class="summary-stats" id="summary-stats"></div>
             </div>
 
-            <!-- 期待改善効果 -->
             <div class="improvement-section">
                 <h3 class="improvement-title">期待改善効果（トレーニング終了時点）</h3>
-                <div class="improvement-grid" id="improvement-grid">
-                    <!-- JavaScript で動的に生成 -->
-                </div>
+                <div class="improvement-grid" id="improvement-grid"></div>
             </div>
 
-            <!-- Zone分布チャート -->
-            <div class="zone-distribution" id="zone-distribution">
-                <!-- JavaScript で動的に生成 -->
-            </div>
+            <div class="zone-distribution" id="zone-distribution"></div>
         </div>
         
-        <!-- フッター -->
         <div class="footer">
             <p>科学的なピリオダイゼーションに基づくトレーニング計画</p>
         </div>
     </div>
 
     <script>
-        // デモ用の目標設定済み大会データ
         const completedGoals = new Map([
             ['miyakojima_2025', {
                 name: '第39回全日本トライアスロン宮古島大会',
@@ -691,22 +670,14 @@
             }]
         ]);
 
-        // 初期化
         function init() {
-            console.log('トレーニング計画ページ初期化開始');
-            
-            // メインレース選択肢を設定
             populateMainRaceOptions();
-            
-            // デフォルト開始日を今日に設定
             const today = new Date();
             document.getElementById('training-start-date').value = today.toISOString().split('T')[0];
         }
 
-        // メインレース選択肢を設定
         function populateMainRaceOptions() {
             const select = document.getElementById('main-race-select');
-            
             completedGoals.forEach((race, raceId) => {
                 if (race.isArace) {
                     const option = document.createElement('option');
@@ -717,20 +688,12 @@
             });
         }
 
-        // トレーニング計画作成
         function generateTrainingPlan() {
-            console.log('トレーニング計画作成開始');
-            
-            // サマリーセクション表示
             document.getElementById('training-summary-section').style.display = 'block';
-            
-            // デモデータで更新
             updateTrainingSummary();
         }
 
-        // トレーニングサマリー更新（デモ版）
         function updateTrainingSummary() {
-            // 統計情報
             document.getElementById('summary-stats').innerHTML = `
                 <div class="summary-stat">
                     <div class="summary-stat-number">16</div>
@@ -750,7 +713,6 @@
                 </div>
             `;
             
-            // 改善予測
             document.getElementById('improvement-grid').innerHTML = `
                 <div class="improvement-item">
                     <div class="improvement-value">VO2max: 42 → 46</div>
@@ -770,7 +732,6 @@
                 </div>
             `;
             
-            // Zone分布（デモ）
             document.getElementById('zone-distribution').innerHTML = `
                 <div class="zone-chart">
                     <div class="zone-chart-title">SWIM Zone分布</div>
@@ -826,7 +787,6 @@
             `;
         }
 
-        // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

@@ -15,13 +15,12 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
-            padding-top: 120px; /* ナビゲーションバー分の余白 */
+            padding-top: 120px;
             padding-left: 16px;
             padding-right: 16px;
             padding-bottom: 32px;
         }
 
-        /* フロー型ナビゲーションバー */
         .flow-navbar {
             position: fixed;
             top: 0;
@@ -150,7 +149,6 @@
             font-weight: 600;
         }
 
-        /* デバッグ情報 */
         .debug-panel {
             background: #f3f4f6;
             border: 1px solid #d1d5db;
@@ -166,7 +164,6 @@
             margin-bottom: 8px;
         }
 
-        /* 段階表示 */
         .step-indicator {
             background: white;
             border-radius: 12px;
@@ -188,7 +185,6 @@
             color: #6b7280;
         }
 
-        /* 大会選択パネル */
         .race-selection-panel {
             background: white;
             border-radius: 12px;
@@ -291,7 +287,6 @@
             font-weight: bold;
         }
 
-        /* 目標設定フォーム */
         .goal-form-card {
             background: white;
             border-radius: 12px;
@@ -481,7 +476,6 @@
             100% { background: #dcfce7; }
         }
         
-        /* AIコーチコメント */
         .ai-coach-section {
             background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             color: white;
@@ -654,7 +648,7 @@
                 <span class="flow-nav-arrow">→</span>
                 <a href="training-plan.html" class="flow-nav-step available">トレーニング計画</a>
                 <span class="flow-nav-arrow">→</span>
-                <a href="Landing-Page.html" class="flow-nav-step available">シミュレーター</a>
+                <a href="simulator.html" class="flow-nav-step available">シミュレーター</a>
                 <span class="flow-nav-arrow">→</span>
                 <a href="data.html" class="flow-nav-step available">トレーニング進捗</a>
                 <span class="flow-nav-arrow">→</span>
@@ -666,7 +660,6 @@
     </nav>
 
     <div class="container">
-        <!-- ヘッダー -->
         <div class="header">
             <h1 class="title">目標設定</h1>
             <p class="subtitle">参加大会の目標タイムを設定しましょう</p>
@@ -686,28 +679,23 @@
             </div>
         </div>
 
-        <!-- デバッグ情報パネル -->
         <div class="debug-panel" id="debug-panel" style="display: none;">
             <div class="debug-title">デバッグ情報</div>
             <div id="debug-content"></div>
         </div>
 
-        <!-- 段階表示 -->
         <div class="step-indicator" id="step-indicator">
             <div class="step-title">ステップ 1: 目標設定する大会を選択</div>
             <div class="step-description">参加予定の大会から、目標タイムを設定したい大会を1つ選んでください</div>
         </div>
 
-        <!-- 大会選択パネル -->
         <div class="race-selection-panel" id="race-selection-panel">
             <h2 class="panel-title">
                 参加予定の大会
                 <span style="font-size: 14px; font-weight: 400; color: #6b7280;">- 目標設定したい大会を1つクリックしてください</span>
             </h2>
             
-            <div class="races-grid" id="races-grid">
-                <!-- JavaScript で動的に生成 -->
-            </div>
+            <div class="races-grid" id="races-grid"></div>
             
             <div class="action-buttons">
                 <a href="race-selection.html" class="action-button secondary">
@@ -719,22 +707,16 @@
             </div>
         </div>
 
-        <!-- 目標設定フォーム -->
-        <div id="goal-form-section" style="display: none;">
-            <!-- JavaScript で動的に生成 -->
-        </div>
+        <div id="goal-form-section" style="display: none;"></div>
         
-        <!-- フッター -->
         <div class="footer">
             <p>次は AIコーチがあなたの目標達成をサポートします</p>
         </div>
     </div>
 
     <script>
-        // デバッグフラグ
         let showDebug = false;
 
-        // 大会データ（51大会完全版）
         const raceDatabase = {
             'miyakojima_2025': {
                 name: '第39回全日本トライアスロン宮古島大会',
@@ -756,27 +738,21 @@
             }
         };
 
-        // 状態管理
         let selectedRacesData = { aRaces: [], otherRaces: [] };
         let currentGoalRace = null;
         let completedGoals = new Set();
         let goalData = {};
 
-        // デバッグ表示切り替え
         function toggleDebug() {
             showDebug = !showDebug;
             const debugPanel = document.getElementById('debug-panel');
             debugPanel.style.display = showDebug ? 'block' : 'none';
-            if (showDebug) {
-                updateDebugInfo();
-            }
+            if (showDebug) updateDebugInfo();
         }
 
-        // デバッグ情報更新
         function updateDebugInfo() {
             const debugContent = document.getElementById('debug-content');
             const urlParams = new URLSearchParams(window.location.search);
-            
             debugContent.innerHTML = `
                 <strong>URL情報:</strong><br>
                 - Full URL: ${window.location.href}<br>
@@ -791,30 +767,18 @@
             `;
         }
 
-        // 初期化
         function init() {
-            console.log('目標設定ページ初期化開始');
-            
-            // URLパラメータから取得
             const urlParams = new URLSearchParams(window.location.search);
             const racesParam = urlParams.get('races');
             
             if (racesParam) {
                 try {
                     selectedRacesData = JSON.parse(decodeURIComponent(racesParam));
-                    console.log('URLパラメータから選択データ取得:', selectedRacesData);
                 } catch (error) {
-                    console.error('URLパラメータ解析エラー:', error);
-                    selectedRacesData = {
-                        aRaces: ['miyakojima_2025'],
-                        otherRaces: ['shonan_2025']
-                    };
+                    selectedRacesData = { aRaces: ['miyakojima_2025'], otherRaces: ['shonan_2025'] };
                 }
             } else {
-                selectedRacesData = {
-                    aRaces: ['miyakojima_2025'],
-                    otherRaces: ['shonan_2025']
-                };
+                selectedRacesData = { aRaces: ['miyakojima_2025'], otherRaces: ['shonan_2025'] };
             }
             
             const totalSelected = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
@@ -826,7 +790,6 @@
             }
         }
 
-        // 未選択パネル表示
         function showNoSelectionPanel() {
             document.getElementById('race-selection-panel').innerHTML = `
                 <div style="text-align: center; padding: 48px 24px;">
@@ -843,19 +806,16 @@
             `;
         }
 
-        // 大会選択パネル表示
         function showRaceSelectionPanel() {
             updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を1つ選んでください');
             renderRaceSelectionGrid();
         }
 
-        // ステップ表示更新
         function updateStepIndicator(title, description) {
             document.querySelector('.step-title').textContent = title;
             document.querySelector('.step-description').textContent = description;
         }
 
-        // 大会リスト表示
         function renderRaceSelectionGrid() {
             const racesGrid = document.getElementById('races-grid');
             let html = '';
@@ -885,10 +845,8 @@
             racesGrid.innerHTML = html;
         }
 
-        // エラーカード生成
         function createErrorCard(raceId, type) {
             const typeLabel = type === 'a-race' ? 'Aレース' : 'その他';
-            
             return `
                 <div class="race-selection-card ${type}" style="border-color: #ef4444; background: #fef2f2;">
                     <div class="race-type-badge ${type}">${typeLabel}</div>
@@ -899,27 +857,13 @@
             `;
         }
 
-        // 大会選択カード生成
         function createRaceSelectionCard(raceId, race, type) {
             const typeLabel = type === 'a-race' ? 'Aレース' : 'その他';
             const isCompleted = completedGoals.has(raceId);
-            
-            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', {
-                month: 'long',
-                day: 'numeric'
-            });
-            
+            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' });
             let cardClass = `race-selection-card ${type}`;
-            
-            let statusIndicator = '';
-            if (isCompleted) {
-                statusIndicator = '<div class="selected-indicator">✓</div>';
-            }
-            
-            let statusText = '';
-            if (isCompleted) {
-                statusText = '<div class="race-selection-info" style="color: #059669; font-weight: 600;">目標設定済み（クリックで編集）</div>';
-            }
+            let statusIndicator = isCompleted ? '<div class="selected-indicator">✓</div>' : '';
+            let statusText = isCompleted ? '<div class="race-selection-info" style="color: #059669; font-weight: 600;">目標設定済み（クリックで編集）</div>' : '';
             
             return `
                 <div class="${cardClass}" onclick="selectRaceForGoal('${raceId}')" data-race-id="${raceId}">
@@ -934,15 +878,11 @@
             `;
         }
 
-        // 大会選択
         function selectRaceForGoal(raceId) {
-            console.log('大会選択:', raceId);
             currentGoalRace = raceId;
-            // 目標設定フォームの実装は省略（簡潔にするため）
             alert(`${raceDatabase[raceId].name} の目標設定を開始します`);
         }
 
-        // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

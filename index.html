@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Triathlon Coach - あなた専用のトライアスロンコーチ</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -107,194 +106,282 @@
             margin: 0 0.1rem;
         }
 
-        /* Hero section */
-        .hero-section {
-            text-align: center;
-            padding: 30px 20px;
-            margin-bottom: 30px;
+        /* メインコンテナ */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .hero-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: #666;
+        /* AIコーチパネル */
+        .ai-coach-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
             margin-bottom: 20px;
         }
 
-        /* Flow Steps Container */
-        .flow-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        .ai-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .section-title {
-            text-align: center;
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 40px;
-            color: #333;
+        .ai-header h1 {
+            font-size: 1.3em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Flow Steps Grid */
-        .flow-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
+        .ai-header p {
+            font-size: 0.85em;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .flow-step-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .flow-step-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-        }
-
-        .flow-step-card.step-1::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
-        .flow-step-card.step-2::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
-        .flow-step-card.step-3::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-        .flow-step-card.step-4::before { background: linear-gradient(90deg, #10b981, #059669); }
-        .flow-step-card.step-5::before { background: linear-gradient(90deg, #ec4899, #db2777); }
-        .flow-step-card.step-6::before { background: linear-gradient(90deg, #6366f1, #4f46e5); }
-
-        .flow-step-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        }
-
-        .flow-step-card.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .flow-step-card.disabled:hover {
-            transform: none;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .step-number {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #f3f4f6;
+        }
+
+        .status-connected { background: #28a745; }
+        .status-error { background: #dc3545; }
+
+        .api-setup {
+            padding: 20px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .api-setup strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .api-button {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .api-button:hover {
+            background: #e0a800;
+        }
+
+        .chat-messages {
+            padding: 15px;
+            background: #f8f9fa;
+            min-height: 200px;
+            max-height: 350px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 85%;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background: white;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            background: white;
+            display: none;
+        }
+
+        .chat-input-wrapper {
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px 50px 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            outline: none;
+            resize: none;
+            font-size: 0.9em;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .chat-send-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: #666;
+            font-size: 14px;
         }
 
-        .step-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
+        .chat-send-btn:hover {
+            opacity: 0.9;
         }
 
-        .step-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 10px;
+        /* メニュー説明セクション */
+        .menu-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .menu-section h2 {
+            text-align: center;
+            font-size: 1.1rem;
             color: #333;
-        }
-
-        .step-description {
-            font-size: 0.95rem;
-            color: #666;
-            line-height: 1.6;
             margin-bottom: 15px;
         }
 
-        .step-status {
-            display: inline-flex;
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+            display: flex;
             align-items: center;
-            gap: 5px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            gap: 10px;
+        }
+
+        .menu-card.step-1 { border-left-color: #3b82f6; }
+        .menu-card.step-2 { border-left-color: #8b5cf6; }
+        .menu-card.step-3 { border-left-color: #f59e0b; }
+        .menu-card.step-4 { border-left-color: #10b981; }
+        .menu-card.step-5 { border-left-color: #ec4899; }
+        .menu-card.step-6 { border-left-color: #6366f1; }
+
+        .menu-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .menu-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .menu-icon {
+            font-size: 1.5rem;
+        }
+
+        .menu-info {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .menu-desc {
+            font-size: 0.7rem;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .menu-status {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
             font-weight: 600;
         }
 
-        .step-status.available {
+        .menu-status.available {
             background: #dcfce7;
             color: #166534;
         }
 
-        .step-status.coming-soon {
+        .menu-status.coming {
             background: #fef3c7;
             color: #92400e;
         }
 
-        /* Features Section */
-        .features-section {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        /* メッセージ */
+        .message {
+            margin: 10px 20px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            display: none;
         }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
-        .feature-item {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-
-        .feature-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .feature-description {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-            font-size: 0.9rem;
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         @media (max-width: 768px) {
@@ -319,20 +406,14 @@
                 display: none;
             }
 
-            .hero-title {
-                font-size: 1.8rem;
+            .ai-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
             }
 
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-
-            .flow-steps {
+            .menu-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .features-section {
-                padding: 25px;
             }
         }
     </style>
@@ -362,95 +443,197 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <h1 class="hero-title">AI Triathlon Coach</h1>
-        <p class="hero-subtitle">科学的トレーニングで、あなたの目標達成をサポート</p>
-    </section>
+    <div class="main-container">
+        <!-- AIコーチパネル -->
+        <div class="ai-coach-panel">
+            <div class="ai-header">
+                <h1>🤖 AIトライアスロンコーチ</h1>
+                <p><span id="connectionStatus" class="status-indicator status-error"></span>運動生理学博士</p>
+            </div>
 
-    <!-- Flow Steps -->
-    <div class="flow-container">
-        <h2 class="section-title">🏊‍♂️ トレーニングの流れ 🚴‍♂️ 🏃‍♂️</h2>
-        
-        <div class="flow-steps">
-            <a href="race-selection.html" class="flow-step-card step-1">
-                <div class="step-number">1</div>
-                <div class="step-icon">🎯</div>
-                <h3 class="step-title">レース選択</h3>
-                <p class="step-description">参加予定のトライアスロン大会を選択。Aレース（最重要）とその他のレースを設定できます。</p>
-                <span class="step-status available">✓ 利用可能</span>
-            </a>
+            <div id="messageArea" class="message"></div>
 
-            <a href="goal-setting.html" class="flow-step-card step-2">
-                <div class="step-number">2</div>
-                <div class="step-icon">🏆</div>
-                <h3 class="step-title">目標設定</h3>
-                <p class="step-description">各種目（スイム・バイク・ラン）の目標タイムを設定。AIが実現可能性を分析します。</p>
-                <span class="step-status available">✓ 利用可能</span>
-            </a>
+            <div id="apiSetup" class="api-setup">
+                <strong>⚙️ OpenAI API設定</strong>
+                <p>APIキーを入力してAIコーチを有効化してください。トレーニング、栄養、レース戦略など何でも相談できます。</p>
+                <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-..." />
+                <button onclick="enableAICoach()" class="api-button">AIコーチを起動</button>
+                <p style="font-size: 0.8em; margin-top: 10px; color: #6c757d;">
+                    APIキーは <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a> で取得できます
+                </p>
+            </div>
 
-            <a href="training-plan.html" class="flow-step-card step-3">
-                <div class="step-number">3</div>
-                <div class="step-icon">📋</div>
-                <h3 class="step-title">トレーニング計画</h3>
-                <p class="step-description">目標達成に向けた週間・月間トレーニング計画を自動生成。TSSベースで負荷を最適化。</p>
-                <span class="step-status available">✓ 利用可能</span>
-            </a>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-message ai-message">
+                    <strong>AIコーチ</strong><br>
+                    こんにちは！運動生理学博士のAIコーチです。🏊‍♂️🚴‍♂️🏃‍♂️<br><br>
+                    トレーニング計画、栄養、リカバリー、レース戦略など、トライアスロンに関することは何でもお気軽にご相談ください！
+                </div>
+            </div>
 
-            <a href="simulator.html" class="flow-step-card step-4">
-                <div class="step-number">4</div>
-                <div class="step-icon">🔬</div>
-                <h3 class="step-title">シミュレーター</h3>
-                <p class="step-description">VO2max、LT、REの改善をシミュレート。トレーニング効果を事前に予測できます。</p>
-                <span class="step-status available">✓ 利用可能</span>
-            </a>
-
-            <a href="data.html" class="flow-step-card step-5">
-                <div class="step-number">5</div>
-                <div class="step-icon">📊</div>
-                <h3 class="step-title">トレーニング進捗</h3>
-                <p class="step-description">Stravaと連携してトレーニングデータを自動取得。進捗状況をリアルタイムで確認。</p>
-                <span class="step-status available">✓ 利用可能</span>
-            </a>
-
-            <div class="flow-step-card step-6 disabled">
-                <div class="step-number">6</div>
-                <div class="step-icon">🏁</div>
-                <h3 class="step-title">レース戦略・振り返り</h3>
-                <p class="step-description">レース当日のペース配分戦略、レース後の振り返り分析機能を提供予定。</p>
-                <span class="step-status coming-soon">🚧 開発中</span>
+            <div id="chatInputArea" class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="質問を入力... (例: 初めてのオリンピックディスタンスに向けたトレーニング方法を教えて)" onkeypress="handleEnter(event)">
+                    <button onclick="sendMessage()" class="chat-send-btn">➤</button>
+                </div>
             </div>
         </div>
 
-        <section class="features-section">
-            <h2 class="section-title">✨ 主な機能</h2>
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">🤖</div>
-                    <h3 class="feature-title">AI分析</h3>
-                    <p class="feature-description">科学的根拠に基づいたトレーニング分析と提案</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">📈</div>
-                    <h3 class="feature-title">進捗追跡</h3>
-                    <p class="feature-description">Strava連携でトレーニングデータを自動取得・分析</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🎯</div>
-                    <h3 class="feature-title">目標管理</h3>
-                    <p class="feature-description">レース目標に向けた計画的なトレーニングをサポート</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">パフォーマンス予測</h3>
-                    <p class="feature-description">シミュレーターでトレーニング効果を事前予測</p>
+        <!-- メニュー説明セクション -->
+        <div class="menu-section">
+            <h2>🏊‍♂️ 機能メニュー 🚴‍♂️ 🏃‍♂️</h2>
+            <div class="menu-grid">
+                <a href="race-selection.html" class="menu-card step-1">
+                    <div class="menu-icon">🎯</div>
+                    <div class="menu-info">
+                        <div class="menu-title">レース選択</div>
+                        <div class="menu-desc">参加レースとAレースを設定</div>
+                    </div>
+                    <span class="menu-status available">✓</span>
+                </a>
+
+                <a href="goal-setting.html" class="menu-card step-2">
+                    <div class="menu-icon">🏆</div>
+                    <div class="menu-info">
+                        <div class="menu-title">目標設定</div>
+                        <div class="menu-desc">種目別の目標タイムを設定</div>
+                    </div>
+                    <span class="menu-status available">✓</span>
+                </a>
+
+                <a href="training-plan.html" class="menu-card step-3">
+                    <div class="menu-icon">📋</div>
+                    <div class="menu-info">
+                        <div class="menu-title">トレーニング計画</div>
+                        <div class="menu-desc">週間・月間プランを自動生成</div>
+                    </div>
+                    <span class="menu-status available">✓</span>
+                </a>
+
+                <a href="simulator.html" class="menu-card step-4">
+                    <div class="menu-icon">🔬</div>
+                    <div class="menu-info">
+                        <div class="menu-title">シミュレーター</div>
+                        <div class="menu-desc">VO2max・LT改善を予測</div>
+                    </div>
+                    <span class="menu-status available">✓</span>
+                </a>
+
+                <a href="data.html" class="menu-card step-5">
+                    <div class="menu-icon">📊</div>
+                    <div class="menu-info">
+                        <div class="menu-title">トレーニング進捗</div>
+                        <div class="menu-desc">Strava連携でデータ同期</div>
+                    </div>
+                    <span class="menu-status available">✓</span>
+                </a>
+
+                <div class="menu-card step-6 disabled">
+                    <div class="menu-icon">🏁</div>
+                    <div class="menu-info">
+                        <div class="menu-title">レース戦略・振り返り</div>
+                        <div class="menu-desc">ペース配分と分析</div>
+                    </div>
+                    <span class="menu-status coming">開発中</span>
                 </div>
             </div>
-        </section>
+        </div>
     </div>
 
-    <footer class="footer">
-        <p>© 2025 AI Triathlon Coach - Powered by Science & AI</p>
-    </footer>
+    <script>
+        var isAIConnected = false;
+        var apiKey = '';
+
+        function showMessage(text, type) {
+            var msg = document.getElementById('messageArea');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+            msg.style.display = 'block';
+            setTimeout(function() {
+                msg.style.display = 'none';
+            }, 3000);
+        }
+
+        function enableAICoach() {
+            var key = document.getElementById('apiKeyInput').value.trim();
+            if (!key || !key.startsWith('sk-')) {
+                showMessage('有効なAPIキーを入力してください（sk-で始まる文字列）', 'error');
+                return;
+            }
+
+            apiKey = key;
+            isAIConnected = true;
+            document.getElementById('apiSetup').style.display = 'none';
+            document.getElementById('chatMessages').style.display = 'block';
+            document.getElementById('chatInputArea').style.display = 'block';
+            document.getElementById('connectionStatus').className = 'status-indicator status-connected';
+            showMessage('AIコーチが起動しました！', 'success');
+        }
+
+        function addMessage(sender, content) {
+            var div = document.createElement('div');
+            div.className = 'chat-message ' + sender + '-message';
+            div.innerHTML = sender === 'ai' ? '<strong>AIコーチ</strong><br>' + content : content;
+            document.getElementById('chatMessages').appendChild(div);
+            document.getElementById('chatMessages').scrollTop = 999999;
+        }
+
+        function sendMessage() {
+            if (!isAIConnected) {
+                showMessage('先にAIコーチを起動してください', 'error');
+                return;
+            }
+
+            var input = document.getElementById('chatInput');
+            var msg = input.value.trim();
+            if (!msg) return;
+
+            addMessage('user', msg);
+            input.value = '';
+            callAI(msg);
+        }
+
+        function callAI(userMessage) {
+            addMessage('ai', '考え中... 🤔');
+
+            var systemPrompt = 'あなたは運動生理学博士であり、トライアスロンの専門コーチです。トレーニング計画、栄養、リカバリー、レース戦略、機材選びなど、トライアスロンに関するあらゆる質問に対して、科学的根拠に基づいた実践的なアドバイスを提供してください。回答は400-600字程度で簡潔にまとめてください。';
+
+            fetch('/api/openai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMessage,
+                    apiKey: apiKey,
+                    systemPrompt: systemPrompt
+                })
+            })
+            .then(function(res) {
+                var msgs = document.getElementById('chatMessages');
+                var loading = msgs.lastChild;
+                if (loading && loading.textContent.includes('考え中')) loading.remove();
+
+                if (!res.ok) return res.json().then(function(e) { throw new Error(e.error || 'HTTP ' + res.status); });
+                return res.json();
+            })
+            .then(function(data) {
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    addMessage('ai', data.choices[0].message.content.replace(/\n/g, '<br>'));
+                }
+            })
+            .catch(function(error) {
+                console.error('AI Error:', error);
+                addMessage('ai', '❌ エラー: ' + error.message + '<br>APIキーとサーバー設定を確認してください。');
+            });
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        console.log('🏊‍♂️🚴‍♂️🏃‍♂️ AI Triathlon Coach Ready');
+    </script>
 </body>
 </html>

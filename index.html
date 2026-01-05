@@ -653,6 +653,9 @@
             // URL をクリック可能なリンクに変換
             text = text.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" style="color: #1976d2; text-decoration: underline;">$1</a>');
             
+            // ダミーDOI（10.xxxx, 10.xxx など）を含むリンクを除去
+            text = text.replace(/<a[^>]*href="https?:\/\/doi\.org\/10\.x+[^"]*"[^>]*>[^<]*<\/a>/gi, '');
+            
             // 改行処理
             text = text.replace(/\n{2,}/g, '\n');
             text = text.replace(/\n/g, '<br>');

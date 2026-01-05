@@ -628,25 +628,25 @@
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
             // 見出し: ### text → <h4>text</h4>
-            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 10px 0; color: #333;">$1</h4>');
-            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 10px 0; color: #333;">$1</h3>');
-            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 10px 0; color: #333; font-size: 1.2em;">$1</h3>');
+            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 10px 0 4px; color: #333;">$1</h4>');
+            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 10px 0 4px; color: #333;">$1</h3>');
+            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 10px 0 4px; color: #333; font-size: 1.2em;">$1</h3>');
             
-            // 「参考文献」単体（番号なし）: 上下に10pxのmargin
-            text = text.replace(/^(参考文献)$/gm, '<div style="margin: 10px 0;"><strong>$1</strong></div>');
+            // 「参考文献」単体（番号なし）: 上に10px、下に4px
+            text = text.replace(/^(参考文献)$/gm, '<div style="margin: 10px 0 4px;"><strong>$1</strong></div>');
             
-            // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上下に10pxのmargin
+            // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上に10px、下に4px
             text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ|次のステップ|参考文献)(:?)(.*)$/gm, 
-                '<div style="margin: 10px 0;"><strong>$1. $2$3</strong>$4</div>');
+                '<div style="margin: 10px 0 4px;"><strong>$1. $2$3</strong>$4</div>');
             
-            // 💡 次のステップ（絵文字付き）: 上下に10pxのmargin
-            text = text.replace(/^(💡\s*次のステップ.*)$/gm, '<div style="margin: 10px 0;"><strong>$1</strong></div>');
+            // 💡 次のステップ（絵文字付き）: 上に10px、下に4px
+            text = text.replace(/^(💡\s*次のステップ.*)$/gm, '<div style="margin: 10px 0 4px;"><strong>$1</strong></div>');
             
             // その他の番号付きリスト（次のステップの1, 2, 3など）: 行間ゼロ
-            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div style="margin: 0; padding-left: 10px;"><strong>$1.</strong> $2</div>');
+            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div class="list-item" style="margin: 0; padding-left: 10px;"><strong>$1.</strong> $2</div>');
             
             // 箇条書き: - text → <div>• text</div> 行間ゼロ
-            text = text.replace(/^- (.+)$/gm, '<div style="margin: 0; padding-left: 20px;">• $1</div>');
+            text = text.replace(/^- (.+)$/gm, '<div class="bullet-item" style="margin: 0; padding-left: 20px;">• $1</div>');
             
             // コード: `text` → <code>text</code>
             text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');
@@ -665,6 +665,15 @@
             
             // 連続した<br>タグを1つにまとめる
             text = text.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+            
+            // 箇条書きdiv間の<br>を削除（行間ゼロにする）
+            text = text.replace(/<\/div>\s*<br>\s*(<div class="bullet-item")/gi, '</div>$1');
+            
+            // リストdiv間の<br>を削除（行間ゼロにする）
+            text = text.replace(/<\/div>\s*<br>\s*(<div class="list-item")/gi, '</div>$1');
+            
+            // 文章と箇条書きの間に適切なスペースを確保（brを残す）
+            // 箇条書きの最初の項目の前のbrはそのまま残す
             
             return text;
         }

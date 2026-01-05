@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>AI Triathlon Coach - あなた専用のトライアスロンコーチ</title>
     <style>
         * {
@@ -640,6 +643,9 @@
             
             // 残った ** を削除（閉じタグがない場合）
             text = text.replace(/\*\*/g, '');
+            
+            // URL をクリック可能なリンクに変換
+            text = text.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" style="color: #1976d2; text-decoration: underline;">$1</a>');
             
             // 改行
             text = text.replace(/\n/g, '<br>');

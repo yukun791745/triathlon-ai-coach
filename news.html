@@ -211,6 +211,91 @@
             transform: rotate(180deg);
         }
 
+        /* マイチャンネルセクション（最上位表示） */
+        .my-channel-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .my-channel-section h2 {
+            color: #92400e;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .my-channel-video {
+            display: flex;
+            gap: 15px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .my-channel-video:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .my-channel-video .thumbnail {
+            width: 200px;
+            height: 112px;
+            background: #1f2937;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .my-channel-video .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .my-channel-video .thumbnail .play-icon {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .my-channel-video .video-info {
+            flex: 1;
+        }
+
+        .my-channel-video .video-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+
+        .my-channel-video .video-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
         /* フィードコンテナ */
         .feed-container {
             display: flex;
@@ -392,6 +477,15 @@
                 font-size: 0.8rem;
             }
 
+            .my-channel-video {
+                flex-direction: column;
+            }
+
+            .my-channel-video .thumbnail {
+                width: 100%;
+                height: 180px;
+            }
+
             .feed-card.video {
                 flex-direction: column;
             }
@@ -515,6 +609,20 @@
             <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
         </div>
 
+        <!-- マイチャンネルセクション -->
+        <div class="my-channel-section" id="myChannelSection">
+            <h2>⭐ マイチャンネル（最新動画）</h2>
+            <div id="myChannelContent">
+                <div class="my-channel-video">
+                    <div class="thumbnail">🎬</div>
+                    <div class="video-info">
+                        <div class="video-title">読み込み中...</div>
+                        <div class="video-meta">最新動画を取得しています</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- フィードコンテナ -->
         <div class="feed-container" id="feedContainer">
             <!-- ローディング表示 -->
@@ -531,6 +639,10 @@
         const FEED_CACHE_KEY = 'triathlon_news_feed_cache';
         const FEED_CACHE_DURATION = 60 * 60 * 1000; // 1時間
         const ITEMS_PER_PAGE = 20; // 1ページあたりの表示件数
+        const MAX_AGE_DAYS = 60; // 過去2ヶ月（60日）まで表示
+        
+        // マイチャンネル設定（ユーザーのYouTubeチャンネル）
+        const MY_CHANNEL_SOURCE = 'ヒロ/トライアスロン'; // ここを変更してマイチャンネルを設定
         
         // 日本語ソース一覧
         const JAPANESE_SOURCES = ['LUMINA', 'JTU', 'Lapulem', 'ヒロ/トライアスロン', '古谷純平', 'Triathlon LUMINA'];
@@ -553,6 +665,7 @@
         // フィードデータ
         let feedData = [];
         let filteredData = []; // フィルター後のデータ
+        let myChannelVideo = null; // マイチャンネルの最新動画
         let translationCache = {}; // 翻訳キャッシュ
         
         // 日付をフォーマット
@@ -578,6 +691,22 @@
             }
         }
         
+        // 過去N日以内かチェック
+        function isWithinDays(dateString, days) {
+            if (!dateString) return false;
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const daysDiff = diff / (1000 * 60 * 60 * 24);
+            return daysDiff <= days;
+        }
+        
+        // ショート動画かどうかチェック
+        function isShortVideo(url) {
+            if (!url) return false;
+            return url.includes('/shorts/');
+        }
+        
         // 言語を判定
         function detectLanguage(item) {
             // ソース名で判定
@@ -599,6 +728,7 @@
                 title: item.title,
                 source: item.source,
                 url: item.link,
+                pubDate: item.pubDate,
                 time: formatDate(item.pubDate),
                 thumbnail: item.thumbnail || null,
                 summary: item.summary || '',
@@ -695,6 +825,46 @@
             }
         }
 
+        // マイチャンネルを表示
+        function renderMyChannel() {
+            const content = document.getElementById('myChannelContent');
+            
+            if (!myChannelVideo) {
+                content.innerHTML = `
+                    <div class="my-channel-video">
+                        <div class="thumbnail">🎬</div>
+                        <div class="video-info">
+                            <div class="video-title">最新動画がありません</div>
+                            <div class="video-meta">${MY_CHANNEL_SOURCE} の最新動画を表示します</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // YouTubeサムネイルを生成
+            let thumbnailUrl = myChannelVideo.thumbnail;
+            if (!thumbnailUrl && myChannelVideo.url && myChannelVideo.url.includes('youtube.com')) {
+                const videoId = myChannelVideo.url.match(/[?&]v=([^&]+)/);
+                if (videoId) {
+                    thumbnailUrl = `https://img.youtube.com/vi/${videoId[1]}/mqdefault.jpg`;
+                }
+            }
+
+            content.innerHTML = `
+                <a href="${myChannelVideo.url}" target="_blank" class="my-channel-video">
+                    <div class="thumbnail">
+                        ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="">` : ''}
+                        <div class="play-icon">▶</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${myChannelVideo.title}</div>
+                        <div class="video-meta">${myChannelVideo.source} • ${myChannelVideo.time}</div>
+                    </div>
+                </a>
+            `;
+        }
+
         // フィードを表示
         function renderFeed(data) {
             const container = document.getElementById('feedContainer');
@@ -720,7 +890,7 @@
                     // YouTubeサムネイルを生成
                     let thumbnailUrl = item.thumbnail;
                     if (!thumbnailUrl && item.url && item.url.includes('youtube.com')) {
-                        const videoId = item.url.match(/[?&]v=([^&]+)/) || item.url.match(/shorts\/([^?]+)/);
+                        const videoId = item.url.match(/[?&]v=([^&]+)/);
                         if (videoId) {
                             thumbnailUrl = `https://img.youtube.com/vi/${videoId[1]}/mqdefault.jpg`;
                         }
@@ -852,8 +1022,10 @@
             // キャッシュをチェック（強制更新でなければ）
             if (!forceRefresh) {
                 const cached = getCachedFeed();
-                if (cached && cached.length > 0) {
-                    feedData = cached;
+                if (cached && cached.feedData && cached.feedData.length > 0) {
+                    feedData = cached.feedData;
+                    myChannelVideo = cached.myChannelVideo;
+                    renderMyChannel();
                     filterFeed();
                     updateTranslateButton();
                     if (loading) loading.style.display = 'none';
@@ -879,11 +1051,35 @@
                 
                 // itemsが存在すれば成功
                 if (data.items && Array.isArray(data.items)) {
-                    // APIレスポンスを内部形式に変換
-                    feedData = data.items.map(transformItem);
+                    // APIレスポンスを内部形式に変換し、フィルタリング
+                    const allItems = data.items.map(transformItem);
+                    
+                    // フィルタリング：過去2ヶ月以内 & ショート動画を除外
+                    feedData = allItems.filter(item => {
+                        // 過去2ヶ月以内かチェック
+                        if (!isWithinDays(item.pubDate, MAX_AGE_DAYS)) {
+                            return false;
+                        }
+                        // ショート動画を除外
+                        if (isShortVideo(item.url)) {
+                            return false;
+                        }
+                        return true;
+                    });
+                    
+                    // マイチャンネルの最新動画を取得（ショート除外済み）
+                    myChannelVideo = feedData.find(item => 
+                        item.source === MY_CHANNEL_SOURCE && item.type === 'video'
+                    ) || null;
                     
                     // キャッシュに保存
-                    saveFeedToCache(feedData);
+                    saveFeedToCache({
+                        feedData: feedData,
+                        myChannelVideo: myChannelVideo
+                    });
+                    
+                    // マイチャンネルを表示
+                    renderMyChannel();
                     
                     // 表示
                     filterFeed();
@@ -891,7 +1087,7 @@
                     // 翻訳ボタンの状態を更新
                     updateTranslateButton();
                     
-                    console.log(`フィード取得完了: ${feedData.length}件`);
+                    console.log(`フィード取得完了: ${feedData.length}件（フィルター後）`);
                 } else {
                     throw new Error('データ形式が不正です');
                 }
@@ -997,7 +1193,10 @@
             btn.textContent = '✅ 翻訳済み';
             
             // キャッシュを更新
-            saveFeedToCache(feedData);
+            saveFeedToCache({
+                feedData: feedData,
+                myChannelVideo: myChannelVideo
+            });
         }
 
         // 初期化

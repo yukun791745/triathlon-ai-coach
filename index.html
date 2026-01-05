@@ -601,6 +601,13 @@
     <script>
         // Markdown → HTML 変換関数
         function markdownToHtml(text) {
+            // Assistants API の引用アノテーションを除去
+            // 【数字:数字 + 任意の文字 + source + 任意の文字】の形式を全て除去
+            text = text.replace(/【\d+:\d+[^】]*】/g, '');
+            text = text.replace(/【\d+[^】]*source[^】]*】/g, '');
+            // 角括弧版も対応
+            text = text.replace(/\[\d+:\d+[^\]]*\]/g, '');
+            
             // LaTeX形式を除去（\[ \] で囲まれた部分を簡略化）
             text = text.replace(/\\\[[\s\S]*?\\\]/g, function(match) {
                 // \text{xxx} から xxx を抽出

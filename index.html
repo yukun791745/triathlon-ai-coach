@@ -42,9 +42,9 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            gap: 16px;
+            gap: 24px;
         }
 
         .flow-nav-logo {
@@ -59,7 +59,7 @@
         .flow-nav-steps {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -68,7 +68,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 6px 12px;
+            padding: 6px 16px;
             border-radius: 10px;
             font-size: 0.65rem;
             font-weight: 600;
@@ -77,7 +77,7 @@
             text-decoration: none;
             border: none;
             white-space: nowrap;
-            min-width: 70px;
+            min-width: 80px;
         }
 
         .flow-nav-step .nav-icon {
@@ -473,6 +473,10 @@
                 padding: 6px 8px;
             }
 
+            .flow-nav-container {
+                gap: 12px;
+            }
+
             .flow-nav-logo {
                 font-size: 0.8rem;
             }
@@ -482,9 +486,9 @@
             }
 
             .flow-nav-step {
-                font-size: 0.55rem;
-                padding: 4px 6px;
-                min-width: 50px;
+                font-size: 0.5rem;
+                padding: 4px 8px;
+                min-width: 45px;
             }
 
             .flow-nav-step .nav-icon {
@@ -724,6 +728,8 @@
         var apiKey = '';
         var threadId = null;  // Assistants APIのスレッドID
         var selectedFile = null;  // アップロード用の選択されたファイル
+        var currentRunId = null;  // 現在のRun ID
+        var isProcessing = false;  // 処理中フラグ
         var ASSISTANT_ID = 'asst_Bcsi23XJPtGZWcbO6jSpAwS6';  // Triathlon AI Coach
         var API_KEY_STORAGE = 'triathlon_ai_api_key';  // ローカルストレージのキー
 
@@ -804,6 +810,11 @@
                 showMessage('先にAIコーチを起動してください', 'error');
                 return;
             }
+            
+            if (isProcessing) {
+                showMessage('回答を生成中です。しばらくお待ちください...', 'error');
+                return;
+            }
 
             var input = document.getElementById('chatInput');
             var msg = input.value.trim();
@@ -842,6 +853,8 @@
         }
 
         async function callAI(userMessage, file) {
+            isProcessing = true;
+            
             // メッセージ表示エリアを作成
             var aiMessageDiv = document.createElement('div');
             aiMessageDiv.className = 'chat-message ai-message';
@@ -850,6 +863,35 @@
             var contentSpan = aiMessageDiv.querySelector('.streaming-content');
             
             try {
+                // アクティブなRunがあればキャンセル
+                contentSpan.textContent = '準備中...';
+                var runsResponse = await fetch('https://api.openai.com/v1/threads/' + threadId + '/runs?limit=1', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + apiKey,
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+                
+                if (runsResponse.ok) {
+                    var runsData = await runsResponse.json();
+                    if (runsData.data && runsData.data.length > 0) {
+                        var latestRun = runsData.data[0];
+                        if (['queued', 'in_progress', 'requires_action'].includes(latestRun.status)) {
+                            // アクティブなRunをキャンセル
+                            await fetch('https://api.openai.com/v1/threads/' + threadId + '/runs/' + latestRun.id + '/cancel', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': 'Bearer ' + apiKey,
+                                    'OpenAI-Beta': 'assistants=v2'
+                                }
+                            });
+                            // キャンセルが完了するまで少し待つ
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    }
+                }
+                
                 var uploadedFileId = null;
                 var isImageFile = false;
                 
@@ -999,6 +1041,12 @@
                 // ストリーミング完了
                 contentSpan.classList.remove('streaming-content');
                 contentSpan.classList.add('streaming-done');
+                
+                // 回答が空の場合のフォールバック
+                if (!fullContent || fullContent.trim() === '') {
+                    fullContent = 'すみません、回答の生成に問題が発生しました。もう一度お試しください。';
+                }
+                
                 contentSpan.innerHTML = markdownToHtml(fullContent);
                 
                 // 画像プレースホルダーがあれば処理
@@ -1010,6 +1058,8 @@
                 console.error('AI Error:', error);
                 contentSpan.classList.remove('streaming-content');
                 contentSpan.innerHTML = '❌ エラー: ' + error.message;
+            } finally {
+                isProcessing = false;
             }
         }
         

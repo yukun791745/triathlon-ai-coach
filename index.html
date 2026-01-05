@@ -605,77 +605,64 @@
         // Markdown → HTML 変換関数
         function markdownToHtml(text) {
             // Assistants API の引用アノテーションを除去
-            // 【8:5†source】などの形式 - source】で終わるものを全て除去
             text = text.replace(/【[^】]*source】/g, '');
-            // 【数字:数字...】の形式も除去
             text = text.replace(/【\d+:\d+[^】]*】/g, '');
             
-            // LaTeX形式を除去（\[ \] で囲まれた部分を簡略化）
+            // LaTeX形式を除去
             text = text.replace(/\\\[[\s\S]*?\\\]/g, function(match) {
-                // \text{xxx} から xxx を抽出
                 var simplified = match.replace(/\\text\{([^}]+)\}/g, '$1');
-                // \frac{a}{b} を a/b に変換
                 simplified = simplified.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
-                // 残りのLaTeX記号を削除
                 simplified = simplified.replace(/\\\[|\\\]|\\|{|}/g, '');
                 return simplified.trim();
             });
-            
-            // インラインLaTeX \text{} を除去
             text = text.replace(/\\text\{([^}]+)\}/g, '$1');
             
             // 太字: **text** → <strong>text</strong>
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
-            // 見出し: ### text → <h4>text</h4>
-            text = text.replace(/^### (.+)$/gm, '<h4 class="section-header" style="margin: 10px 0; color: #333;">$1</h4>');
-            text = text.replace(/^## (.+)$/gm, '<h3 class="section-header" style="margin: 10px 0; color: #333;">$1</h3>');
-            text = text.replace(/^# (.+)$/gm, '<h3 class="section-header" style="margin: 10px 0; color: #333; font-size: 1.2em;">$1</h3>');
+            // 見出し
+            text = text.replace(/^### (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
+            text = text.replace(/^## (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
+            text = text.replace(/^# (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
             
-            // 「参考文献」単体（番号なし、太字でも対応）: 上下に10px
-            text = text.replace(/^(<strong>)?(参考文献)(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$2</strong></div>');
+            // 番号付き大項目（1. 概要 など）: 上下に10px - 先に処理
+            text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ)(:?)$/gm, 
+                '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong></div>');
             
-            // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上下に10px
-            text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ|次のステップ|参考文献)(:?)(.*)$/gm, 
-                '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong>$4</div>');
+            // 「参考文献」（太字でも対応）: 上下に10px
+            text = text.replace(/^(<strong>)?参考文献(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
             
-            // 💡 次のステップ（絵文字付き、太字でも対応）: 上下に10px
-            text = text.replace(/^(<strong>)?(💡\s*次のステップ[^<]*)(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$2</strong></div>');
+            // 「💡 次のステップ」（太字でも対応）: 上下に10px
+            text = text.replace(/^(<strong>)?💡\s*次のステップ(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
             
-            // 👉 案内文: 上に10pxのmargin、太字にしない
-            text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0 0;">$1</div>');
+            // 👉 案内文: 上に10px
+            text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0;">$1</div>');
             
-            // その他の番号付きリスト（次のステップの1, 2, 3など）: 行間ゼロ、太字にしない
-            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div class="list-item" style="margin: 0; padding-left: 10px;">$1. $2</div>');
+            // 箇条書き: - text または • text → 行間ゼロ
+            text = text.replace(/^[-•]\s*(.+)$/gm, '<div class="bullet-item" style="margin: 0; padding-left: 20px;">• $1</div>');
             
-            // 箇条書き: - text → <div>• text</div> 行間ゼロ
-            text = text.replace(/^- (.+)$/gm, '<div class="bullet-item" style="margin: 0; padding-left: 20px;">• $1</div>');
+            // 番号付きリスト（1. text）: 行間ゼロ - 大項目の後に処理
+            text = text.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="list-item" style="margin: 0; padding-left: 10px;">$1. $2</div>');
             
-            // コード: `text` → <code>text</code>
+            // コード
             text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');
             
-            // 残った ** を削除（閉じタグがない場合）
+            // 残った ** を削除
             text = text.replace(/\*\*/g, '');
             
             // URL をクリック可能なリンクに変換
             text = text.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" style="color: #1976d2; text-decoration: underline;">$1</a>');
             
-            // 連続した改行を1つにまとめる（空行を除去）
+            // 改行処理
             text = text.replace(/\n{2,}/g, '\n');
-            
-            // 改行
             text = text.replace(/\n/g, '<br>');
-            
-            // 連続した<br>タグを1つにまとめる
             text = text.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
             
-            // 箇条書きdiv間の<br>を削除（行間ゼロにする）
+            // 箇条書き・リスト間の<br>を削除
             text = text.replace(/<\/div>\s*<br>\s*(<div class="bullet-item")/gi, '</div>$1');
-            
-            // リストdiv間の<br>を削除（行間ゼロにする）
             text = text.replace(/<\/div>\s*<br>\s*(<div class="list-item")/gi, '</div>$1');
             
-            // section-headerの直後の<br>を削除（ただしsection-headerの前のbrは残す）
+            // section-headerの直後の<br>を削除
             text = text.replace(/(<div class="section-header"[^>]*>.*?<\/div>)\s*<br>/gi, '$1');
             
             return text;

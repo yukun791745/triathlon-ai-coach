@@ -716,6 +716,7 @@
         var threadId = null;  // Assistants APIのスレッドID
         var selectedFile = null;  // アップロード用の選択されたファイル
         var ASSISTANT_ID = 'asst_Bcsi23XJPtGZWcbO6jSpAwS6';  // Triathlon AI Coach
+        var API_KEY_STORAGE = 'triathlon_ai_api_key';  // ローカルストレージのキー
 
         function showMessage(text, type) {
             var msg = document.getElementById('messageArea');
@@ -726,6 +727,16 @@
                 msg.style.display = 'none';
             }, 3000);
         }
+
+        // ページ読み込み時に保存されたAPIキーをチェック
+        window.addEventListener('DOMContentLoaded', function() {
+            var savedKey = localStorage.getItem(API_KEY_STORAGE);
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                // 自動的に接続を試みる
+                enableAICoach();
+            }
+        });
 
         async function enableAICoach() {
             var key = document.getElementById('apiKeyInput').value.trim();
@@ -754,6 +765,9 @@
                 var data = await response.json();
                 threadId = data.id;
                 
+                // APIキーをローカルストレージに保存
+                localStorage.setItem(API_KEY_STORAGE, apiKey);
+                
                 isAIConnected = true;
                 document.getElementById('apiSetup').style.display = 'none';
                 document.getElementById('chatMessages').style.display = 'block';
@@ -763,6 +777,8 @@
             } catch (error) {
                 console.error('Error:', error);
                 showMessage('接続エラー: ' + error.message, 'error');
+                // エラー時は保存されたキーを削除
+                localStorage.removeItem(API_KEY_STORAGE);
             }
         }
 

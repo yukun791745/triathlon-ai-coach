@@ -6,6 +6,8 @@
   "scripts": {
     "build": "echo 'No build required'"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
   "devDependencies": {}
 }

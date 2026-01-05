@@ -211,6 +211,39 @@
             transform: rotate(180deg);
         }
 
+        /* 言語フィルターセクション */
+        .language-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .lang-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
         /* マイチャンネルセクション（最上位表示） */
         .my-channel-section {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -577,6 +610,12 @@
             <p>最新のトライアスロン情報をお届けします</p>
         </div>
 
+        <!-- 言語フィルター -->
+        <div class="language-filter">
+            <button class="lang-btn active" data-lang="all">🌐 すべて</button>
+            <button class="lang-btn" data-lang="ja">🇯🇵 日本語のみ</button>
+        </div>
+
         <!-- タブナビゲーション -->
         <div class="tab-navigation">
             <button class="tab-btn active" data-tab="all">🌐 すべて</button>
@@ -619,25 +658,39 @@
         // 日本語ソース一覧
         const JAPANESE_SOURCES = ['LUMINA', 'JTU', 'Lapulem', 'ヒロ/トライアスロン', '古谷純平', 'Triathlon LUMINA'];
         
-        // タブ切り替え
+        // タブ・言語フィルター
         const tabButtons = document.querySelectorAll('.tab-btn');
+        const langButtons = document.querySelectorAll('.lang-btn');
         let currentTab = 'all';
+        let currentLang = 'all';
         let currentPage = 1;
 
+        // タブ切り替え
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 tabButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentTab = btn.dataset.tab;
-                currentPage = 1; // タブ切り替え時は1ページ目に戻る
+                currentPage = 1;
+                filterFeed();
+            });
+        });
+
+        // 言語フィルター切り替え
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                langButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLang = btn.dataset.lang;
+                currentPage = 1;
                 filterFeed();
             });
         });
 
         // フィードデータ
         let feedData = [];
-        let filteredData = []; // フィルター後のデータ
-        let translationCache = {}; // 翻訳キャッシュ
+        let filteredData = [];
+        let translationCache = {};
         
         // 日付をフォーマット
         function formatDate(dateString) {
@@ -870,10 +923,16 @@
         function filterFeed() {
             filteredData = feedData;
             
+            // 言語フィルター
+            if (currentLang === 'ja') {
+                filteredData = filteredData.filter(item => item.language === 'ja');
+            }
+            
+            // タイプフィルター
             if (currentTab === 'videos') {
-                filteredData = feedData.filter(item => item.type === 'video');
+                filteredData = filteredData.filter(item => item.type === 'video');
             } else if (currentTab === 'news') {
-                filteredData = feedData.filter(item => item.type === 'news');
+                filteredData = filteredData.filter(item => item.type === 'news');
             }
             
             // ページネーションを適用して表示
@@ -908,7 +967,7 @@
             const existingPagination = document.getElementById('pagination');
             if (existingPagination) existingPagination.remove();
             
-            if (totalPages <= 1) return; // 1ページ以下ならページネーション不要
+            if (totalPages <= 1) return;
             
             const pagination = document.createElement('div');
             pagination.id = 'pagination';
@@ -941,7 +1000,6 @@
         function goToPage(page) {
             currentPage = page;
             renderPaginatedFeed();
-            // ページ上部にスクロール
             document.querySelector('.page-header').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -950,7 +1008,6 @@
             const container = document.getElementById('feedContainer');
             const loading = document.getElementById('loadingIndicator');
             
-            // キャッシュをチェック（強制更新でなければ）
             if (!forceRefresh) {
                 const cached = getCachedFeed();
                 if (cached && cached.length > 0) {
@@ -968,7 +1025,6 @@
                     loading.innerHTML = '<div class="loading-spinner"></div><p>最新情報を取得中...</p>';
                 }
                 
-                // Netlify Functionからデータを取得
                 const url = forceRefresh ? '/.netlify/functions/news?refresh=true' : '/.netlify/functions/news';
                 const response = await fetch(url);
                 
@@ -978,34 +1034,20 @@
                 
                 const data = await response.json();
                 
-                // itemsが存在すれば成功
                 if (data.items && Array.isArray(data.items)) {
-                    // APIレスポンスを内部形式に変換し、フィルタリング
                     const allItems = data.items.map(transformItem);
                     
-                    // フィルタリング：過去2ヶ月以内 & ショート動画を除外
                     feedData = allItems.filter(item => {
-                        // 過去2ヶ月以内かチェック
-                        if (!isWithinDays(item.pubDate, MAX_AGE_DAYS)) {
-                            return false;
-                        }
-                        // ショート動画を除外
-                        if (isShortVideo(item.url)) {
-                            return false;
-                        }
+                        if (!isWithinDays(item.pubDate, MAX_AGE_DAYS)) return false;
+                        if (isShortVideo(item.url)) return false;
                         return true;
                     });
                     
-                    // キャッシュに保存
                     saveFeedToCache(feedData);
-                    
-                    // 表示
                     filterFeed();
-                    
-                    // 翻訳ボタンの状態を更新
                     updateTranslateButton();
                     
-                    console.log(`フィード取得完了: ${feedData.length}件（フィルター後）`);
+                    console.log(`フィード取得完了: ${feedData.length}件`);
                 } else {
                     throw new Error('データ形式が不正です');
                 }
@@ -1013,11 +1055,8 @@
             } catch (error) {
                 console.error('フィード取得エラー:', error);
                 
-                if (loading) {
-                    loading.style.display = 'none';
-                }
+                if (loading) loading.style.display = 'none';
                 
-                // エラー表示
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">⚠️</div>
@@ -1029,7 +1068,7 @@
             }
         }
         
-        // 手動更新（キャッシュをクリアして再取得）
+        // 手動更新
         async function refreshFeed() {
             clearFeedCache();
             await fetchFeed(true);
@@ -1064,21 +1103,18 @@
                 return;
             }
             
-            // 英語コンテンツがあるか確認
             const englishItems = feedData.filter(item => item.language === 'en' && !item.translated);
             if (englishItems.length === 0) {
                 alert('翻訳するコンテンツがありません');
                 return;
             }
             
-            // ボタンを翻訳中状態に
             btn.disabled = true;
             btn.classList.add('translating');
             btn.textContent = '🔄 翻訳中... (0/' + englishItems.length + ')';
             
             let translatedCount = 0;
             
-            // 各アイテムを順番に翻訳
             for (let i = 0; i < feedData.length; i++) {
                 const item = feedData[i];
                 if (item.language === 'en' && !item.translated) {
@@ -1098,7 +1134,6 @@
                         translatedCount++;
                         btn.textContent = '🔄 翻訳中... (' + translatedCount + '/' + englishItems.length + ')';
                         
-                        // 翻訳の都度、表示を更新
                         filterFeed();
                     } catch (error) {
                         console.error('翻訳エラー:', error);
@@ -1106,11 +1141,8 @@
                 }
             }
             
-            // 完了
             btn.classList.remove('translating');
             btn.textContent = '✅ 翻訳済み';
-            
-            // キャッシュを更新
             saveFeedToCache(feedData);
         }
 

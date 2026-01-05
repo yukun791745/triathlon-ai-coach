@@ -9,7 +9,6 @@ const parser = new Parser({
 });
 
 // フィードソースの定義
-// TODO: ユーザーが指定したフィードに置き換え
 const FEED_SOURCES = {
     // ニュースフィード
     news: [
@@ -18,17 +17,36 @@ const FEED_SOURCES = {
             name: 'Triathlete.com',
             language: 'en'
         },
-        // 他のフィードは後で追加
     ],
     // YouTubeチャンネル
     youtube: [
+        // === 海外チャンネル ===
         {
             // GTN (Global Triathlon Network)
-            url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1WLbdXhDmMxhJ9eJyPHp7g',
+            url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCJVMrR290HU9pDxaP35u_cg',
             name: 'GTN',
             language: 'en'
         },
-        // 他のチャンネルは後で追加
+        {
+            // World Triathlon (ITU)
+            url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCXRVKD6l-LrX5TmGJqQFFoQ',
+            name: 'World Triathlon',
+            language: 'en'
+        },
+        {
+            // Ironman Triathlon
+            url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCUlPrWg9Ef-IGsKRfDCPPew',
+            name: 'IRONMAN',
+            language: 'en'
+        },
+        // T100 Triathlon - チャンネルID要確認
+        // Lapulem - チャンネルID要確認
+        
+        // === 日本チャンネル ===
+        // JTU (日本トライアスロン連合) - チャンネルID要確認
+        // jumpei_furuya - チャンネルID要確認
+        // hiro_triathlon - チャンネルID要確認
+        // TRIATHLON LUMINA - チャンネルID要確認
     ],
     // マイチャンネル（最上位表示）
     myChannel: {

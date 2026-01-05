@@ -511,70 +511,49 @@
             });
         });
 
-        // フィードデータ（後でAPIから取得）
+        // フィードデータ
         let feedData = [];
+        let myChannelData = [];
 
-        // サンプルデータ（APIが実装されるまでの仮データ）
-        const sampleData = [
-            {
-                type: 'video',
-                title: 'VO2max向上のための5つのワークアウト',
-                source: 'GTN',
-                time: '3時間前',
-                thumbnail: '',
-                url: '#',
-                summary: 'トライアスロンのパフォーマンス向上に欠かせないVO2maxトレーニングを解説'
-            },
-            {
-                type: 'news',
-                title: 'アイアンマン世界選手権2025、コース変更を発表',
-                source: 'Triathlete.com',
-                time: '5時間前',
-                url: '#',
-                summary: 'ハワイ・コナで開催される今年の世界選手権で、バイクコースの一部が変更されることが明らかになった。'
-            },
-            {
-                type: 'video',
-                title: 'プロ選手のレース前ルーティン公開',
-                source: 'Lionel Sanders',
-                time: '8時間前',
-                thumbnail: '',
-                url: '#',
-                summary: ''
-            },
-            {
-                type: 'news',
-                title: '2025年JTU年間スケジュール発表',
-                source: 'JTU',
-                time: '1日前',
-                url: '#',
-                summary: '日本トライアスロン連合が2025年の主要大会スケジュールを発表。注目の大会日程をチェック。'
-            },
-            {
-                type: 'news',
-                title: '最新エアロヘルメット比較レビュー',
-                source: 'Slowtwitch',
-                time: '1日前',
-                url: '#',
-                summary: '2025年モデルのエアロヘルメット5製品を風洞実験でテスト。最も空力性能が高かったのは...'
-            },
-            {
-                type: 'video',
-                title: 'スイムドリル：キャッチ力向上エクササイズ',
-                source: 'GTN',
-                time: '2日前',
-                thumbnail: '',
-                url: '#',
-                summary: ''
+        // マイチャンネルを表示
+        function renderMyChannel(items) {
+            const section = document.getElementById('myChannelSection');
+            
+            if (!items || items.length === 0) {
+                section.innerHTML = `
+                    <h2>⭐ マイチャンネル（最新動画）</h2>
+                    <div class="my-channel-video">
+                        <div class="thumbnail">🎬</div>
+                        <div class="video-info">
+                            <div class="video-title">チャンネル準備中...</div>
+                            <div class="video-meta">YouTubeチャンネルを設定すると、最新動画がここに表示されます</div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
-        ];
+
+            const latestVideo = items[0];
+            section.innerHTML = `
+                <h2>⭐ マイチャンネル（最新動画）</h2>
+                <a href="${latestVideo.url}" target="_blank" class="my-channel-video" style="text-decoration: none; color: inherit;">
+                    <div class="thumbnail">
+                        ${latestVideo.thumbnail ? `<img src="${latestVideo.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '🎬'}
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${latestVideo.title}</div>
+                        <div class="video-meta">${latestVideo.time}</div>
+                    </div>
+                </a>
+            `;
+        }
 
         // フィードを表示
         function renderFeed(data) {
             const container = document.getElementById('feedContainer');
             const loading = document.getElementById('loadingIndicator');
             
-            loading.style.display = 'none';
+            if (loading) loading.style.display = 'none';
             
             if (data.length === 0) {
                 container.innerHTML = `
@@ -598,6 +577,7 @@
                                 <div class="card-header">
                                     <span class="card-type">🎬</span>
                                     <span class="card-source">${item.source}</span>
+                                    ${item.language === 'en' ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : ''}
                                     <span class="card-time">${item.time}</span>
                                 </div>
                                 <div class="card-title">${item.title}</div>
@@ -611,6 +591,7 @@
                             <div class="card-header">
                                 <span class="card-type">📰</span>
                                 <span class="card-source">${item.source}</span>
+                                ${item.language === 'en' ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : ''}
                                 <span class="card-time">${item.time}</span>
                             </div>
                             <div class="card-title">${item.title}</div>
@@ -634,26 +615,107 @@
             renderFeed(filtered);
         }
 
-        // ニュースを取得（将来的にはNetlify Functionsから取得）
+        // ニュースを取得
         async function fetchFeed() {
+            const container = document.getElementById('feedContainer');
+            const loading = document.getElementById('loadingIndicator');
+            
             try {
-                // TODO: Netlify Functionsからデータを取得
-                // const response = await fetch('/.netlify/functions/news');
-                // const data = await response.json();
-                // feedData = data;
+                // Netlify Functionからデータを取得
+                const response = await fetch('/.netlify/functions/news');
                 
-                // 現在はサンプルデータを使用
-                feedData = sampleData;
-                filterFeed();
+                if (!response.ok) {
+                    throw new Error('フィード取得に失敗しました');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    myChannelData = data.myChannel || [];
+                    feedData = data.items || [];
+                    
+                    // マイチャンネルを表示
+                    renderMyChannel(myChannelData);
+                    
+                    // フィードを表示
+                    filterFeed();
+                } else {
+                    throw new Error(data.error || '不明なエラー');
+                }
+                
             } catch (error) {
                 console.error('フィード取得エラー:', error);
-                document.getElementById('feedContainer').innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">⚠️</div>
-                        <p>ニュースの読み込みに失敗しました</p>
-                    </div>
-                `;
+                
+                // エラー時はサンプルデータを表示（開発用）
+                console.log('サンプルデータを表示します');
+                feedData = getSampleData();
+                filterFeed();
+                
+                if (loading) loading.style.display = 'none';
             }
+        }
+
+        // サンプルデータ（API未接続時のフォールバック）
+        function getSampleData() {
+            return [
+                {
+                    type: 'video',
+                    title: 'VO2max向上のための5つのワークアウト',
+                    source: 'GTN',
+                    language: 'en',
+                    time: '3時間前',
+                    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+                    url: '#',
+                    summary: 'トライアスロンのパフォーマンス向上に欠かせないVO2maxトレーニングを解説'
+                },
+                {
+                    type: 'news',
+                    title: 'アイアンマン世界選手権2025、コース変更を発表',
+                    source: 'Triathlete.com',
+                    language: 'en',
+                    time: '5時間前',
+                    url: '#',
+                    summary: 'ハワイ・コナで開催される今年の世界選手権で、バイクコースの一部が変更されることが明らかになった。'
+                },
+                {
+                    type: 'video',
+                    title: 'プロ選手のレース前ルーティン公開',
+                    source: 'Lionel Sanders',
+                    language: 'en',
+                    time: '8時間前',
+                    thumbnail: '',
+                    url: '#',
+                    summary: ''
+                },
+                {
+                    type: 'news',
+                    title: '2025年JTU年間スケジュール発表',
+                    source: 'JTU',
+                    language: 'ja',
+                    time: '1日前',
+                    url: '#',
+                    summary: '日本トライアスロン連合が2025年の主要大会スケジュールを発表。注目の大会日程をチェック。'
+                },
+                {
+                    type: 'news',
+                    title: '最新エアロヘルメット比較レビュー',
+                    source: 'Slowtwitch',
+                    language: 'en',
+                    time: '1日前',
+                    url: '#',
+                    summary: '2025年モデルのエアロヘルメット5製品を風洞実験でテスト。最も空力性能が高かったのは...'
+                },
+                {
+                    type: 'video',
+                    title: 'スイムドリル：キャッチ力向上エクササイズ',
+                    source: 'GTN',
+                    language: 'en',
+                    time: '2日前',
+                    thumbnail: '',
+                    url: '#',
+                    summary: ''
+                }
+            ];
         }
 
         // 初期化

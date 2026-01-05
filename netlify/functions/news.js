@@ -1,8 +1,8 @@
 const Parser = require('rss-parser');
 
-// RSSパーサーの初期化
+// RSSパーサーの初期化（タイムアウト短縮）
 const parser = new Parser({
-    timeout: 10000,
+    timeout: 5000, // 5秒に短縮
     headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; TriathlonAICoach/1.0)'
     }
@@ -143,29 +143,41 @@ exports.handler = async (event, context) => {
         const params = event.queryStringParameters || {};
         const feedType = params.type || 'all'; // all, news, videos, myChannel
 
-        let allItems = [];
+        // 並列でフィードを取得
+        const fetchPromises = [];
 
         // マイチャンネル
         if ((feedType === 'all' || feedType === 'myChannel') && FEED_SOURCES.myChannel.url) {
-            const myChannelItems = await fetchSingleFeed(FEED_SOURCES.myChannel, 'myChannel');
-            allItems.push(...myChannelItems.map(item => ({ ...item, isMyChannel: true })));
+            fetchPromises.push(
+                fetchSingleFeed(FEED_SOURCES.myChannel, 'myChannel')
+                    .then(items => items.map(item => ({ ...item, isMyChannel: true })))
+            );
         }
 
-        // YouTubeフィード
+        // YouTubeフィード（並列）
         if (feedType === 'all' || feedType === 'videos') {
             for (const source of FEED_SOURCES.youtube) {
-                const items = await fetchSingleFeed(source, 'video');
-                allItems.push(...items);
+                fetchPromises.push(fetchSingleFeed(source, 'video'));
             }
         }
 
-        // ニュースフィード
+        // ニュースフィード（並列）
         if (feedType === 'all' || feedType === 'news') {
             for (const source of FEED_SOURCES.news) {
-                const items = await fetchSingleFeed(source, 'news');
-                allItems.push(...items);
+                fetchPromises.push(fetchSingleFeed(source, 'news'));
             }
         }
+
+        // 全て並列で実行（一部失敗しても続行）
+        const results = await Promise.allSettled(fetchPromises);
+        
+        // 成功したものだけ集める
+        let allItems = [];
+        results.forEach(result => {
+            if (result.status === 'fulfilled' && result.value) {
+                allItems.push(...result.value);
+            }
+        });
 
         // 日付順にソート（新しい順）
         allItems.sort((a, b) => b.timestamp - a.timestamp);

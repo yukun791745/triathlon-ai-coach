@@ -42,13 +42,18 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            gap: 16px;
         }
 
         .flow-nav-logo {
-            display: none;
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
         }
 
         .flow-nav-steps {
@@ -468,6 +473,10 @@
                 padding: 6px 8px;
             }
 
+            .flow-nav-logo {
+                font-size: 0.8rem;
+            }
+
             .flow-nav-steps {
                 gap: 4px;
             }
@@ -499,6 +508,7 @@
     <!-- コンパクトアイコンナビゲーションバー -->
     <nav class="flow-navbar">
         <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
             <div class="flow-nav-steps">
                 <a href="#" class="flow-nav-step current">
                     <span class="nav-icon">🤖</span>

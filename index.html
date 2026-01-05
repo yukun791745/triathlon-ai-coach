@@ -618,11 +618,11 @@
             text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ)(:?)$/gm, 
                 '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong></div>');
             
-            // 「参考文献」（太字でも対応）: 上下に10px
-            text = text.replace(/^[\s]*(<strong>)?[\s]*参考文献[\s]*(<\/strong>)?[\s]*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
+            // 「参考文献」（様々な形式に対応）: 上下に10px
+            text = text.replace(/^.*参考文献.*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
             
             // 「💡 次のステップ」（様々な形式に対応）: 上下に10px
-            text = text.replace(/^[\s]*(<strong>)?[\s]*💡[\s]*(次のステップ)[\s]*(<\/strong>)?[\s]*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
+            text = text.replace(/^.*💡.*次のステップ.*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
             
             // 👉 案内文: 上に10px
             text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0;">$1</div>');

@@ -642,11 +642,11 @@
             // 💡 次のステップ（絵文字付き、太字でも対応）: 上下に10px
             text = text.replace(/^(<strong>)?(💡\s*次のステップ[^<]*)(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$2</strong></div>');
             
-            // 👉 案内文: 上に10pxのmargin
+            // 👉 案内文: 上に10pxのmargin、太字にしない
             text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0 0;">$1</div>');
             
-            // その他の番号付きリスト（次のステップの1, 2, 3など）: 行間ゼロ
-            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div class="list-item" style="margin: 0; padding-left: 10px;"><strong>$1.</strong> $2</div>');
+            // その他の番号付きリスト（次のステップの1, 2, 3など）: 行間ゼロ、太字にしない
+            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div class="list-item" style="margin: 0; padding-left: 10px;">$1. $2</div>');
             
             // 箇条書き: - text → <div>• text</div> 行間ゼロ
             text = text.replace(/^- (.+)$/gm, '<div class="bullet-item" style="margin: 0; padding-left: 20px;">• $1</div>');

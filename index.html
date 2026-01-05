@@ -628,15 +628,15 @@
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
             // 見出し: ### text → <h4>text</h4>
-            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 15px 0 8px; color: #333;">$1</h4>');
-            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 18px 0 10px; color: #333;">$1</h3>');
-            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 20px 0 12px; color: #333; font-size: 1.2em;">$1</h3>');
+            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 8px 0 2px; color: #333;">$1</h4>');
+            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 10px 0 2px; color: #333;">$1</h3>');
+            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 12px 0 2px; color: #333; font-size: 1.2em;">$1</h3>');
             
             // 番号付きリスト: 1. text, 1.text, 1 text など様々な形式に対応
-            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div style="margin: 8px 0 8px 10px;"><strong>$1.</strong> $2</div>');
+            text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div style="margin: 4px 0 2px 10px;"><strong>$1.</strong> $2</div>');
             
             // 箇条書き: - text → <div>• text</div>
-            text = text.replace(/^- (.+)$/gm, '<div style="margin: 3px 0 3px 20px;">• $1</div>');
+            text = text.replace(/^- (.+)$/gm, '<div style="margin: 2px 0 2px 20px;">• $1</div>');
             
             // コード: `text` → <code>text</code>
             text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');
@@ -652,6 +652,9 @@
             
             // 改行
             text = text.replace(/\n/g, '<br>');
+            
+            // 連続した<br>タグを1つにまとめる
+            text = text.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
             
             return text;
         }

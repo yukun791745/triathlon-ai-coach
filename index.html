@@ -628,19 +628,19 @@
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
             // 見出し: ### text → <h4>text</h4>
-            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 12px 0 4px; color: #333;">$1</h4>');
-            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 14px 0 4px; color: #333;">$1</h3>');
-            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 16px 0 4px; color: #333; font-size: 1.2em;">$1</h3>');
+            text = text.replace(/^### (.+)$/gm, '<h4 style="margin: 10px 0 10px; color: #333;">$1</h4>');
+            text = text.replace(/^## (.+)$/gm, '<h3 style="margin: 10px 0 10px; color: #333;">$1</h3>');
+            text = text.replace(/^# (.+)$/gm, '<h3 style="margin: 10px 0 10px; color: #333; font-size: 1.2em;">$1</h3>');
             
-            // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上にmargin
+            // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上下に10pxのmargin
             text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ|次のステップ|参考文献)(:?)(.*)$/gm, 
-                '<div style="margin: 12px 0 2px 0;"><strong>$1. $2$3</strong>$4</div>');
+                '<div style="margin: 10px 0 10px 0;"><strong>$1. $2$3</strong>$4</div>');
             
             // その他の番号付きリスト（次のステップの1, 2, 3など）: marginは最小限
             text = text.replace(/^(\d+)[\.\s]\s*(.+)$/gm, '<div style="margin: 2px 0 2px 10px;"><strong>$1.</strong> $2</div>');
             
-            // 箇条書き: - text → <div>• text</div> marginは最小限
-            text = text.replace(/^- (.+)$/gm, '<div style="margin: 1px 0 1px 20px;">• $1</div>');
+            // 箇条書き: - text → <div>• text</div> marginは大項目の半分（5px）
+            text = text.replace(/^- (.+)$/gm, '<div style="margin: 5px 0 5px 20px;">• $1</div>');
             
             // コード: `text` → <code>text</code>
             text = text.replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-family: monospace;">$1</code>');

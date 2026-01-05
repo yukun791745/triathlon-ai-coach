@@ -619,10 +619,10 @@
                 '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong></div>');
             
             // 「参考文献」（太字でも対応）: 上下に10px
-            text = text.replace(/^(<strong>)?参考文献(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
+            text = text.replace(/^[\s]*(<strong>)?[\s]*参考文献[\s]*(<\/strong>)?[\s]*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
             
-            // 「💡 次のステップ」（太字でも対応）: 上下に10px
-            text = text.replace(/^(<strong>)?💡\s*次のステップ(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
+            // 「💡 次のステップ」（様々な形式に対応）: 上下に10px
+            text = text.replace(/^[\s]*(<strong>)?[\s]*💡[\s]*(次のステップ)[\s]*(<\/strong>)?[\s]*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
             
             // 👉 案内文: 上に10px
             text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0;">$1</div>');

@@ -759,6 +759,27 @@
         var isProcessing = false;  // 処理中フラグ
         var ASSISTANT_ID = 'asst_Bcsi23XJPtGZWcbO6jSpAwS6';  // Triathlon AI Coach
         var API_KEY_STORAGE = 'triathlon_ai_api_key';  // ローカルストレージのキー
+        var THREAD_ID_STORAGE = 'triathlon_ai_thread_id';  // スレッドID保存キー
+        var CHAT_HISTORY_STORAGE = 'triathlon_ai_chat_history';  // 会話履歴保存キー
+
+        // 会話履歴を保存
+        function saveChatHistory() {
+            var chatMessages = document.getElementById('chatMessages');
+            localStorage.setItem(CHAT_HISTORY_STORAGE, chatMessages.innerHTML);
+            if (threadId) {
+                localStorage.setItem(THREAD_ID_STORAGE, threadId);
+            }
+        }
+        
+        // 会話履歴を復元
+        function loadChatHistory() {
+            var savedHistory = localStorage.getItem(CHAT_HISTORY_STORAGE);
+            if (savedHistory) {
+                document.getElementById('chatMessages').innerHTML = savedHistory;
+                return true;
+            }
+            return false;
+        }
 
         function showMessage(text, type) {
             var msg = document.getElementById('messageArea');
@@ -789,23 +810,33 @@
 
             apiKey = key;
             
-            // スレッドを作成
             try {
-                var response = await fetch('https://api.openai.com/v1/threads', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + apiKey,
-                        'OpenAI-Beta': 'assistants=v2'
+                // 保存されたスレッドIDがあるか確認
+                var savedThreadId = localStorage.getItem(THREAD_ID_STORAGE);
+                
+                if (savedThreadId) {
+                    // 既存のスレッドが有効か確認
+                    var checkResponse = await fetch('https://api.openai.com/v1/threads/' + savedThreadId, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + apiKey,
+                            'OpenAI-Beta': 'assistants=v2'
+                        }
+                    });
+                    
+                    if (checkResponse.ok) {
+                        // スレッドが有効なら再利用
+                        threadId = savedThreadId;
+                        // 会話履歴を復元
+                        loadChatHistory();
+                    } else {
+                        // スレッドが無効なら新規作成
+                        await createNewThread();
                     }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('スレッド作成に失敗しました');
+                } else {
+                    // 新規スレッド作成
+                    await createNewThread();
                 }
-                
-                var data = await response.json();
-                threadId = data.id;
                 
                 // APIキーをローカルストレージに保存
                 localStorage.setItem(API_KEY_STORAGE, apiKey);
@@ -823,6 +854,26 @@
                 localStorage.removeItem(API_KEY_STORAGE);
             }
         }
+        
+        // 新規スレッド作成
+        async function createNewThread() {
+            var response = await fetch('https://api.openai.com/v1/threads', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + apiKey,
+                    'OpenAI-Beta': 'assistants=v2'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('スレッド作成に失敗しました');
+            }
+            
+            var data = await response.json();
+            threadId = data.id;
+            localStorage.setItem(THREAD_ID_STORAGE, threadId);
+        }
 
         function addMessage(sender, content) {
             var div = document.createElement('div');
@@ -830,6 +881,9 @@
             div.innerHTML = sender === 'ai' ? '<strong>AIコーチ</strong><br>' + content : content;
             document.getElementById('chatMessages').appendChild(div);
             document.getElementById('chatMessages').scrollTop = 999999;
+            
+            // 会話履歴を保存
+            saveChatHistory();
         }
 
         function sendMessage() {
@@ -1078,6 +1132,9 @@
                     await processImagePlaceholders(contentSpan);
                 }
                 
+                // 会話履歴を保存
+                saveChatHistory();
+                
             } catch (error) {
                 console.error('AI Error:', error);
                 contentSpan.classList.remove('streaming-content');
@@ -1101,6 +1158,10 @@
         
         // 会話履歴をクリア（新しいスレッドを作成）
         async function clearConversation() {
+            if (!confirm('会話履歴をクリアしますか？この操作は取り消せません。')) {
+                return;
+            }
+            
             try {
                 var response = await fetch('https://api.openai.com/v1/threads', {
                     method: 'POST',
@@ -1114,12 +1175,20 @@
                 if (response.ok) {
                     var data = await response.json();
                     threadId = data.id;
+                    // 新しいスレッドIDを保存
+                    localStorage.setItem(THREAD_ID_STORAGE, threadId);
                 }
             } catch (e) {
                 console.error('Thread creation error:', e);
             }
             
-            document.getElementById('chatMessages').innerHTML = '<div class="ai-message"><strong>AIコーチ</strong><br>会話履歴をクリアしました。新しい質問をどうぞ！🏊‍♂️🚴‍♂️🏃‍♂️</div>';
+            // 会話履歴をクリア
+            localStorage.removeItem(CHAT_HISTORY_STORAGE);
+            
+            document.getElementById('chatMessages').innerHTML = '<div class="chat-message ai-message"><strong>AIコーチ</strong><br>会話履歴をクリアしました。新しい質問をどうぞ！🏊‍♂️🚴‍♂️🏃‍♂️</div>';
+            
+            // クリア後の状態を保存
+            saveChatHistory();
         }
 
         function handleEnter(e) {

@@ -819,16 +819,18 @@
             var contentSpan = aiMessageDiv.querySelector('.streaming-content');
             
             try {
-                var attachments = [];
+                var uploadedFileId = null;
+                var isImageFile = false;
                 
                 // ファイルがある場合はアップロード
                 if (file) {
                     contentSpan.textContent = 'ファイルをアップロード中...';
+                    isImageFile = file.type.startsWith('image/');
                     
                     // ファイルをOpenAIにアップロード
                     var formData = new FormData();
                     formData.append('file', file);
-                    formData.append('purpose', 'assistants');
+                    formData.append('purpose', isImageFile ? 'vision' : 'assistants');
                     
                     var uploadResponse = await fetch('https://api.openai.com/v1/files', {
                         method: 'POST',
@@ -839,19 +841,12 @@
                     });
                     
                     if (!uploadResponse.ok) {
-                        throw new Error('ファイルアップロードに失敗しました');
+                        var errData = await uploadResponse.json();
+                        throw new Error('ファイルアップロードに失敗: ' + (errData.error?.message || ''));
                     }
                     
                     var uploadData = await uploadResponse.json();
-                    var fileId = uploadData.id;
-                    
-                    // 画像ファイルの場合
-                    if (file.type.startsWith('image/')) {
-                        attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
-                    } else {
-                        // PDF等のドキュメントの場合
-                        attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
-                    }
+                    uploadedFileId = uploadData.id;
                 }
                 
                 contentSpan.textContent = '回答を生成中...';
@@ -859,28 +854,22 @@
                 // メッセージの内容を構築
                 var messageContent = [];
                 
-                // 画像ファイルの場合は画像としてメッセージに追加
-                if (file && file.type.startsWith('image/')) {
-                    // 画像をBase64に変換
-                    var base64 = await fileToBase64(file);
+                // 画像ファイルの場合はimage_fileとしてメッセージに追加
+                if (isImageFile && uploadedFileId) {
                     messageContent.push({
-                        type: 'image_url',
-                        image_url: {
-                            url: base64
+                        type: 'image_file',
+                        image_file: {
+                            file_id: uploadedFileId
                         }
                     });
                 }
                 
                 // テキストメッセージを追加
-                if (userMessage) {
+                var textMessage = userMessage || (file ? 'このファイルについて教えてください' : '');
+                if (textMessage) {
                     messageContent.push({
                         type: 'text',
-                        text: userMessage || 'このファイルについて教えてください'
-                    });
-                } else if (file) {
-                    messageContent.push({
-                        type: 'text',
-                        text: 'このファイルについて教えてください'
+                        text: textMessage
                     });
                 }
                 
@@ -890,9 +879,12 @@
                     content: messageContent
                 };
                 
-                // 画像以外のファイルはattachmentsとして追加
-                if (attachments.length > 0 && file && !file.type.startsWith('image/')) {
-                    messageBody.attachments = attachments;
+                // 画像以外のファイル（PDF等）はattachmentsとして追加
+                if (uploadedFileId && !isImageFile) {
+                    messageBody.attachments = [{
+                        file_id: uploadedFileId,
+                        tools: [{ type: 'file_search' }]
+                    }];
                 }
                 
                 var addMessageResponse = await fetch('https://api.openai.com/v1/threads/' + threadId + '/messages', {

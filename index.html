@@ -288,6 +288,26 @@
             background: #e0e0e0;
         }
 
+        .chat-upload-btn {
+            background: #e8f4fd;
+            color: #1976d2;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .chat-upload-btn:hover {
+            background: #d0e8f9;
+        }
+
         /* メニュー説明セクション */
         .menu-section {
             background: white;
@@ -504,9 +524,15 @@
 
             <div id="chatInputArea" class="chat-input-area">
                 <div class="chat-input-wrapper">
+                    <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.doc,.docx" style="display: none;" onchange="handleFileSelect(event)">
+                    <button onclick="document.getElementById('fileInput').click()" class="chat-upload-btn" title="ファイルをアップロード">📎</button>
                     <input type="text" id="chatInput" class="chat-input" placeholder="質問を入力... (例: 初めてのオリンピックディスタンスに向けたトレーニング方法を教えて)" onkeypress="handleEnter(event)">
                     <button onclick="sendMessage()" class="chat-send-btn">➤</button>
                     <button onclick="clearConversation()" class="chat-clear-btn" title="会話履歴をクリア">🗑️</button>
+                </div>
+                <div id="filePreview" style="display: none; margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 8px;">
+                    <span id="fileName"></span>
+                    <button onclick="clearFileSelection()" style="margin-left: 10px; background: none; border: none; cursor: pointer;">❌</button>
                 </div>
             </div>
         </div>
@@ -681,7 +707,9 @@
         
         var isAIConnected = false;
         var apiKey = '';
-        var conversationHistory = [];  // 会話履歴を保持
+        var threadId = null;  // Assistants APIのスレッドID
+        var selectedFile = null;  // アップロード用の選択されたファイル
+        var ASSISTANT_ID = 'asst_Bcsi23XJPtGZWcbO6jSpAwS6';  // Triathlon AI Coach
 
         function showMessage(text, type) {
             var msg = document.getElementById('messageArea');
@@ -693,7 +721,7 @@
             }, 3000);
         }
 
-        function enableAICoach() {
+        async function enableAICoach() {
             var key = document.getElementById('apiKeyInput').value.trim();
             if (!key || !key.startsWith('sk-')) {
                 showMessage('有効なAPIキーを入力してください（sk-で始まる文字列）', 'error');
@@ -701,13 +729,35 @@
             }
 
             apiKey = key;
-            isAIConnected = true;
-            conversationHistory = [];  // 会話履歴をリセット
-            document.getElementById('apiSetup').style.display = 'none';
-            document.getElementById('chatMessages').style.display = 'block';
-            document.getElementById('chatInputArea').style.display = 'block';
-            document.getElementById('connectionStatus').className = 'status-indicator status-connected';
-            showMessage('AIコーチが起動しました！', 'success');
+            
+            // スレッドを作成
+            try {
+                var response = await fetch('https://api.openai.com/v1/threads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey,
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('スレッド作成に失敗しました');
+                }
+                
+                var data = await response.json();
+                threadId = data.id;
+                
+                isAIConnected = true;
+                document.getElementById('apiSetup').style.display = 'none';
+                document.getElementById('chatMessages').style.display = 'block';
+                document.getElementById('chatInputArea').style.display = 'block';
+                document.getElementById('connectionStatus').className = 'status-indicator status-connected';
+                showMessage('AIコーチが起動しました！', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('接続エラー: ' + error.message, 'error');
+            }
         }
 
         function addMessage(sender, content) {
@@ -726,291 +776,191 @@
 
             var input = document.getElementById('chatInput');
             var msg = input.value.trim();
-            if (!msg) return;
+            if (!msg && !selectedFile) return;
 
-            addMessage('user', msg);
+            // ユーザーメッセージを表示
+            var displayMsg = msg;
+            if (selectedFile) {
+                displayMsg = (msg ? msg + '<br>' : '') + '📎 ' + selectedFile.name;
+            }
+            addMessage('user', displayMsg);
             input.value = '';
-            callAI(msg);
+            
+            // callAIにファイルも渡す
+            callAI(msg, selectedFile);
+            
+            // ファイル選択をクリア
+            clearFileSelection();
+        }
+        
+        // ファイル選択処理
+        function handleFileSelect(event) {
+            var file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('fileName').textContent = '📎 ' + file.name;
+                document.getElementById('filePreview').style.display = 'block';
+            }
+        }
+        
+        // ファイル選択をクリア
+        function clearFileSelection() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').style.display = 'none';
         }
 
-        async function callAI(userMessage) {
-            // ストリーミング用のメッセージ要素を作成
+        async function callAI(userMessage, file) {
+            // メッセージ表示エリアを作成
             var aiMessageDiv = document.createElement('div');
             aiMessageDiv.className = 'chat-message ai-message';
-            aiMessageDiv.innerHTML = '<strong>AIコーチ</strong><br><span class="streaming-content"></span>';
+            aiMessageDiv.innerHTML = '<strong>AIコーチ</strong><br><span class="streaming-content">考え中...</span>';
             document.getElementById('chatMessages').appendChild(aiMessageDiv);
             var contentSpan = aiMessageDiv.querySelector('.streaming-content');
             
-            var systemPrompt = `あなたは運動生理学博士号を持つトライアスロン専門コーチです。科学的根拠に基づいた専門的アドバイスを提供してください。
-
-【生理学基礎知識】
-■VO2max（最大酸素摂取量）
-- 持久力の指標。エリート男性70-85ml/kg/min、女性60-75ml/kg/min、一般40-50
-- 遺伝的上限あり（トレーニングで10-20%改善可能）
-- 計算式：VO2max = 15.3 × (HRmax/HRrest)
-- Cooper Test: VO2max = (距離m - 504.9) / 44.73
-
-■乳酸閾値（LT/LTHR）
-- LT1: 血中乳酸2mmol/L、有酸素ベース。HRmax65-75%
-- LT2/OBLA: 血中乳酸4mmol/L、持続可能最大強度。HRmax80-88%
-- FTP（機能的閾値パワー）: 1時間維持可能な最大パワー
-- LT向上トレーニング: テンポ走、クルーズインターバル
-
-■心拍ゾーン（5ゾーンモデル）
-- Z1回復(50-60%HRmax): 疲労回復、脂肪燃焼
-- Z2有酸素(60-70%): ベース構築、ミトコンドリア増加
-- Z3テンポ(70-80%): LT1付近、持久力向上
-- Z4閾値(80-90%): LT2付近、レースペース
-- Z5無酸素(90-100%): VO2max向上、短時間高強度
-
-■ランニングエコノミー（RE）
-- 同じ速度での酸素消費量。低いほど効率的
-- 改善要因: ストライド最適化、接地時間短縮、垂直振動低減
-- 週1回のストライド走（100m×6-8本）が効果的
-
-【トレーニング理論】
-■ピリオダイゼーション
-- 基礎期(12-16週): Z2中心、週10-15時間、ベース構築
-- 構築期(8-12週): 強度増加、インターバル導入
-- 専門期(4-8週): レース特異性、ブリック増加
-- テーパー期(2-3週): 量60-70%減、強度維持
-- 回復期(1-2週): アクティブリカバリー
-
-■超回復理論
-- 適切な負荷→疲労→回復→超回復（48-72時間）
-- オーバートレーニング指標: 安静時HR上昇、HRV低下、睡眠障害
-
-■トレーニング負荷管理
-- TSS（Training Stress Score）= 時間×IF²×100（IF=強度係数）
-- CTL（フィットネス）: 42日間TSS移動平均
-- ATL（疲労）: 7日間TSS移動平均
-- TSB（フォーム）= CTL - ATL（レース時+15~+25が理想）
-- 週間TSS増加は10%以下に抑制
-
-■HIIT vs 低強度持久走
-- HIIT: VO2max向上、時間効率高、回復に48-72時間必要
-- 低強度（80/20ルール）: 80%をZ2、20%をZ4-5に
-- ポラライズドトレーニングが長距離で最も効果的
-
-【トライアスロン特有】
-■3種目バランス（週間配分例）
-- スプリント: S25%/B35%/R40%
-- オリンピック: S25%/B40%/R35%
-- ロング: S15%/B50%/R35%
-- 弱点種目に+10%配分
-
-■ブリックトレーニング
-- バイク→ラン移行の神経筋適応
-- 週1回、バイク60-90分+ラン15-30分
-- レース4週前から頻度増加
-
-■テーパリング
-- オリンピック: 10-14日
-- ロング/IM: 2-3週間
-- 量を40-60%削減、強度は維持
-- レース5日前に短いレースペース刺激
-
-■レース栄養戦略
-- カーボローディング: 3日前から8-10g/kg/日
-- レース中: 60-90g糖質/時間（胃腸トレーニング必須）
-- 電解質: Na500-1000mg/時間（発汗量による）
-- カフェイン: 3-6mg/kg、レース1時間前
-
-【年齢・性別・身体特性】
-■加齢の影響
-- VO2maxは年1%低下（30歳以降）
-- LT低下は緩やか（トレーニングで維持可能）
-- 回復時間延長: 40代+24時間、50代+48時間
-- 筋力低下: 週2回のレジスタンストレーニング推奨
-
-■性差
-- 女性VO2max: 男性の85-90%
-- 脂肪酸化能力: 女性が優位（ウルトラで有利）
-- 月経周期: 黄体期は高強度トレーニング調整
-- 相対的エネルギー不足（RED-S）に注意
-
-■体格とパフォーマンス
-- バイク: パワー/体重比（W/kg）が重要。登りでは軽量有利
-- スイム: 身長・リーチが有利
-- ラン: 軽量・長い脚が有利
-- 理想体脂肪率: 男性8-15%、女性15-22%
-
-【怪我と病気】
-■ランニング障害
-- 腸脛靭帯炎: 週間走行距離急増、ヒップ強化で予防
-- 足底筋膜炎: カーフストレッチ、段階的距離増加
-- シンスプリント: 接地衝撃軽減、シューズ見直し
-- 疲労骨折: RED-S、急激な負荷増加が原因
-
-■スイム障害
-- 水泳肩: ローテーターカフ強化、テクニック修正
-- 頸部痛: 息継ぎ時の過回旋を修正
-
-■オーバートレーニング症候群
-- 症状: 慢性疲労、パフォーマンス低下、免疫低下、うつ
-- 回復: 2-12週間の完全休養が必要
-- 予防: HRV監視、CTL週5%以下増加
-
-■免疫機能
-- 高強度直後は免疫低下（Open Window理論）
-- ビタミンD、亜鉛、睡眠7-9時間で免疫維持
-
-【主要レース情報】
-■レース距離
-- スーパースプリント: S400m/B10km/R2.5km
-- スプリント: S750m/B20km/R5km
-- オリンピック: S1.5km/B40km/R10km
-- 70.3/ミドル: S1.9km/B90km/R21.1km
-- アイアンマン: S3.8km/B180km/R42.2km
-
-■IRONMAN完走データ（年齢群別目安）
-- 全体中央値: 男性12:30、女性13:15
-- 25-29歳: 男性11:45、女性12:30
-- 40-44歳: 男性12:15、女性13:00
-- 50-54歳: 男性12:45、女性13:30
-- Kona出場目安: 年齢群上位1-2%（9:30-11:00）
-
-■主要レース特性
-- IM Kona: 暑さ(30-35°C)、風、溶岩路面
-- IM Nice: 山岳バイク(2500m獲得標高)
-- IM Cairns: 高温多湿、フラットコース
-- 宮古島: 高温(25-30°C)、強風、起伏あり
-- 佐渡A: 国内最長、山岳バイク
-- IM Japan(北海道): 涼しい(15-25°C)、フラット
-
-【発汗量測定・水分補給】
-■測定方法の比較
-| 方法 | 精度 | 実装 | 情報 | 主用途 |
-| 体重変化法 | 高 | 容易 | 全身量 | 実践・研究 |
-| パッチ法 | 中 | 中 | 局所量+Na⁺ | 電解質設計 |
-| 全身洗浄法 | 最高 | 困難 | 全身量+成分 | 基礎研究 |
-| ウェアラブル | 可変 | 容易 | 連続推定 | 現場モニタ |
-
-■体重変化法（ゴールドスタンダード）
-計算式:
-発汗量(L) = (運動前体重 - 運動後体重) + 摂取水分量 - 尿量
-※1kg ≒ 1L
-発汗率(L/h) = 発汗量 / 運動時間(h)
-
-実施ポイント:
-- 同一条件: 時間帯、衣服、計測器、食事・排尿の統制
-- 裸体体重測定（±50g精度）
-- 長時間・高強度では呼吸水分損失や代謝水は実用上無視可
-- 誤差源: 衣服の汗保持、計測時の残汗
-
-■パッチ法（局所発汗・電解質評価）
-- 皮膚に吸収パッチを貼付、局所汗量とNa⁺/Cl⁻濃度を分析
-- 強み: ナトリウム濃度(mg/L)評価が可能
-- 制約: 部位差が大きく全身推定には補正モデルが必要
-- 用途: 個別の電解質補給設計、salty sweaterの同定
-
-■全身洗浄法（Whole-body washdown）
-- 運動後に全身を洗浄して汗を回収、質量・電解質を直接測定
-- 精度: 最高
-- 実装: 極めて煩雑（研究施設限定）
-
-■ウェアラブルセンサー
-- 皮膚装着型で汗量・電解質・温度をリアルタイム推定
-- 強み: 連続データ、現場即応
-- 留意: キャリブレーション、部位差、ドリフト
-
-■実践向け測定プロトコル（60-120分運動）
-1. 裸体体重測定（±50g）
-2. 摂取水分量を記録
-3. 排尿があれば計測
-4. 同一ウェア・同一環境で運動
-5. 運動直後に再計測
-6. 上式で発汗量/発汗率算出
-
-■補給設計の目安
-- 体重減少を<2%に抑制
-- 摂取量 = 発汗率 × 運動時間 × 0.6-0.8（胃腸耐性に応じ調整）
-- Na⁺補給: 500-1000mg/時間（発汗量・塩分濃度による）
-
-■環境・個体差の影響
-- 環境依存: 気温・湿度・風速で発汗率は大きく変動
-- 個体差: 同一強度でも日内・日間変動あり（脱水・順化状態）
-- 競技特異性: バイクは蒸発効率↑、ランは体温↑→発汗率↑
-- 暑熱順化: 7-14日で発汗能力向上、発汗開始温度低下
-
-■発汗率の典型値
-- 軽度運動・涼しい環境: 0.3-0.5 L/h
-- 中強度・温暖環境: 0.5-1.0 L/h
-- 高強度・暑熱環境: 1.0-2.5 L/h
-- エリートアスリート最大: 3.0 L/h以上
-
-【回答ガイドライン - 必ず守ること】
-あなたは世界トップレベルの運動生理学者です。以下の形式で、学術論文レベルの深さで回答してください：
-
-1. **概要**: 質問への直接的な回答を最初に述べる
-2. **科学的背景**: 関連する生理学的メカニズム、研究知見を詳述
-3. **具体的方法/数値**: 計算式、測定プロトコル、具体的な数値範囲を必ず含める
-4. **実践への応用**: トライアスリートが実際に使える具体的なアドバイス
-5. **注意点/限界**: 個人差、環境要因、測定誤差などの考慮事項
-6. **まとめ**: 重要ポイントの要約
-
-- 重要な用語は**太字**で強調してください
-- 【重要】数式はLaTeX形式（\\text, \\frac, \\[, \\]など）を絶対に使わないでください
-- 数式はプレーンテキストで記載してください（例: 「発汗量(L) = 運動前体重 - 運動後体重 + 摂取水分量 - 尿量」）
-- 「〜と言われています」ではなく「〜である（研究により実証）」のように断定的に
-- 一般論ではなく、トライアスロン特有の文脈で回答
-- 最低1000字以上で詳細に回答すること
-
-【画像生成について】
-ユーザーが「図解して」「イラストで見せて」「画像で説明して」などと依頼した場合、または視覚的な説明が特に有効な場合（フォーム、姿勢、動作、解剖学的な説明など）は、回答の適切な位置に以下の形式で画像リクエストを含めてください：
-[IMAGE: 画像の詳細な説明を英語で記載]
-例: [IMAGE: Professional triathlete demonstrating correct running form with proper posture, arm swing, and foot strike, side view, anatomical illustration style]
-画像の説明は具体的かつ詳細に、英語で記載してください。`;
-
-            // ユーザーメッセージを履歴に追加
-            conversationHistory.push({ role: 'user', content: userMessage });
-
-            // 送信するメッセージを構築（システムプロンプト + 全履歴）
-            var messagesToSend = [{ role: 'system', content: systemPrompt }].concat(conversationHistory);
-
             try {
-                var response = await fetch('https://api.openai.com/v1/chat/completions', {
+                var attachments = [];
+                
+                // ファイルがある場合はアップロード
+                if (file) {
+                    contentSpan.textContent = 'ファイルをアップロード中...';
+                    
+                    // ファイルをOpenAIにアップロード
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('purpose', 'assistants');
+                    
+                    var uploadResponse = await fetch('https://api.openai.com/v1/files', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        throw new Error('ファイルアップロードに失敗しました');
+                    }
+                    
+                    var uploadData = await uploadResponse.json();
+                    var fileId = uploadData.id;
+                    
+                    // 画像ファイルの場合
+                    if (file.type.startsWith('image/')) {
+                        attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
+                    } else {
+                        // PDF等のドキュメントの場合
+                        attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
+                    }
+                }
+                
+                contentSpan.textContent = '回答を生成中...';
+                
+                // メッセージの内容を構築
+                var messageContent = [];
+                
+                // 画像ファイルの場合は画像としてメッセージに追加
+                if (file && file.type.startsWith('image/')) {
+                    // 画像をBase64に変換
+                    var base64 = await fileToBase64(file);
+                    messageContent.push({
+                        type: 'image_url',
+                        image_url: {
+                            url: base64
+                        }
+                    });
+                }
+                
+                // テキストメッセージを追加
+                if (userMessage) {
+                    messageContent.push({
+                        type: 'text',
+                        text: userMessage || 'このファイルについて教えてください'
+                    });
+                } else if (file) {
+                    messageContent.push({
+                        type: 'text',
+                        text: 'このファイルについて教えてください'
+                    });
+                }
+                
+                // スレッドにメッセージを追加
+                var messageBody = {
+                    role: 'user',
+                    content: messageContent
+                };
+                
+                // 画像以外のファイルはattachmentsとして追加
+                if (attachments.length > 0 && file && !file.type.startsWith('image/')) {
+                    messageBody.attachments = attachments;
+                }
+                
+                var addMessageResponse = await fetch('https://api.openai.com/v1/threads/' + threadId + '/messages', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + apiKey
+                        'Authorization': 'Bearer ' + apiKey,
+                        'OpenAI-Beta': 'assistants=v2'
+                    },
+                    body: JSON.stringify(messageBody)
+                });
+                
+                if (!addMessageResponse.ok) {
+                    var errData = await addMessageResponse.json();
+                    throw new Error(errData.error?.message || 'メッセージ追加に失敗しました');
+                }
+                
+                // Runを開始（ストリーミング）
+                var runResponse = await fetch('https://api.openai.com/v1/threads/' + threadId + '/runs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey,
+                        'OpenAI-Beta': 'assistants=v2'
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o',
-                        messages: messagesToSend,
-                        max_tokens: 4000,
-                        temperature: 0.3,
+                        assistant_id: ASSISTANT_ID,
                         stream: true
                     })
                 });
-
-                if (!response.ok) {
-                    var errorData = await response.json();
-                    throw new Error(errorData.error?.message || 'API Error');
+                
+                if (!runResponse.ok) {
+                    var errData = await runResponse.json();
+                    throw new Error(errData.error?.message || 'Run開始に失敗しました');
                 }
-
-                var reader = response.body.getReader();
+                
+                // ストリーミングレスポンスを処理
+                var reader = runResponse.body.getReader();
                 var decoder = new TextDecoder();
                 var fullContent = '';
-
+                contentSpan.textContent = '';
+                
                 while (true) {
                     var result = await reader.read();
                     if (result.done) break;
-
+                    
                     var chunk = decoder.decode(result.value);
                     var lines = chunk.split('\n');
-
+                    
                     for (var i = 0; i < lines.length; i++) {
                         var line = lines[i].trim();
                         if (line.startsWith('data: ') && line !== 'data: [DONE]') {
                             try {
                                 var json = JSON.parse(line.substring(6));
-                                var content = json.choices[0]?.delta?.content || '';
-                                if (content) {
-                                    fullContent += content;
-                                    contentSpan.innerHTML = markdownToHtml(fullContent);
-                                    // 自動スクロール
-                                    document.getElementById('chatMessages').scrollTop = 999999;
+                                
+                                // テキストデルタイベントを処理
+                                if (json.object === 'thread.message.delta') {
+                                    var delta = json.delta;
+                                    if (delta && delta.content) {
+                                        for (var j = 0; j < delta.content.length; j++) {
+                                            var content = delta.content[j];
+                                            if (content.type === 'text' && content.text && content.text.value) {
+                                                fullContent += content.text.value;
+                                                contentSpan.innerHTML = markdownToHtml(fullContent);
+                                                document.getElementById('chatMessages').scrollTop = 999999;
+                                            }
+                                        }
+                                    }
                                 }
                             } catch (e) {
                                 // パースエラーは無視
@@ -1018,7 +968,8 @@
                         }
                     }
                 }
-                // ストリーミング完了 - カーソルを消す＆最終変換
+                
+                // ストリーミング完了
                 contentSpan.classList.remove('streaming-content');
                 contentSpan.classList.add('streaming-done');
                 contentSpan.innerHTML = markdownToHtml(fullContent);
@@ -1028,21 +979,45 @@
                     await processImagePlaceholders(contentSpan);
                 }
                 
-                // AIの回答を履歴に追加
-                conversationHistory.push({ role: 'assistant', content: fullContent });
-                
             } catch (error) {
                 console.error('AI Error:', error);
                 contentSpan.classList.remove('streaming-content');
-                contentSpan.innerHTML = '❌ エラー: ' + error.message + '<br>APIキーを確認してください。';
-                // エラー時はユーザーメッセージを履歴から削除
-                conversationHistory.pop();
+                contentSpan.innerHTML = '❌ エラー: ' + error.message;
             }
         }
         
-        // 会話履歴をクリア
-        function clearConversation() {
-            conversationHistory = [];
+        // ファイルをBase64に変換
+        function fileToBase64(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() {
+                    resolve(reader.result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 会話履歴をクリア（新しいスレッドを作成）
+        async function clearConversation() {
+            try {
+                var response = await fetch('https://api.openai.com/v1/threads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey,
+                        'OpenAI-Beta': 'assistants=v2'
+                    }
+                });
+                
+                if (response.ok) {
+                    var data = await response.json();
+                    threadId = data.id;
+                }
+            } catch (e) {
+                console.error('Thread creation error:', e);
+            }
+            
             document.getElementById('chatMessages').innerHTML = '<div class="ai-message"><strong>AIコーチ</strong><br>会話履歴をクリアしました。新しい質問をどうぞ！🏊‍♂️🚴‍♂️🏃‍♂️</div>';
         }
 

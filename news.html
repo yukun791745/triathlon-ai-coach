@@ -142,6 +142,7 @@
             padding: 10px;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -164,6 +165,50 @@
         .tab-btn.active {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
+        }
+
+        .translate-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .translate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .translate-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .translate-btn.translating {
+            background: #f59e0b;
+        }
+
+        .refresh-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .refresh-btn:hover {
+            background: #e5e7eb;
+            transform: rotate(180deg);
         }
 
         /* マイチャンネルセクション（最上位表示） */
@@ -473,6 +518,8 @@
             <button class="tab-btn active" data-tab="all">🌐 すべて</button>
             <button class="tab-btn" data-tab="videos">🎬 動画</button>
             <button class="tab-btn" data-tab="news">📰 ニュース</button>
+            <button class="translate-btn" id="translateBtn" onclick="translateAllItems()">🌐 日本語に翻訳</button>
+            <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
         </div>
 
         <!-- マイチャンネルセクション -->
@@ -500,6 +547,8 @@
     <script>
         // APIキー（index.htmlと共有）
         const API_KEY_STORAGE = 'triathlon_ai_api_key';
+        const FEED_CACHE_KEY = 'triathlon_news_feed_cache';
+        const FEED_CACHE_DURATION = 60 * 60 * 1000; // 1時間
         
         // タブ切り替え
         const tabButtons = document.querySelectorAll('.tab-btn');
@@ -518,6 +567,42 @@
         let feedData = [];
         let myChannelData = [];
         let translationCache = {}; // 翻訳キャッシュ
+        
+        // キャッシュからフィードを取得
+        function getCachedFeed() {
+            try {
+                const cached = localStorage.getItem(FEED_CACHE_KEY);
+                if (!cached) return null;
+                
+                const { data, timestamp } = JSON.parse(cached);
+                const age = Date.now() - timestamp;
+                
+                if (age < FEED_CACHE_DURATION) {
+                    console.log('キャッシュからフィードを読み込み（残り' + Math.round((FEED_CACHE_DURATION - age) / 60000) + '分）');
+                    return data;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // フィードをキャッシュに保存
+        function saveFeedToCache(data) {
+            try {
+                localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({
+                    data: data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.error('キャッシュ保存エラー:', e);
+            }
+        }
+        
+        // キャッシュをクリア（手動更新用）
+        function clearFeedCache() {
+            localStorage.removeItem(FEED_CACHE_KEY);
+        }
         
         // OpenAI APIで翻訳
         async function translateText(text, apiKey) {
@@ -708,12 +793,31 @@
         }
 
         // ニュースを取得
-        async function fetchFeed() {
+        async function fetchFeed(forceRefresh = false) {
             const container = document.getElementById('feedContainer');
             const loading = document.getElementById('loadingIndicator');
-            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+            
+            // キャッシュをチェック（強制更新でなければ）
+            if (!forceRefresh) {
+                const cached = getCachedFeed();
+                if (cached) {
+                    myChannelData = cached.myChannel || [];
+                    feedData = cached.items || [];
+                    
+                    renderMyChannel(myChannelData);
+                    filterFeed();
+                    updateTranslateButton();
+                    if (loading) loading.style.display = 'none';
+                    return;
+                }
+            }
             
             try {
+                if (loading) {
+                    loading.style.display = 'block';
+                    loading.innerHTML = '<div class="loading-spinner"></div><p>最新情報を取得中...</p>';
+                }
+                
                 // Netlify Functionからデータを取得
                 const response = await fetch('/.netlify/functions/news');
                 
@@ -725,23 +829,22 @@
                 
                 if (data.success) {
                     myChannelData = data.myChannel || [];
-                    let items = data.items || [];
+                    feedData = data.items || [];
+                    
+                    // キャッシュに保存
+                    saveFeedToCache({
+                        myChannel: myChannelData,
+                        items: feedData
+                    });
                     
                     // マイチャンネルを表示
                     renderMyChannel(myChannelData);
                     
-                    // APIキーがあれば英語記事を翻訳
-                    if (apiKey) {
-                        if (loading) {
-                            loading.innerHTML = '<div class="loading-spinner"></div><p>翻訳中...</p>';
-                        }
-                        feedData = await translateFeedItems(items, apiKey);
-                    } else {
-                        feedData = items;
-                    }
-                    
-                    // フィードを表示
+                    // 翻訳なしで即座に表示
                     filterFeed();
+                    
+                    // 翻訳ボタンの状態を更新
+                    updateTranslateButton();
                 } else {
                     throw new Error(data.error || '不明なエラー');
                 }
@@ -751,18 +854,96 @@
                 
                 // エラー時はサンプルデータを表示（開発用）
                 console.log('サンプルデータを表示します');
-                let sampleItems = getSampleData();
-                
-                // サンプルデータも翻訳
-                if (apiKey) {
-                    feedData = await translateFeedItems(sampleItems, apiKey);
-                } else {
-                    feedData = sampleItems;
-                }
+                feedData = getSampleData();
                 filterFeed();
+                updateTranslateButton();
                 
                 if (loading) loading.style.display = 'none';
             }
+        }
+        
+        // 手動更新（キャッシュをクリアして再取得）
+        async function refreshFeed() {
+            clearFeedCache();
+            await fetchFeed(true);
+        }
+            }
+        }
+        
+        // 翻訳ボタンの状態を更新
+        function updateTranslateButton() {
+            const btn = document.getElementById('translateBtn');
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+            const hasEnglishContent = feedData.some(item => item.language === 'en' && !item.translated);
+            
+            if (!apiKey) {
+                btn.disabled = true;
+                btn.textContent = '🔑 APIキー未設定';
+                btn.title = 'AIコーチページでAPIキーを設定してください';
+            } else if (!hasEnglishContent) {
+                btn.disabled = true;
+                btn.textContent = '✅ 翻訳済み';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '🌐 日本語に翻訳';
+            }
+        }
+        
+        // 全アイテムを翻訳
+        async function translateAllItems() {
+            const btn = document.getElementById('translateBtn');
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+            
+            if (!apiKey) {
+                alert('AIコーチページでOpenAI APIキーを設定してください');
+                return;
+            }
+            
+            // 英語コンテンツがあるか確認
+            const englishItems = feedData.filter(item => item.language === 'en' && !item.translated);
+            if (englishItems.length === 0) {
+                alert('翻訳するコンテンツがありません');
+                return;
+            }
+            
+            // ボタンを翻訳中状態に
+            btn.disabled = true;
+            btn.classList.add('translating');
+            btn.textContent = '🔄 翻訳中... (0/' + englishItems.length + ')';
+            
+            let translatedCount = 0;
+            
+            // 各アイテムを順番に翻訳
+            for (let i = 0; i < feedData.length; i++) {
+                const item = feedData[i];
+                if (item.language === 'en' && !item.translated) {
+                    try {
+                        const textToTranslate = item.title + (item.summary ? '\n---\n' + item.summary : '');
+                        const translated = await translateText(textToTranslate, apiKey);
+                        
+                        const parts = translated.split('\n---\n');
+                        feedData[i] = {
+                            ...item,
+                            originalTitle: item.title,
+                            title: parts[0] || item.title,
+                            summary: parts[1] || item.summary || '',
+                            translated: true
+                        };
+                        
+                        translatedCount++;
+                        btn.textContent = '🔄 翻訳中... (' + translatedCount + '/' + englishItems.length + ')';
+                        
+                        // 翻訳の都度、表示を更新
+                        filterFeed();
+                    } catch (error) {
+                        console.error('翻訳エラー:', error);
+                    }
+                }
+            }
+            
+            // 完了
+            btn.classList.remove('translating');
+            btn.textContent = '✅ 翻訳済み';
         }
 
         // サンプルデータ（API未接続時のフォールバック）

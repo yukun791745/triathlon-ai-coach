@@ -632,15 +632,15 @@
             text = text.replace(/^## (.+)$/gm, '<h3 class="section-header" style="margin: 10px 0; color: #333;">$1</h3>');
             text = text.replace(/^# (.+)$/gm, '<h3 class="section-header" style="margin: 10px 0; color: #333; font-size: 1.2em;">$1</h3>');
             
-            // 「参考文献」単体（番号なし）: 上下に10px
-            text = text.replace(/^(参考文献)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
+            // 「参考文献」単体（番号なし、太字でも対応）: 上下に10px
+            text = text.replace(/^(<strong>)?(参考文献)(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$2</strong></div>');
             
             // 番号付き大項目（1. 概要、2. 科学的背景 など）: 上下に10px
             text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ|次のステップ|参考文献)(:?)(.*)$/gm, 
                 '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong>$4</div>');
             
-            // 💡 次のステップ（絵文字付き）: 上下に10px
-            text = text.replace(/^(💡\s*次のステップ.*)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
+            // 💡 次のステップ（絵文字付き、太字でも対応）: 上下に10px
+            text = text.replace(/^(<strong>)?(💡\s*次のステップ[^<]*)(<\/strong>)?$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$2</strong></div>');
             
             // 👉 案内文: 上に10pxのmargin
             text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0 0;">$1</div>');
@@ -675,11 +675,8 @@
             // リストdiv間の<br>を削除（行間ゼロにする）
             text = text.replace(/<\/div>\s*<br>\s*(<div class="list-item")/gi, '</div>$1');
             
-            // 大項目(section-header)の直後の<br>を削除
-            text = text.replace(/<\/div>\s*<br>\s*(?=\S)/gi, '</div>');
-            text = text.replace(/<\/h[34]>\s*<br>\s*(?=\S)/gi, function(match) {
-                return match.replace(/<br\s*\/?>/gi, '');
-            });
+            // section-headerの直後の<br>を削除（ただしsection-headerの前のbrは残す）
+            text = text.replace(/(<div class="section-header"[^>]*>.*?<\/div>)\s*<br>/gi, '$1');
             
             return text;
         }

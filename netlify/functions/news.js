@@ -91,22 +91,33 @@ async function fetchSingleFeed(source, type) {
     try {
         const feed = await parser.parseURL(source.url);
         
-        return feed.items.slice(0, 10).map(item => {
-            const isYouTube = source.url.includes('youtube.com');
-            const videoId = isYouTube ? extractYouTubeVideoId(item.link) : null;
+        // 1ヶ月前の日付
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        return feed.items
+            .filter(item => {
+                // 1ヶ月以内のコンテンツのみ
+                const itemDate = new Date(item.pubDate || item.isoDate);
+                return itemDate >= oneMonthAgo;
+            })
+            .slice(0, 10)
+            .map(item => {
+                const isYouTube = source.url.includes('youtube.com');
+                const videoId = isYouTube ? extractYouTubeVideoId(item.link) : null;
             
-            return {
-                type: isYouTube ? 'video' : 'news',
-                title: item.title,
-                source: source.name,
-                language: source.language,
-                time: timeAgo(item.pubDate || item.isoDate),
-                timestamp: new Date(item.pubDate || item.isoDate).getTime(),
-                url: item.link,
-                summary: item.contentSnippet ? item.contentSnippet.substring(0, 150) + '...' : '',
-                thumbnail: isYouTube && videoId ? getYouTubeThumbnail(videoId) : null
-            };
-        });
+                return {
+                    type: isYouTube ? 'video' : 'news',
+                    title: item.title,
+                    source: source.name,
+                    language: source.language,
+                    time: timeAgo(item.pubDate || item.isoDate),
+                    timestamp: new Date(item.pubDate || item.isoDate).getTime(),
+                    url: item.link,
+                    summary: item.contentSnippet ? item.contentSnippet.substring(0, 150) + '...' : '',
+                    thumbnail: isYouTube && videoId ? getYouTubeThumbnail(videoId) : null
+                };
+            });
     } catch (error) {
         console.error(`Error fetching ${source.name}:`, error.message);
         return [];

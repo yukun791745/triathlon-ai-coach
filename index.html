@@ -647,6 +647,9 @@
             // URL をクリック可能なリンクに変換
             text = text.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" style="color: #1976d2; text-decoration: underline;">$1</a>');
             
+            // 連続した改行を1つにまとめる（空行を除去）
+            text = text.replace(/\n{2,}/g, '\n');
+            
             // 改行
             text = text.replace(/\n/g, '<br>');
             
@@ -892,12 +895,16 @@
                     });
                 }
                 
-                // テキストメッセージを追加
+                // テキストメッセージを追加（複数論文参照の指示を自動付加）
                 var textMessage = userMessage || (file ? 'このファイルについて教えてください' : '');
+                
+                // 論文検索を促す指示を追加
+                var searchInstruction = '\n\n【指示】この質問に関連する論文が複数ある場合は、すべてを参照し比較してください。研究間で見解が異なる場合は「このテーマについては複数の研究があり、見解が異なります」と冒頭で述べ、各研究の知見を本文中で引用（例：Vivan et al., 2025）してください。';
+                
                 if (textMessage) {
                     messageContent.push({
                         type: 'text',
-                        text: textMessage
+                        text: textMessage + searchInstruction
                     });
                 }
                 

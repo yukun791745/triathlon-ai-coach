@@ -498,6 +498,9 @@
     </div>
 
     <script>
+        // APIキー（index.htmlと共有）
+        const API_KEY_STORAGE = 'triathlon_ai_api_key';
+        
         // タブ切り替え
         const tabButtons = document.querySelectorAll('.tab-btn');
         let currentTab = 'all';
@@ -514,6 +517,88 @@
         // フィードデータ
         let feedData = [];
         let myChannelData = [];
+        let translationCache = {}; // 翻訳キャッシュ
+        
+        // OpenAI APIで翻訳
+        async function translateText(text, apiKey) {
+            if (!text || !apiKey) return text;
+            
+            // キャッシュチェック
+            if (translationCache[text]) {
+                return translationCache[text];
+            }
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: '英語のニュースタイトルや要約を自然な日本語に翻訳してください。簡潔に翻訳し、余計な説明は不要です。'
+                            },
+                            {
+                                role: 'user',
+                                content: text
+                            }
+                        ],
+                        max_tokens: 200,
+                        temperature: 0.3
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.error('翻訳API エラー');
+                    return text;
+                }
+                
+                const data = await response.json();
+                const translated = data.choices[0].message.content.trim();
+                
+                // キャッシュに保存
+                translationCache[text] = translated;
+                
+                return translated;
+            } catch (error) {
+                console.error('翻訳エラー:', error);
+                return text;
+            }
+        }
+        
+        // 英語記事を翻訳
+        async function translateFeedItems(items, apiKey) {
+            if (!apiKey) return items;
+            
+            const translatedItems = [];
+            
+            for (const item of items) {
+                if (item.language === 'en') {
+                    // タイトルと要約を一括で翻訳
+                    const textToTranslate = item.title + (item.summary ? '\n---\n' + item.summary : '');
+                    const translated = await translateText(textToTranslate, apiKey);
+                    
+                    // 翻訳結果を分割
+                    const parts = translated.split('\n---\n');
+                    
+                    translatedItems.push({
+                        ...item,
+                        title: parts[0] || item.title,
+                        summary: parts[1] || item.summary || '',
+                        originalTitle: item.title,
+                        translated: true
+                    });
+                } else {
+                    translatedItems.push(item);
+                }
+            }
+            
+            return translatedItems;
+        }
 
         // マイチャンネルを表示
         function renderMyChannel(items) {
@@ -566,6 +651,9 @@
             }
 
             container.innerHTML = data.map(item => {
+                const translatedBadge = item.translated ? '<span class="card-source" style="background:#dcfce7;color:#166534;">🌐 翻訳済</span>' : '';
+                const langBadge = (item.language === 'en' && !item.translated) ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : '';
+                
                 if (item.type === 'video') {
                     return `
                         <a href="${item.url}" target="_blank" class="feed-card video" data-type="video">
@@ -577,10 +665,12 @@
                                 <div class="card-header">
                                     <span class="card-type">🎬</span>
                                     <span class="card-source">${item.source}</span>
-                                    ${item.language === 'en' ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : ''}
+                                    ${langBadge}
+                                    ${translatedBadge}
                                     <span class="card-time">${item.time}</span>
                                 </div>
                                 <div class="card-title">${item.title}</div>
+                                ${item.originalTitle ? `<div class="card-original" style="font-size:0.75rem;color:#9ca3af;margin-top:4px;">原題: ${item.originalTitle}</div>` : ''}
                                 ${item.summary ? `<div class="card-summary">${item.summary}</div>` : ''}
                             </div>
                         </a>
@@ -591,10 +681,12 @@
                             <div class="card-header">
                                 <span class="card-type">📰</span>
                                 <span class="card-source">${item.source}</span>
-                                ${item.language === 'en' ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : ''}
+                                ${langBadge}
+                                ${translatedBadge}
                                 <span class="card-time">${item.time}</span>
                             </div>
                             <div class="card-title">${item.title}</div>
+                            ${item.originalTitle ? `<div class="card-original" style="font-size:0.75rem;color:#9ca3af;margin-top:4px;">原題: ${item.originalTitle}</div>` : ''}
                             <div class="card-summary">${item.summary}</div>
                         </a>
                     `;
@@ -619,6 +711,7 @@
         async function fetchFeed() {
             const container = document.getElementById('feedContainer');
             const loading = document.getElementById('loadingIndicator');
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
             
             try {
                 // Netlify Functionからデータを取得
@@ -632,10 +725,20 @@
                 
                 if (data.success) {
                     myChannelData = data.myChannel || [];
-                    feedData = data.items || [];
+                    let items = data.items || [];
                     
                     // マイチャンネルを表示
                     renderMyChannel(myChannelData);
+                    
+                    // APIキーがあれば英語記事を翻訳
+                    if (apiKey) {
+                        if (loading) {
+                            loading.innerHTML = '<div class="loading-spinner"></div><p>翻訳中...</p>';
+                        }
+                        feedData = await translateFeedItems(items, apiKey);
+                    } else {
+                        feedData = items;
+                    }
                     
                     // フィードを表示
                     filterFeed();
@@ -648,7 +751,14 @@
                 
                 // エラー時はサンプルデータを表示（開発用）
                 console.log('サンプルデータを表示します');
-                feedData = getSampleData();
+                let sampleItems = getSampleData();
+                
+                // サンプルデータも翻訳
+                if (apiKey) {
+                    feedData = await translateFeedItems(sampleItems, apiKey);
+                } else {
+                    feedData = sampleItems;
+                }
                 filterFeed();
                 
                 if (loading) loading.style.display = 'none';

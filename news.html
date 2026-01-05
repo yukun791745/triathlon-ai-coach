@@ -211,62 +211,6 @@
             transform: rotate(180deg);
         }
 
-        /* マイチャンネルセクション（最上位表示） */
-        .my-channel-section {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 2px solid #f59e0b;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .my-channel-section h2 {
-            color: #92400e;
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .my-channel-video {
-            display: flex;
-            gap: 15px;
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .my-channel-video .thumbnail {
-            width: 200px;
-            height: 112px;
-            background: #e5e7eb;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            font-size: 2rem;
-            flex-shrink: 0;
-        }
-
-        .my-channel-video .video-info {
-            flex: 1;
-        }
-
-        .my-channel-video .video-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: #1f2937;
-        }
-
-        .my-channel-video .video-meta {
-            font-size: 0.8rem;
-            color: #6b7280;
-        }
-
         /* フィードコンテナ */
         .feed-container {
             display: flex;
@@ -448,15 +392,6 @@
                 font-size: 0.8rem;
             }
 
-            .my-channel-video {
-                flex-direction: column;
-            }
-
-            .my-channel-video .thumbnail {
-                width: 100%;
-                height: 180px;
-            }
-
             .feed-card.video {
                 flex-direction: column;
             }
@@ -580,18 +515,6 @@
             <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
         </div>
 
-        <!-- マイチャンネルセクション -->
-        <div class="my-channel-section" id="myChannelSection">
-            <h2>⭐ マイチャンネル（最新動画）</h2>
-            <div class="my-channel-video">
-                <div class="thumbnail">🎬</div>
-                <div class="video-info">
-                    <div class="video-title">チャンネル準備中...</div>
-                    <div class="video-meta">YouTubeチャンネルを設定すると、最新動画がここに表示されます</div>
-                </div>
-            </div>
-        </div>
-
         <!-- フィードコンテナ -->
         <div class="feed-container" id="feedContainer">
             <!-- ローディング表示 -->
@@ -608,6 +531,9 @@
         const FEED_CACHE_KEY = 'triathlon_news_feed_cache';
         const FEED_CACHE_DURATION = 60 * 60 * 1000; // 1時間
         const ITEMS_PER_PAGE = 20; // 1ページあたりの表示件数
+        
+        // 日本語ソース一覧
+        const JAPANESE_SOURCES = ['LUMINA', 'JTU', 'Lapulem', 'ヒロ/トライアスロン', '古谷純平', 'Triathlon LUMINA'];
         
         // タブ切り替え
         const tabButtons = document.querySelectorAll('.tab-btn');
@@ -627,8 +553,60 @@
         // フィードデータ
         let feedData = [];
         let filteredData = []; // フィルター後のデータ
-        let myChannelData = [];
         let translationCache = {}; // 翻訳キャッシュ
+        
+        // 日付をフォーマット
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (minutes < 60) {
+                return `${minutes}分前`;
+            } else if (hours < 24) {
+                return `${hours}時間前`;
+            } else if (days < 7) {
+                return `${days}日前`;
+            } else {
+                return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+            }
+        }
+        
+        // 言語を判定
+        function detectLanguage(item) {
+            // ソース名で判定
+            if (JAPANESE_SOURCES.includes(item.source)) {
+                return 'ja';
+            }
+            // タイトルに日本語が含まれているか
+            if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(item.title)) {
+                return 'ja';
+            }
+            return 'en';
+        }
+        
+        // APIレスポンスを内部形式に変換
+        function transformItem(item) {
+            return {
+                id: item.id,
+                type: item.type === 'video' ? 'video' : 'news',
+                title: item.title,
+                source: item.source,
+                url: item.link,
+                time: formatDate(item.pubDate),
+                thumbnail: item.thumbnail || null,
+                summary: item.summary || '',
+                language: detectLanguage(item),
+                translated: false,
+                originalTitle: null
+            };
+        }
         
         // キャッシュからフィードを取得
         function getCachedFeed() {
@@ -716,69 +694,6 @@
                 return text;
             }
         }
-        
-        // 英語記事を翻訳
-        async function translateFeedItems(items, apiKey) {
-            if (!apiKey) return items;
-            
-            const translatedItems = [];
-            
-            for (const item of items) {
-                if (item.language === 'en') {
-                    // タイトルと要約を一括で翻訳
-                    const textToTranslate = item.title + (item.summary ? '\n---\n' + item.summary : '');
-                    const translated = await translateText(textToTranslate, apiKey);
-                    
-                    // 翻訳結果を分割
-                    const parts = translated.split('\n---\n');
-                    
-                    translatedItems.push({
-                        ...item,
-                        title: parts[0] || item.title,
-                        summary: parts[1] || item.summary || '',
-                        originalTitle: item.title,
-                        translated: true
-                    });
-                } else {
-                    translatedItems.push(item);
-                }
-            }
-            
-            return translatedItems;
-        }
-
-        // マイチャンネルを表示
-        function renderMyChannel(items) {
-            const section = document.getElementById('myChannelSection');
-            
-            if (!items || items.length === 0) {
-                section.innerHTML = `
-                    <h2>⭐ マイチャンネル（最新動画）</h2>
-                    <div class="my-channel-video">
-                        <div class="thumbnail">🎬</div>
-                        <div class="video-info">
-                            <div class="video-title">チャンネル準備中...</div>
-                            <div class="video-meta">YouTubeチャンネルを設定すると、最新動画がここに表示されます</div>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            const latestVideo = items[0];
-            section.innerHTML = `
-                <h2>⭐ マイチャンネル（最新動画）</h2>
-                <a href="${latestVideo.url}" target="_blank" class="my-channel-video" style="text-decoration: none; color: inherit;">
-                    <div class="thumbnail">
-                        ${latestVideo.thumbnail ? `<img src="${latestVideo.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '🎬'}
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">${latestVideo.title}</div>
-                        <div class="video-meta">${latestVideo.time}</div>
-                    </div>
-                </a>
-            `;
-        }
 
         // フィードを表示
         function renderFeed(data) {
@@ -802,10 +717,19 @@
                 const langBadge = (item.language === 'en' && !item.translated) ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : '';
                 
                 if (item.type === 'video') {
+                    // YouTubeサムネイルを生成
+                    let thumbnailUrl = item.thumbnail;
+                    if (!thumbnailUrl && item.url && item.url.includes('youtube.com')) {
+                        const videoId = item.url.match(/[?&]v=([^&]+)/) || item.url.match(/shorts\/([^?]+)/);
+                        if (videoId) {
+                            thumbnailUrl = `https://img.youtube.com/vi/${videoId[1]}/mqdefault.jpg`;
+                        }
+                    }
+                    
                     return `
                         <a href="${item.url}" target="_blank" class="feed-card video" data-type="video">
                             <div class="thumbnail">
-                                ${item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : ''}
+                                ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="">` : ''}
                                 <div class="play-icon">▶</div>
                             </div>
                             <div class="video-content">
@@ -834,7 +758,7 @@
                             </div>
                             <div class="card-title">${item.title}</div>
                             ${item.originalTitle ? `<div class="card-original" style="font-size:0.75rem;color:#9ca3af;margin-top:4px;">原題: ${item.originalTitle}</div>` : ''}
-                            <div class="card-summary">${item.summary}</div>
+                            ${item.summary ? `<div class="card-summary">${item.summary}</div>` : ''}
                         </a>
                     `;
                 }
@@ -928,11 +852,8 @@
             // キャッシュをチェック（強制更新でなければ）
             if (!forceRefresh) {
                 const cached = getCachedFeed();
-                if (cached) {
-                    myChannelData = cached.myChannel || [];
-                    feedData = cached.items || [];
-                    
-                    renderMyChannel(myChannelData);
+                if (cached && cached.length > 0) {
+                    feedData = cached;
                     filterFeed();
                     updateTranslateButton();
                     if (loading) loading.style.display = 'none';
@@ -947,7 +868,8 @@
                 }
                 
                 // Netlify Functionからデータを取得
-                const response = await fetch('/.netlify/functions/news');
+                const url = forceRefresh ? '/.netlify/functions/news?refresh=true' : '/.netlify/functions/news';
+                const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error('フィード取得に失敗しました');
@@ -955,38 +877,41 @@
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    myChannelData = data.myChannel || [];
-                    feedData = data.items || [];
+                // itemsが存在すれば成功
+                if (data.items && Array.isArray(data.items)) {
+                    // APIレスポンスを内部形式に変換
+                    feedData = data.items.map(transformItem);
                     
                     // キャッシュに保存
-                    saveFeedToCache({
-                        myChannel: myChannelData,
-                        items: feedData
-                    });
+                    saveFeedToCache(feedData);
                     
-                    // マイチャンネルを表示
-                    renderMyChannel(myChannelData);
-                    
-                    // 翻訳なしで即座に表示
+                    // 表示
                     filterFeed();
                     
                     // 翻訳ボタンの状態を更新
                     updateTranslateButton();
+                    
+                    console.log(`フィード取得完了: ${feedData.length}件`);
                 } else {
-                    throw new Error(data.error || '不明なエラー');
+                    throw new Error('データ形式が不正です');
                 }
                 
             } catch (error) {
                 console.error('フィード取得エラー:', error);
                 
-                // エラー時はサンプルデータを表示（開発用）
-                console.log('サンプルデータを表示します');
-                feedData = getSampleData();
-                filterFeed();
-                updateTranslateButton();
+                if (loading) {
+                    loading.style.display = 'none';
+                }
                 
-                if (loading) loading.style.display = 'none';
+                // エラー表示
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <p>フィードの取得に失敗しました</p>
+                        <p style="font-size:0.8rem;margin-top:10px;color:#9ca3af;">${error.message}</p>
+                        <button onclick="refreshFeed()" style="margin-top:15px;padding:10px 20px;border:none;border-radius:8px;background:#667eea;color:white;cursor:pointer;">再試行</button>
+                    </div>
+                `;
             }
         }
         
@@ -1070,69 +995,9 @@
             // 完了
             btn.classList.remove('translating');
             btn.textContent = '✅ 翻訳済み';
-        }
-
-        // サンプルデータ（API未接続時のフォールバック）
-        function getSampleData() {
-            return [
-                {
-                    type: 'video',
-                    title: 'VO2max向上のための5つのワークアウト',
-                    source: 'GTN',
-                    language: 'en',
-                    time: '3時間前',
-                    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-                    url: '#',
-                    summary: 'トライアスロンのパフォーマンス向上に欠かせないVO2maxトレーニングを解説'
-                },
-                {
-                    type: 'news',
-                    title: 'アイアンマン世界選手権2025、コース変更を発表',
-                    source: 'Triathlete.com',
-                    language: 'en',
-                    time: '5時間前',
-                    url: '#',
-                    summary: 'ハワイ・コナで開催される今年の世界選手権で、バイクコースの一部が変更されることが明らかになった。'
-                },
-                {
-                    type: 'video',
-                    title: 'プロ選手のレース前ルーティン公開',
-                    source: 'Lionel Sanders',
-                    language: 'en',
-                    time: '8時間前',
-                    thumbnail: '',
-                    url: '#',
-                    summary: ''
-                },
-                {
-                    type: 'news',
-                    title: '2025年JTU年間スケジュール発表',
-                    source: 'JTU',
-                    language: 'ja',
-                    time: '1日前',
-                    url: '#',
-                    summary: '日本トライアスロン連合が2025年の主要大会スケジュールを発表。注目の大会日程をチェック。'
-                },
-                {
-                    type: 'news',
-                    title: '最新エアロヘルメット比較レビュー',
-                    source: 'Slowtwitch',
-                    language: 'en',
-                    time: '1日前',
-                    url: '#',
-                    summary: '2025年モデルのエアロヘルメット5製品を風洞実験でテスト。最も空力性能が高かったのは...'
-                },
-                {
-                    type: 'video',
-                    title: 'スイムドリル：キャッチ力向上エクササイズ',
-                    source: 'GTN',
-                    language: 'en',
-                    time: '2日前',
-                    thumbnail: '',
-                    url: '#',
-                    summary: ''
-                }
-            ];
+            
+            // キャッシュを更新
+            saveFeedToCache(feedData);
         }
 
         // 初期化

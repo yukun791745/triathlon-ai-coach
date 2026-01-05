@@ -238,49 +238,26 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             text-decoration: none;
             color: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .my-channel-video:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .my-channel-video .thumbnail {
             width: 200px;
             height: 112px;
-            background: #1f2937;
+            background: #e5e7eb;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #9ca3af;
             font-size: 2rem;
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .my-channel-video .thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .my-channel-video .thumbnail .play-icon {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
         }
 
         .my-channel-video .video-info {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .my-channel-video .video-title {
@@ -609,16 +586,14 @@
             <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
         </div>
 
-        <!-- マイチャンネルセクション -->
+        <!-- マイチャンネルセクション（準備中） -->
         <div class="my-channel-section" id="myChannelSection">
             <h2>⭐ マイチャンネル（最新動画）</h2>
-            <div id="myChannelContent">
-                <div class="my-channel-video">
-                    <div class="thumbnail">🎬</div>
-                    <div class="video-info">
-                        <div class="video-title">読み込み中...</div>
-                        <div class="video-meta">最新動画を取得しています</div>
-                    </div>
+            <div class="my-channel-video">
+                <div class="thumbnail">🎬</div>
+                <div class="video-info">
+                    <div class="video-title">チャンネル準備中...</div>
+                    <div class="video-meta">YouTubeチャンネルを設定すると、最新動画がここに表示されます</div>
                 </div>
             </div>
         </div>
@@ -641,9 +616,6 @@
         const ITEMS_PER_PAGE = 20; // 1ページあたりの表示件数
         const MAX_AGE_DAYS = 60; // 過去2ヶ月（60日）まで表示
         
-        // マイチャンネル設定（ユーザーのYouTubeチャンネル）
-        const MY_CHANNEL_SOURCE = 'ヒロ/トライアスロン'; // ここを変更してマイチャンネルを設定
-        
         // 日本語ソース一覧
         const JAPANESE_SOURCES = ['LUMINA', 'JTU', 'Lapulem', 'ヒロ/トライアスロン', '古谷純平', 'Triathlon LUMINA'];
         
@@ -665,7 +637,6 @@
         // フィードデータ
         let feedData = [];
         let filteredData = []; // フィルター後のデータ
-        let myChannelVideo = null; // マイチャンネルの最新動画
         let translationCache = {}; // 翻訳キャッシュ
         
         // 日付をフォーマット
@@ -825,46 +796,6 @@
             }
         }
 
-        // マイチャンネルを表示
-        function renderMyChannel() {
-            const content = document.getElementById('myChannelContent');
-            
-            if (!myChannelVideo) {
-                content.innerHTML = `
-                    <div class="my-channel-video">
-                        <div class="thumbnail">🎬</div>
-                        <div class="video-info">
-                            <div class="video-title">最新動画がありません</div>
-                            <div class="video-meta">${MY_CHANNEL_SOURCE} の最新動画を表示します</div>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            // YouTubeサムネイルを生成
-            let thumbnailUrl = myChannelVideo.thumbnail;
-            if (!thumbnailUrl && myChannelVideo.url && myChannelVideo.url.includes('youtube.com')) {
-                const videoId = myChannelVideo.url.match(/[?&]v=([^&]+)/);
-                if (videoId) {
-                    thumbnailUrl = `https://img.youtube.com/vi/${videoId[1]}/mqdefault.jpg`;
-                }
-            }
-
-            content.innerHTML = `
-                <a href="${myChannelVideo.url}" target="_blank" class="my-channel-video">
-                    <div class="thumbnail">
-                        ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="">` : ''}
-                        <div class="play-icon">▶</div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">${myChannelVideo.title}</div>
-                        <div class="video-meta">${myChannelVideo.source} • ${myChannelVideo.time}</div>
-                    </div>
-                </a>
-            `;
-        }
-
         // フィードを表示
         function renderFeed(data) {
             const container = document.getElementById('feedContainer');
@@ -1022,10 +953,8 @@
             // キャッシュをチェック（強制更新でなければ）
             if (!forceRefresh) {
                 const cached = getCachedFeed();
-                if (cached && cached.feedData && cached.feedData.length > 0) {
-                    feedData = cached.feedData;
-                    myChannelVideo = cached.myChannelVideo;
-                    renderMyChannel();
+                if (cached && cached.length > 0) {
+                    feedData = cached;
                     filterFeed();
                     updateTranslateButton();
                     if (loading) loading.style.display = 'none';
@@ -1067,19 +996,8 @@
                         return true;
                     });
                     
-                    // マイチャンネルの最新動画を取得（ショート除外済み）
-                    myChannelVideo = feedData.find(item => 
-                        item.source === MY_CHANNEL_SOURCE && item.type === 'video'
-                    ) || null;
-                    
                     // キャッシュに保存
-                    saveFeedToCache({
-                        feedData: feedData,
-                        myChannelVideo: myChannelVideo
-                    });
-                    
-                    // マイチャンネルを表示
-                    renderMyChannel();
+                    saveFeedToCache(feedData);
                     
                     // 表示
                     filterFeed();
@@ -1193,10 +1111,7 @@
             btn.textContent = '✅ 翻訳済み';
             
             // キャッシュを更新
-            saveFeedToCache({
-                feedData: feedData,
-                myChannelVideo: myChannelVideo
-            });
+            saveFeedToCache(feedData);
         }
 
         // 初期化

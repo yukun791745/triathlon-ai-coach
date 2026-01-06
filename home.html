@@ -560,7 +560,7 @@
             return result;
         }
 
-        // 獲得ポイント計算
+        // 獲得ポイント計算（種目別も含む）
         function calculateWeeklyPoints(activities) {
             const weeks = {};
 
@@ -572,24 +572,46 @@
                 const duration = (activity.moving_time || activity.elapsed_time || 0) / 60; // 分に変換
                 const sportType = activity.sport_type || activity.type;
 
-                // 対象種目のみ
-                const isTargetSport = Object.values(SPORT_TYPES).flat().includes(sportType);
-                if (!isTargetSport) return;
+                // 種目を判定
+                let sport = null;
+                for (const [sportKey, types] of Object.entries(SPORT_TYPES)) {
+                    if (types.includes(sportType)) {
+                        sport = sportKey;
+                        break;
+                    }
+                }
+                if (!sport) return;
 
                 if (!weeks[weekKey]) {
-                    weeks[weekKey] = {};
+                    weeks[weekKey] = {
+                        days: {},
+                        bySport: { swim: 0, bike: 0, run: 0, strength: 0 }
+                    };
                 }
 
-                if (!weeks[weekKey][dayKey]) {
-                    weeks[weekKey][dayKey] = 0;
+                if (!weeks[weekKey].days[dayKey]) {
+                    weeks[weekKey].days[dayKey] = {};
+                }
+
+                if (!weeks[weekKey].days[dayKey][sport]) {
+                    weeks[weekKey].days[dayKey][sport] = 0;
                 }
 
                 // 30分単位でポイント計算
                 const points = Math.floor(duration / 30);
-                weeks[weekKey][dayKey] += points;
+                weeks[weekKey].days[dayKey][sport] += points;
             });
 
-            // 週ごとの合計ポイントを計算
+            // 週ごとの種目別ポイントを集計
+            Object.keys(weeks).forEach(weekKey => {
+                Object.values(weeks[weekKey].days).forEach(day => {
+                    Object.entries(day).forEach(([sport, points]) => {
+                        weeks[weekKey].bySport[sport] += points;
+                    });
+                });
+            });
+
+            // 過去8週間分を生成
             const result = [];
             for (let i = 7; i >= 0; i--) {
                 const date = new Date();
@@ -598,12 +620,14 @@
                 const weekKey = weekStart.toISOString().split('T')[0];
                 const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
 
-                const weekData = weeks[weekKey] || {};
-                const totalPoints = Object.values(weekData).reduce((sum, points) => sum + points, 0);
+                const weekData = weeks[weekKey] || { bySport: { swim: 0, bike: 0, run: 0, strength: 0 } };
 
                 result.push({
                     week: weekLabel,
-                    points: totalPoints
+                    swim: weekData.bySport.swim,
+                    bike: weekData.bySport.bike,
+                    run: weekData.bySport.run,
+                    strength: weekData.bySport.strength
                 });
             }
 
@@ -671,27 +695,27 @@
                 </div>
 
                 <div class="chart-container">
-                    <h3 class="chart-title">週間獲得ポイント（過去8週間）</h3>
+                    <h3 class="chart-title">心拍Zone別割合（過去8週間）</h3>
                     <div class="chart-wrapper">
-                        <canvas id="pointsChart"></canvas>
+                        <canvas id="hrZonesChart"></canvas>
                     </div>
                 </div>
 
                 <div class="chart-container">
-                    <h3 class="chart-title">心拍Zone別トレーニング時間（過去8週間）</h3>
+                    <h3 class="chart-title">週間獲得ポイント（過去8週間）</h3>
                     <div class="chart-wrapper">
-                        <canvas id="hrZonesChart"></canvas>
+                        <canvas id="pointsChart"></canvas>
                     </div>
                 </div>
             `;
 
             // グラフ描画
             renderTrainingTimeChart(weeklyData);
-            renderPointsChart(weeklyPoints);
             renderHRZonesChart(weeklyZones);
+            renderPointsChart(weeklyPoints);
         }
 
-        // グラフ1: トレーニング時間
+        // グラフ1: トレーニング時間（合計値表示付き）
         function renderTrainingTimeChart(weeklyData) {
             const ctx = document.getElementById('trainingTimeChart').getContext('2d');
             
@@ -743,15 +767,49 @@
                             callbacks: {
                                 label: function(context) {
                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + 'h';
+                                },
+                                footer: function(items) {
+                                    const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
+                                    return '合計: ' + total.toFixed(1) + 'h';
                                 }
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            color: '#fff',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: function(value) {
+                                return value > 0 ? value.toFixed(1) : '';
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'totalLabel',
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.labels.forEach((label, index) => {
+                            let total = 0;
+                            chart.data.datasets.forEach(dataset => {
+                                total += dataset.data[index];
+                            });
+                            if (total > 0) {
+                                const meta = chart.getDatasetMeta(0);
+                                const x = meta.data[index].x;
+                                const y = chart.scales.y.top;
+                                
+                                ctx.fillStyle = '#1f2937';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(total.toFixed(1) + 'h', x, y - 5);
+                            }
+                        });
+                    }
+                }]
             });
         }
 
-        // グラフ2: 獲得ポイント
+        // グラフ2: 獲得ポイント（種目別・合計表示付き）
         function renderPointsChart(weeklyPoints) {
             const ctx = document.getElementById('pointsChart').getContext('2d');
             
@@ -759,70 +817,134 @@
                 type: 'bar',
                 data: {
                     labels: weeklyPoints.map(w => w.week),
-                    datasets: [{
-                        label: '獲得ポイント',
-                        data: weeklyPoints.map(w => w.points),
-                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
-                        borderColor: 'rgba(245, 158, 11, 1)',
-                        borderWidth: 1
-                    }]
+                    datasets: [
+                        {
+                            label: SPORT_LABELS.swim,
+                            data: weeklyPoints.map(w => w.swim),
+                            backgroundColor: SPORT_COLORS.swim
+                        },
+                        {
+                            label: SPORT_LABELS.bike,
+                            data: weeklyPoints.map(w => w.bike),
+                            backgroundColor: SPORT_COLORS.bike
+                        },
+                        {
+                            label: SPORT_LABELS.run,
+                            data: weeklyPoints.map(w => w.run),
+                            backgroundColor: SPORT_COLORS.run
+                        },
+                        {
+                            label: SPORT_LABELS.strength,
+                            data: weeklyPoints.map(w => w.strength),
+                            backgroundColor: SPORT_COLORS.strength
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
+                        x: { stacked: true },
                         y: { 
+                            stacked: true,
                             beginAtZero: true,
                             title: { display: true, text: 'ポイント' },
                             ticks: { stepSize: 1 }
                         }
                     },
                     plugins: {
-                        legend: { display: false },
+                        legend: { position: 'bottom' },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.parsed.y + 'pt';
+                                    return context.dataset.label + ': ' + context.parsed.y + 'pt';
+                                },
+                                footer: function(items) {
+                                    const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
+                                    return '合計: ' + total + 'pt';
                                 }
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'totalLabel',
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.labels.forEach((label, index) => {
+                            let total = 0;
+                            chart.data.datasets.forEach(dataset => {
+                                total += dataset.data[index];
+                            });
+                            if (total > 0) {
+                                const meta = chart.getDatasetMeta(0);
+                                const x = meta.data[index].x;
+                                const y = chart.scales.y.top;
+                                
+                                ctx.fillStyle = '#1f2937';
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(total + 'pt', x, y - 5);
+                            }
+                        });
+                    }
+                }]
             });
         }
 
-        // グラフ3: 心拍Zone
+        // グラフ3: 心拍Zone（%表示）
         function renderHRZonesChart(weeklyZones) {
             const ctx = document.getElementById('hrZonesChart').getContext('2d');
+            
+            // 各週の合計時間を計算してパーセンテージに変換
+            const percentageData = weeklyZones.map(week => {
+                const total = week.data.zone1 + week.data.zone2 + week.data.zone3 + week.data.zone4 + week.data.zone5;
+                
+                if (total === 0) {
+                    return {
+                        week: week.week,
+                        zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0
+                    };
+                }
+                
+                return {
+                    week: week.week,
+                    zone1: (week.data.zone1 / total) * 100,
+                    zone2: (week.data.zone2 / total) * 100,
+                    zone3: (week.data.zone3 / total) * 100,
+                    zone4: (week.data.zone4 / total) * 100,
+                    zone5: (week.data.zone5 / total) * 100
+                };
+            });
             
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: weeklyZones.map(w => w.week),
+                    labels: percentageData.map(w => w.week),
                     datasets: [
                         {
                             label: 'Zone 1 (50-60%)',
-                            data: weeklyZones.map(w => w.data.zone1),
+                            data: percentageData.map(w => w.zone1),
                             backgroundColor: 'rgba(156, 163, 175, 0.8)'
                         },
                         {
                             label: 'Zone 2 (60-70%)',
-                            data: weeklyZones.map(w => w.data.zone2),
+                            data: percentageData.map(w => w.zone2),
                             backgroundColor: 'rgba(59, 130, 246, 0.8)'
                         },
                         {
                             label: 'Zone 3 (70-80%)',
-                            data: weeklyZones.map(w => w.data.zone3),
+                            data: percentageData.map(w => w.zone3),
                             backgroundColor: 'rgba(34, 197, 94, 0.8)'
                         },
                         {
                             label: 'Zone 4 (80-90%)',
-                            data: weeklyZones.map(w => w.data.zone4),
+                            data: percentageData.map(w => w.zone4),
                             backgroundColor: 'rgba(249, 115, 22, 0.8)'
                         },
                         {
                             label: 'Zone 5 (90-100%)',
-                            data: weeklyZones.map(w => w.data.zone5),
+                            data: percentageData.map(w => w.zone5),
                             backgroundColor: 'rgba(239, 68, 68, 0.8)'
                         }
                     ]
@@ -834,10 +956,11 @@
                         x: { stacked: true },
                         y: { 
                             stacked: true,
-                            title: { display: true, text: '時間' },
+                            max: 100,
+                            title: { display: true, text: '割合 (%)' },
                             ticks: {
                                 callback: function(value) {
-                                    return value.toFixed(1) + 'h';
+                                    return value + '%';
                                 }
                             }
                         }
@@ -847,7 +970,8 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + 'h';
+                                    const value = context.parsed.y;
+                                    return value > 0 ? context.dataset.label + ': ' + value.toFixed(1) + '%' : '';
                                 }
                             }
                         }

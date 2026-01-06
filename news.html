@@ -16,85 +16,91 @@
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
             min-height: 100vh;
             color: #333;
-            padding-top: 70px;
-            padding-left: 16px;
-            padding-right: 16px;
-            padding-bottom: 32px;
+            margin: 0;
+            padding: 0;
+            display: flex;
         }
 
         .flow-navbar {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            bottom: 0;
+            width: 240px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            padding: 8px 16px;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            overflow-y: auto;
         }
 
         .flow-nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 24px;
+            flex-direction: column;
+            height: 100%;
         }
 
         .flow-nav-logo {
-            font-size: 1rem;
+            font-size: 1.3rem;
             font-weight: 700;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            white-space: nowrap;
+            color: white;
+            text-align: center;
+            padding: 0 20px 30px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .flow-nav-steps {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px;
+            flex: 1;
         }
 
         .flow-nav-step {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 6px 16px;
+            gap: 12px;
+            padding: 12px 16px;
             border-radius: 10px;
-            font-size: 0.65rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            border: none;
+            color: rgba(255, 255, 255, 0.8);
             white-space: nowrap;
-            min-width: 80px;
         }
 
         .flow-nav-step .nav-icon {
-            font-size: 1.2rem;
-            margin-bottom: 2px;
+            font-size: 1.4rem;
+            flex-shrink: 0;
         }
 
         .flow-nav-step.current {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: rgba(255, 255, 255, 0.25);
             color: white;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .flow-nav-step.available {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .flow-nav-step.available:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .content-wrapper {
+            margin-left: 240px;
+            flex: 1;
+            padding: 32px;
+            width: calc(100% - 240px);
         }
 
         .main-container {
@@ -105,20 +111,20 @@
         .page-header {
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 30px;
             border-radius: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
         .page-header h1 {
-            font-size: 1.5em;
-            margin-bottom: 5px;
+            font-size: 2em;
+            margin-bottom: 10px;
         }
 
         .page-header p {
-            font-size: 0.9em;
+            font-size: 1em;
             opacity: 0.9;
         }
 
@@ -282,6 +288,13 @@
             color: #9ca3af;
             font-size: 2rem;
             flex-shrink: 0;
+        }
+
+        .my-channel-video .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
         .my-channel-video .video-info {
@@ -616,7 +629,42 @@
 
         @media (max-width: 768px) {
             body {
-                padding-top: 90px;
+                flex-direction: column;
+            }
+
+            .flow-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+                width: 100%;
+                height: auto;
+                max-height: 80vh;
+                padding: 12px 0;
+            }
+
+            .flow-nav-logo {
+                font-size: 1rem;
+                padding: 0 16px 16px;
+                margin-bottom: 12px;
+            }
+
+            .flow-nav-step {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .flow-nav-step .nav-icon {
+                font-size: 1.2rem;
+            }
+
+            .content-wrapper {
+                margin-left: 0;
+                margin-top: auto;
+                padding: 16px;
+                width: 100%;
+                padding-top: 280px;
             }
 
             .settings-btn {
@@ -671,6 +719,10 @@
         <div class="flow-nav-container">
             <div class="flow-nav-logo">AI Triathlon Coach</div>
             <div class="flow-nav-steps">
+                <a href="home.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
                 <a href="index.html" class="flow-nav-step available">
                     <span class="nav-icon">🤖</span>
                     <span>AIコーチ</span>
@@ -703,7 +755,8 @@
         </div>
     </nav>
 
-    <div class="main-container">
+    <div class="content-wrapper">
+        <div class="main-container">
         <div class="page-header">
             <h1>📰 トライアスロン ニュース & 動画</h1>
             <p>最新のトライアスロン情報をお届けします</p>
@@ -770,6 +823,7 @@
                 <div class="loading-spinner"></div>
                 <p>ニュースを読み込み中...</p>
             </div>
+        </div>
         </div>
     </div>
 

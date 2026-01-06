@@ -870,6 +870,12 @@
                 const translatedBadge = item.translated ? '<span class="card-source" style="background:#dcfce7;color:#166534;">🌐 翻訳済</span>' : '';
                 const langBadge = (item.language === 'en' && !item.translated) ? '<span class="card-source" style="background:#dbeafe;color:#1e40af;">EN</span>' : '';
                 
+                // 英語記事の場合は要約ページへ、日本語記事は直接リンク
+                const linkUrl = item.language === 'en' 
+                    ? `article-summary.html?title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&date=${encodeURIComponent(item.pubDate)}&url=${encodeURIComponent(item.url)}&type=${encodeURIComponent(item.type)}&summary=${encodeURIComponent(item.summary || '')}`
+                    : item.url;
+                const linkTarget = item.language === 'en' ? '_self' : '_blank';
+                
                 if (item.type === 'video') {
                     // YouTubeサムネイルを生成
                     let thumbnailUrl = item.thumbnail;
@@ -881,7 +887,7 @@
                     }
                     
                     return `
-                        <a href="${item.url}" target="_blank" class="feed-card video" data-type="video">
+                        <a href="${linkUrl}" target="${linkTarget}" class="feed-card video" data-type="video">
                             <div class="thumbnail">
                                 ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="">` : ''}
                                 <div class="play-icon">▶</div>
@@ -902,7 +908,7 @@
                     `;
                 } else {
                     return `
-                        <a href="${item.url}" target="_blank" class="feed-card news" data-type="news">
+                        <a href="${linkUrl}" target="${linkTarget}" class="feed-card news" data-type="news">
                             <div class="card-header">
                                 <span class="card-type">📰</span>
                                 <span class="card-source">${item.source}</span>

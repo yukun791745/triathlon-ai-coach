@@ -1,18 +1,26 @@
 const Parser = require('rss-parser');
 
 const parser = new Parser({
-  timeout: 5000,
+  timeout: 10000, // タイムアウトを10秒に延長
   headers: {
     'User-Agent': 'Mozilla/5.0 (compatible; TriathlonAICoach/1.0)'
   }
 });
 
-// RSSフィード設定
+// RSSフィード設定（拡張版）
 const rssFeeds = [
+  // 既存のソース
   { name: 'Triathlete', url: 'https://www.triathlete.com/feed/' },
   { name: 'Slowtwitch', url: 'https://www.slowtwitch.com/feed/' },
   { name: '220 Triathlon', url: 'https://www.220triathlon.com/feed/' },
-  { name: 'LUMINA', url: 'https://lumina-magazine.com/feed/' }
+  { name: 'LUMINA', url: 'https://lumina-magazine.com/feed/' },
+  
+  // 新規追加ソース
+  { name: 'DC Rainmaker', url: 'https://www.dcrainmaker.com/feed' },
+  { name: 'World Triathlon', url: 'https://www.triathlon.org/rss' },
+  { name: 'TrainingPeaks', url: 'https://www.trainingpeaks.com/blog/feed/' },
+  { name: 'Ironman', url: 'https://www.ironman.com/news-rss' },
+  { name: 'Triathlon Magazine Canada', url: 'https://triathlonmagazine.ca/feed/' }
 ];
 
 // YouTubeチャンネル設定
@@ -22,12 +30,19 @@ const youtubeChannels = [
   { name: 'World Triathlon', id: 'UCXRVKD6l-CYA7mQdMPg3KjA' },
   { name: 'IRONMAN', id: 'UCUlPrWg9EMR7CiMfK6GVwvQ' },
   { name: 'T100 Triathlon', id: 'UCITB6kXrkXZBD9e_sHCVE1Q' },
+  { name: 'DC Rainmaker', id: 'UCd-eE2v3gQJTgCRGmZL2uFQ' },
+  
   // 日本語チャンネル
   { name: 'Triathlon LUMINA', id: 'UCUCCGRvP8Bf_vBNheT9tPvw' },
   { name: 'JTU', id: 'UCVDeZm3hyrZQMn0G19iQzDQ' },
   { name: 'Lapulem', id: 'UCo71o37Z18nDo-qb1y5xKnA' },
   { name: 'ヒロ/トライアスロン', id: 'UCYuqo2-kFmcTHBl7G3dgyvw' },
   { name: '古谷純平', id: 'UCi8LOra2y2wkwv2GHRQEz0A' }
+];
+
+// Podcastフィード設定
+const podcastFeeds = [
+  { name: 'TriDot Podcast', url: 'https://feeds.captivate.fm/the-tridot-triathlon-podcast/' }
 ];
 
 // キャッシュ設定
@@ -49,7 +64,8 @@ async function fetchRSSFeed(feed) {
       link: item.link,
       pubDate: item.pubDate || item.isoDate,
       source: feed.name,
-      type: 'article'
+      type: 'article',
+      summary: item.contentSnippet?.substring(0, 200) || item.summary?.substring(0, 200) || ''
     }));
   } catch (error) {
     console.error(`Error fetching ${feed.name}:`, error.message);
@@ -68,10 +84,30 @@ async function fetchYouTubeFeed(channel) {
       pubDate: item.pubDate || item.isoDate,
       source: channel.name,
       type: 'video',
-      thumbnail: item['media:group']?.['media:thumbnail']?.[0]?.['$']?.url || null
+      thumbnail: item['media:group']?.['media:thumbnail']?.[0]?.['$']?.url || null,
+      summary: item['media:group']?.['media:description']?.[0] || ''
     }));
   } catch (error) {
     console.error(`Error fetching YouTube ${channel.name}:`, error.message);
+    return [];
+  }
+}
+
+// Podcastフィードを取得
+async function fetchPodcastFeed(feed) {
+  try {
+    const data = await parser.parseURL(feed.url);
+    return data.items.slice(0, 5).map(item => ({
+      title: item.title,
+      link: item.link || item.enclosure?.url,
+      pubDate: item.pubDate || item.isoDate,
+      source: feed.name,
+      type: 'podcast',
+      thumbnail: item.itunes?.image || data.image?.url || null,
+      summary: item.contentSnippet?.substring(0, 200) || item.itunes?.summary?.substring(0, 200) || ''
+    }));
+  } catch (error) {
+    console.error(`Error fetching podcast ${feed.name}:`, error.message);
     return [];
   }
 }
@@ -168,6 +204,7 @@ exports.handler = async (event) => {
     // キャッシュが有効な場合はキャッシュを返す
     const now = Date.now();
     if (!forceRefresh && feedCache.data && feedCache.timestamp && (now - feedCache.timestamp < feedCache.ttl)) {
+      console.log('Returning cached data');
       return {
         statusCode: 200,
         headers,
@@ -179,17 +216,38 @@ exports.handler = async (event) => {
       };
     }
     
-    // 並列でフィードを取得
-    const [rssResults, youtubeResults] = await Promise.all([
-      Promise.all(rssFeeds.map(feed => fetchRSSFeed(feed))),
-      Promise.all(youtubeChannels.map(channel => fetchYouTubeFeed(channel)))
+    console.log('Fetching fresh data from all sources...');
+    
+    // 並列でフィードを取得（エラーハンドリング強化）
+    const [rssResults, youtubeResults, podcastResults] = await Promise.all([
+      Promise.all(rssFeeds.map(feed => 
+        fetchRSSFeed(feed).catch(err => {
+          console.error(`Failed to fetch RSS ${feed.name}:`, err);
+          return [];
+        })
+      )),
+      Promise.all(youtubeChannels.map(channel => 
+        fetchYouTubeFeed(channel).catch(err => {
+          console.error(`Failed to fetch YouTube ${channel.name}:`, err);
+          return [];
+        })
+      )),
+      Promise.all(podcastFeeds.map(feed => 
+        fetchPodcastFeed(feed).catch(err => {
+          console.error(`Failed to fetch Podcast ${feed.name}:`, err);
+          return [];
+        })
+      ))
     ]);
     
     // 結果を結合
     const allItems = [
       ...rssResults.flat(),
-      ...youtubeResults.flat()
+      ...youtubeResults.flat(),
+      ...podcastResults.flat()
     ];
+    
+    console.log(`Total items fetched: ${allItems.length}`);
     
     // 日付でソート（新しい順）
     allItems.sort((a, b) => {
@@ -201,12 +259,14 @@ exports.handler = async (event) => {
     // 一意のIDを付与
     const itemsWithId = allItems.map((item, index) => ({
       ...item,
-      id: `${item.source}-${index}-${Date.now()}`
+      id: `${item.source.replace(/\s+/g, '-')}-${index}-${Date.now()}`
     }));
     
     // キャッシュを更新
     feedCache.data = itemsWithId;
     feedCache.timestamp = now;
+    
+    console.log('Feed cache updated successfully');
     
     return {
       statusCode: 200,
@@ -214,7 +274,12 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         items: itemsWithId,
         cached: false,
-        totalItems: itemsWithId.length
+        totalItems: itemsWithId.length,
+        sources: {
+          rss: rssFeeds.length,
+          youtube: youtubeChannels.length,
+          podcasts: podcastFeeds.length
+        }
       })
     };
     
@@ -223,7 +288,10 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      })
     };
   }
 };

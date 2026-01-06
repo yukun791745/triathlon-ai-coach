@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム - AI Triathlon Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-top: 70px;
+            padding-left: 16px;
+            padding-right: 16px;
+            padding-bottom: 32px;
+        }
+
+        .flow-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 8px 16px;
+        }
+
+        .flow-nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .flow-nav-logo {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+
+        .flow-nav-steps {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .flow-nav-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .flow-nav-step .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .flow-nav-step.current {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .flow-nav-step.available {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .flow-nav-step.available:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .card-content {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .section-full {
+            grid-column: 1 / -1;
+        }
+
+        .placeholder {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .news-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .news-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .news-thumbnail {
+            width: 100px;
+            height: 60px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .news-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1f2937;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .news-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 90px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 1.5em;
+            }
+
+            .news-item {
+                flex-direction: column;
+            }
+
+            .news-thumbnail {
+                width: 100%;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="home.html" class="flow-nav-step current">
+                    <span class="nav-icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
+                <a href="index.html" class="flow-nav-step available">
+                    <span class="nav-icon">🤖</span>
+                    <span>AIコーチ</span>
+                </a>
+                <a href="news.html" class="flow-nav-step available">
+                    <span class="nav-icon">📰</span>
+                    <span>ニュース</span>
+                </a>
+                <a href="race-selection.html" class="flow-nav-step available">
+                    <span class="nav-icon">🎯</span>
+                    <span>レース選択</span>
+                </a>
+                <a href="goal-setting.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏆</span>
+                    <span>目標設定</span>
+                </a>
+                <a href="training-plan.html" class="flow-nav-step available">
+                    <span class="nav-icon">📋</span>
+                    <span>計画</span>
+                </a>
+                <a href="simulator.html" class="flow-nav-step available">
+                    <span class="nav-icon">🔬</span>
+                    <span>シミュレーター</span>
+                </a>
+                <a href="data.html" class="flow-nav-step available">
+                    <span class="nav-icon">📊</span>
+                    <span>進捗</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>🏠 ダッシュボード</h1>
+            <p>あなたのトライアスロンジャーニーを一目で確認</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- 1. アクティビティサマリー -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2 class="card-title">アクティビティサマリー</h2>
+                </div>
+                <div class="card-content">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📈</div>
+                        <p>アクティビティデータを読み込み中...</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. AIコーチの一言 -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-icon">💬</span>
+                    <h2 class="card-title">AIコーチの一言</h2>
+                </div>
+                <div class="card-content">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">🤖</div>
+                        <p>AIコーチからのメッセージを生成中...</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 今後のレース予定 -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-icon">🏁</span>
+                    <h2 class="card-title">今後のレース予定</h2>
+                </div>
+                <div class="card-content">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📅</div>
+                        <p>レース予定を読み込み中...</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. トップ3ニュース -->
+            <div class="dashboard-card section-full">
+                <div class="card-header">
+                    <span class="card-icon">📰</span>
+                    <h2 class="card-title">最新ニュース</h2>
+                </div>
+                <div class="card-content">
+                    <div class="news-list" id="newsList">
+                        <div class="placeholder">
+                            <div class="placeholder-icon">📡</div>
+                            <p>最新ニュースを読み込み中...</p>
+                        </div>
+                    </div>
+                    <a href="news.html" class="btn-primary">すべてのニュースを見る →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ニュースを取得して表示
+        async function loadTopNews() {
+            try {
+                const response = await fetch('/.netlify/functions/news');
+                if (!response.ok) throw new Error('Failed to fetch news');
+                
+                const data = await response.json();
+                const topNews = data.items.slice(0, 3);
+                
+                const newsList = document.getElementById('newsList');
+                
+                if (topNews.length === 0) {
+                    newsList.innerHTML = '<p style="text-align:center;color:#9ca3af;">ニュースがありません</p>';
+                    return;
+                }
+                
+                newsList.innerHTML = topNews.map(item => {
+                    const isEnglish = !/([\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])/.test(item.title);
+                    const linkUrl = isEnglish 
+                        ? `article-summary.html?title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&date=${encodeURIComponent(item.pubDate)}&url=${encodeURIComponent(item.link)}&type=${encodeURIComponent(item.type)}`
+                        : item.link;
+                    const linkTarget = isEnglish ? '_self' : '_blank';
+                    
+                    let thumbnail = '📰';
+                    if (item.type === 'video' && item.thumbnail) {
+                        thumbnail = `<img src="${item.thumbnail}" alt="">`;
+                    } else if (item.type === 'video') {
+                        thumbnail = '🎬';
+                    }
+                    
+                    return `
+                        <a href="${linkUrl}" target="${linkTarget}" class="news-item">
+                            <div class="news-thumbnail">${thumbnail}</div>
+                            <div class="news-content">
+                                <div class="news-title">${item.title}</div>
+                                <div class="news-meta">${item.source} • ${formatDate(item.pubDate)}</div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading news:', error);
+                document.getElementById('newsList').innerHTML = 
+                    '<p style="text-align:center;color:#ef4444;">ニュースの読み込みに失敗しました</p>';
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (hours < 24) return `${hours}時間前`;
+            if (days < 7) return `${days}日前`;
+            return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+        }
+        
+        // ページ読み込み時に実行
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTopNews();
+        });
+    </script>
+</body>
+</html>

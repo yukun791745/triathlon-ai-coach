@@ -788,10 +788,12 @@
             let pageCount = 0;
             
             try {
+                // ステップ1: アクティビティ一覧を取得
+                console.log('📥 アクティビティ一覧を取得中...');
                 while (hasMore) {
                     pageCount++;
-                    progressText.textContent = `データ取得中... (${allActivities.length}件)`;
-                    progressBar.style.width = `${Math.min(pageCount * 15, 90)}%`;
+                    progressText.textContent = `一覧取得中... (${allActivities.length}件)`;
+                    progressBar.style.width = `${Math.min(pageCount * 10, 50)}%`;
                     
                     const requestBody = {
                         token: accessToken,
@@ -803,8 +805,7 @@
                         requestBody.before = oldestTimestamp;
                     }
                     
-                    console.log('🔍 詳細データを取得中...');
-                    const response = await fetch('/.netlify/functions/strava-activity-detail', {
+                    const response = await fetch('/.netlify/functions/strava-activities', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(requestBody)
@@ -816,13 +817,6 @@
                     }
                     
                     const data = await response.json();
-                    console.log('✅ 成功!', data.activity);
-                    console.log('📍 基本情報:', data.activity);
-                    console.log('💓 Zone情報:', data.activity.raw);
-                    
-                    if (data.activity.raw.zones) {
-                        console.log('🎯 Zone情報発見:', data.activity.raw.zones);
-                    }
                     
                     if (data.activities && data.activities.length > 0) {
                         allActivities = allActivities.concat(data.activities);
@@ -846,6 +840,46 @@
                         hasMore = false;
                     }
                 }
+                
+                console.log(`✅ 一覧取得完了: ${allActivities.length}件`);
+                progressBar.style.width = '60%';
+                
+                // ステップ2: 各アクティビティの詳細情報を取得（最初の5件のみサンプルとして）
+                console.log('💓 詳細データを取得中...');
+                progressText.textContent = `詳細データ取得中...`;
+                
+                const detailPromises = allActivities.slice(0, 5).map(async (activity, index) => {
+                    try {
+                        const detailResponse = await fetch('/.netlify/functions/strava-activity-detail', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                token: accessToken,
+                                activityId: activity.id
+                            })
+                        });
+                        
+                        if (detailResponse.ok) {
+                            const detailData = await detailResponse.json();
+                            
+                            // 詳細データをアクティビティに追加
+                            activity.detailData = detailData;
+                            
+                            if (index === 0) {
+                                console.log('📍 基本情報:', detailData.activity);
+                                console.log('💓 生データ:', detailData.raw);
+                                
+                                if (detailData.raw && detailData.raw.zones) {
+                                    console.log('🎯 Zone情報発見:', detailData.raw.zones);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.log(`⚠️ アクティビティ${activity.id}の詳細取得失敗:`, err.message);
+                    }
+                });
+                
+                await Promise.all(detailPromises);
                 
                 activities = allActivities;
                 progressBar.style.width = '100%';

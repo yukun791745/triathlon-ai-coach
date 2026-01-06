@@ -744,9 +744,8 @@
                 accessToken = data.access_token;
                 athlete = data.athlete;
                 
-                if (document.getElementById('stayConnected').checked) {
-                    saveToken(data);
-                }
+                // 常にトークンを保存
+                saveToken(data);
                 
                 onConnected();
                 await syncActivities();
@@ -775,7 +774,6 @@
                     accessToken = data.access_token;
                     athlete = data.athlete;
                     
-                    document.getElementById('stayConnected').checked = true;
                     onConnected();
                     
                     const cachedActivities = localStorage.getItem('strava_activities');

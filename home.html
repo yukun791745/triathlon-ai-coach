@@ -108,34 +108,113 @@
             margin: 0 auto;
         }
 
-        /* ヘッダー */
         .page-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px;
-            border-radius: 20px;
+            padding: 30px;
+            border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
         .page-header h1 {
-            font-size: 2.5em;
+            font-size: 2em;
             margin-bottom: 10px;
         }
 
         .page-header p {
-            font-size: 1.1em;
-            opacity: 0.95;
+            font-size: 1em;
+            opacity: 0.9;
         }
 
-        /* AIコーチひとことセクション */
+        /* 上段：8週間アクティビティサマリー */
+        .activity-summary-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .activity-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .activity-summary-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .strava-connect-btn {
+            background: #fc4c02;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .strava-connect-btn:hover {
+            background: #e03d00;
+            transform: translateY(-2px);
+        }
+
+        .activity-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .activity-stat-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .activity-stat-card .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .activity-stat-card .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .activity-stat-card .label {
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        /* 中段：AIコーチひとこと */
         .coach-message-section {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border: 3px solid #f59e0b;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
             position: relative;
             overflow: hidden;
         }
@@ -145,27 +224,28 @@
             position: absolute;
             top: -20px;
             right: -20px;
-            font-size: 150px;
-            opacity: 0.1;
+            font-size: 120px;
+            opacity: 0.08;
         }
 
         .coach-message-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 18px;
         }
 
         .coach-avatar {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
         }
 
         .coach-title {
@@ -173,110 +253,104 @@
         }
 
         .coach-title h3 {
-            font-size: 1.4em;
+            font-size: 1.2em;
             color: #92400e;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .coach-title p {
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #78350f;
-            opacity: 0.8;
+            opacity: 0.85;
         }
 
         .coach-message-content {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            min-height: 150px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            min-height: 120px;
             position: relative;
         }
 
         .coach-message-text {
-            font-size: 1.05em;
-            line-height: 1.8;
+            font-size: 1em;
+            line-height: 1.75;
             color: #1f2937;
         }
 
         .coach-message-loading {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #9ca3af;
         }
 
         .loading-spinner {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border: 3px solid #f3f4f6;
             border-top-color: #f59e0b;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .coach-message-error {
-            text-align: center;
-            padding: 30px;
-            color: #dc2626;
-        }
-
         .coach-message-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .message-meta {
             display: flex;
             align-items: center;
-            gap: 15px;
-            font-size: 0.85em;
+            gap: 12px;
+            font-size: 0.8em;
             color: #78350f;
         }
 
         .message-type-badge {
             background: rgba(146, 64, 14, 0.15);
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 5px 10px;
+            border-radius: 15px;
             font-weight: 600;
         }
 
         .message-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .coach-action-btn {
-            padding: 12px 24px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 10px;
-            font-size: 0.95em;
+            border-radius: 8px;
+            font-size: 0.9em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .coach-action-btn.primary {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .coach-action-btn.primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
         }
 
         .coach-action-btn.secondary {
@@ -290,131 +364,94 @@
             transform: translateY(-2px);
         }
 
-        /* ダッシュボードグリッド */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .dashboard-card {
+        /* 下段：最新ニュース */
+        .news-section {
             background: white;
             border-radius: 15px;
             padding: 25px;
+            margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
         }
 
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .card-title {
-            flex: 1;
-        }
-
-        .card-title h3 {
-            font-size: 1.2em;
-            margin-bottom: 4px;
-            color: #1f2937;
-        }
-
-        .card-title p {
-            font-size: 0.85em;
-            color: #6b7280;
-        }
-
-        .card-content {
-            font-size: 0.95em;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-
-        .card-footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #f3f4f6;
+        .news-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
         }
 
-        .card-action {
+        .news-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-all-link {
             color: #667eea;
+            text-decoration: none;
             font-weight: 600;
             font-size: 0.9em;
-        }
-
-        .card-stat {
-            background: #f3f4f6;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            font-weight: 600;
-            color: #4b5563;
-        }
-
-        /* クイックアクション */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .quick-action-btn {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
             transition: all 0.3s ease;
+        }
+
+        .view-all-link:hover {
+            color: #764ba2;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .news-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            cursor: pointer;
             text-decoration: none;
             color: inherit;
             display: block;
+            border: 1px solid #e5e7eb;
         }
 
-        .quick-action-btn:hover {
+        .news-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             border-color: #667eea;
-            background: #f9fafb;
-            transform: translateY(-2px);
         }
 
-        .quick-action-icon {
-            font-size: 2em;
+        .news-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 10px;
+            font-size: 0.75em;
+            color: #6b7280;
         }
 
-        .quick-action-text {
-            font-size: 0.95em;
+        .news-card-title {
+            font-size: 1.05em;
             font-weight: 600;
             color: #1f2937;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .news-card-summary {
+            font-size: 0.9em;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .news-loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
         }
 
         @media (max-width: 768px) {
@@ -457,24 +494,6 @@
                 padding-top: 280px;
             }
 
-            .page-header h1 {
-                font-size: 1.8em;
-            }
-
-            .coach-message-section {
-                padding: 20px;
-            }
-
-            .coach-avatar {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-            }
-
-            .coach-title h3 {
-                font-size: 1.2em;
-            }
-
             .coach-message-footer {
                 flex-direction: column;
                 align-items: stretch;
@@ -489,12 +508,8 @@
                 justify-content: center;
             }
 
-            .dashboard-grid {
+            .news-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -542,13 +557,28 @@
 
     <div class="content-wrapper">
         <div class="main-container">
-            <!-- ページヘッダー -->
             <div class="page-header">
                 <h1>🏠 ホーム</h1>
                 <p>あなたのトライアスロンジャーニーをサポートします</p>
             </div>
 
-            <!-- AIコーチひとことセクション -->
+            <!-- 上段：8週間アクティビティサマリー -->
+            <div class="activity-summary-section">
+                <div class="activity-summary-header">
+                    <h2 class="activity-summary-title">
+                        📊 最近8週間のアクティビティ
+                    </h2>
+                    <a href="data.html" class="strava-connect-btn">詳細を見る →</a>
+                </div>
+                <div id="activityStatsContainer">
+                    <div class="no-data-message">
+                        <p>Stravaと連携すると、トレーニングデータが表示されます</p>
+                        <p style="margin-top: 10px; font-size: 0.9em;">「進捗」ページで連携してください</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中段：AIコーチひとこと -->
             <div class="coach-message-section">
                 <div class="coach-message-header">
                     <div class="coach-avatar">🤖</div>
@@ -572,87 +602,29 @@
                     </div>
                     <div class="message-actions">
                         <button class="coach-action-btn secondary" onclick="refreshMessage()">
-                            🔄 新しいメッセージ
+                            🔄 更新
                         </button>
                         <a href="index.html" class="coach-action-btn primary">
-                            💬 AIコーチに相談する
+                            💬 AIコーチに相談
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- クイックアクション -->
-            <div class="quick-actions">
-                <a href="race-selection.html" class="quick-action-btn">
-                    <div class="quick-action-icon">🎯</div>
-                    <div class="quick-action-text">レースを選ぶ</div>
-                </a>
-                <a href="goal-setting.html" class="quick-action-btn">
-                    <div class="quick-action-icon">🏆</div>
-                    <div class="quick-action-text">目標を設定</div>
-                </a>
-                <a href="training-plan.html" class="quick-action-btn">
-                    <div class="quick-action-icon">📋</div>
-                    <div class="quick-action-text">計画を作成</div>
-                </a>
-                <a href="data.html" class="quick-action-btn">
-                    <div class="quick-action-icon">📊</div>
-                    <div class="quick-action-text">進捗を確認</div>
-                </a>
-            </div>
-
-            <!-- ダッシュボードカード -->
-            <div class="dashboard-grid">
-                <a href="news.html" class="dashboard-card">
-                    <div class="card-header">
-                        <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">📰</div>
-                        <div class="card-title">
-                            <h3>最新ニュース</h3>
-                            <p>トライアスロン情報</p>
-                        </div>
+            <!-- 下段：最新ニュース -->
+            <div class="news-section">
+                <div class="news-header">
+                    <h2 class="news-title">
+                        📰 最新ニュース
+                    </h2>
+                    <a href="news.html" class="view-all-link">すべて見る →</a>
+                </div>
+                <div id="newsContainer">
+                    <div class="news-loading">
+                        <div class="loading-spinner"></div>
+                        <p>ニュースを読み込み中...</p>
                     </div>
-                    <div class="card-content">
-                        最新のトライアスロンニュースや動画をチェック。トレーニングのヒントや最新ギア情報をキャッチアップしましょう。
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-action">ニュースを見る →</span>
-                        <span class="card-stat">更新中</span>
-                    </div>
-                </a>
-
-                <a href="simulator.html" class="dashboard-card">
-                    <div class="card-header">
-                        <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">🔬</div>
-                        <div class="card-title">
-                            <h3>パフォーマンス予測</h3>
-                            <p>科学的シミュレーション</p>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        トレーニング効果を科学的に予測。VO2max、FTP、ランニングパフォーマンスの改善をシミュレーション。
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-action">シミュレート →</span>
-                        <span class="card-stat">計算ツール</span>
-                    </div>
-                </a>
-
-                <a href="index.html" class="dashboard-card">
-                    <div class="card-header">
-                        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">🤖</div>
-                        <div class="card-title">
-                            <h3>AIコーチに相談</h3>
-                            <p>24時間対応</p>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        トレーニング、栄養、機材、レース戦略など、何でもAIコーチに相談できます。経験豊富なコーチがサポート。
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-action">相談する →</span>
-                        <span class="card-stat">AI対応</span>
-                    </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
@@ -679,9 +651,71 @@
 
         // ページロード時
         document.addEventListener('DOMContentLoaded', async () => {
+            loadActivitySummary();
             await loadDailyMessage();
+            loadLatestNews();
             updateDateTime();
         });
+
+        // 8週間アクティビティサマリーの読み込み
+        function loadActivitySummary() {
+            const activities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
+            const container = document.getElementById('activityStatsContainer');
+
+            if (activities.length === 0) {
+                return; // デフォルトメッセージを表示
+            }
+
+            // 最近8週間のデータを集計
+            const eightWeeksAgo = new Date();
+            eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+            const recentActivities = activities.filter(act => {
+                const actDate = new Date(act.start_date);
+                return actDate >= eightWeeksAgo;
+            });
+
+            if (recentActivities.length === 0) {
+                return;
+            }
+
+            // 統計を計算
+            const totalDistance = recentActivities.reduce((sum, act) => sum + (act.distance / 1000), 0);
+            const totalTime = recentActivities.reduce((sum, act) => sum + (act.moving_time / 3600), 0);
+            const swimCount = recentActivities.filter(act => act.type === 'Swim').length;
+            const bikeCount = recentActivities.filter(act => act.type === 'Ride').length;
+            const runCount = recentActivities.filter(act => act.type === 'Run').length;
+
+            container.innerHTML = `
+                <div class="activity-stats-grid">
+                    <div class="activity-stat-card">
+                        <div class="icon">🏊‍♂️</div>
+                        <div class="value">${swimCount}</div>
+                        <div class="label">スイム</div>
+                    </div>
+                    <div class="activity-stat-card">
+                        <div class="icon">🚴‍♂️</div>
+                        <div class="value">${bikeCount}</div>
+                        <div class="label">バイク</div>
+                    </div>
+                    <div class="activity-stat-card">
+                        <div class="icon">🏃‍♂️</div>
+                        <div class="value">${runCount}</div>
+                        <div class="label">ラン</div>
+                    </div>
+                    <div class="activity-stat-card">
+                        <div class="icon">📏</div>
+                        <div class="value">${totalDistance.toFixed(1)}</div>
+                        <div class="label">総距離 (km)</div>
+                    </div>
+                    <div class="activity-stat-card">
+                        <div class="icon">⏱️</div>
+                        <div class="value">${totalTime.toFixed(1)}</div>
+                        <div class="label">総時間 (h)</div>
+                    </div>
+                </div>
+            `;
+        }
 
         // メッセージのロード
         async function loadDailyMessage() {
@@ -689,13 +723,12 @@
             const cachedMessage = localStorage.getItem(DAILY_MESSAGE_STORAGE);
             const cacheDate = localStorage.getItem(MESSAGE_DATE_STORAGE);
 
-            // 同じ日のキャッシュがあれば表示
             if (cachedMessage && cacheDate === today) {
-                displayMessage(cachedMessage);
+                const cachedType = localStorage.getItem(MESSAGE_TYPE_STORAGE);
+                displayMessage(cachedMessage, cachedType);
                 return;
             }
 
-            // 新しいメッセージを生成
             await generateDailyMessage();
         }
 
@@ -706,8 +739,8 @@
 
             if (!apiKey) {
                 container.innerHTML = `
-                    <div class="coach-message-error">
-                        <p style="margin-bottom: 15px;">💡 メッセージを生成するにはAPIキーが必要です</p>
+                    <div style="text-align: center; padding: 20px; color: #9ca3af;">
+                        <p style="margin-bottom: 12px;">💡 APIキーを設定すると、毎日異なるアドバイスが表示されます</p>
                         <a href="index.html" class="coach-action-btn primary" style="display: inline-flex;">
                             AIコーチページで設定 →
                         </a>
@@ -716,7 +749,6 @@
                 return;
             }
 
-            // ローディング表示
             if (force) {
                 container.innerHTML = `
                     <div class="coach-message-loading">
@@ -730,7 +762,6 @@
                 const context = await gatherUserContext();
                 const message = await callOpenAI(apiKey, context);
 
-                // メッセージを保存
                 const today = new Date().toDateString();
                 localStorage.setItem(DAILY_MESSAGE_STORAGE, message);
                 localStorage.setItem(MESSAGE_DATE_STORAGE, today);
@@ -741,10 +772,10 @@
             } catch (error) {
                 console.error('メッセージ生成エラー:', error);
                 container.innerHTML = `
-                    <div class="coach-message-error">
+                    <div style="text-align: center; padding: 20px; color: #ef4444;">
                         <p>⚠️ メッセージの生成に失敗しました</p>
-                        <p style="font-size: 0.9em; margin-top: 10px; color: #6b7280;">${error.message}</p>
-                        <button onclick="generateDailyMessage(true)" class="coach-action-btn secondary" style="margin-top: 15px;">
+                        <p style="font-size: 0.9em; margin-top: 8px; color: #9ca3af;">${error.message}</p>
+                        <button onclick="generateDailyMessage(true)" class="coach-action-btn secondary" style="margin-top: 12px;">
                             🔄 再試行
                         </button>
                     </div>
@@ -754,15 +785,13 @@
 
         // コンテキスト情報の収集
         async function gatherUserContext() {
-            // 最近のアクティビティ（Stravaデータから）
             const activities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
-            const recentActivities = activities.slice(0, 7); // 最新7件
+            const recentActivities = activities.slice(0, 7);
             
             const activitySummary = recentActivities.length > 0
                 ? `過去7日間に${recentActivities.length}件のアクティビティ`
                 : '最近のアクティビティなし';
 
-            // 最新ニュース
             const newsCache = localStorage.getItem('triathlon_news_feed_cache');
             let newsSummary = '';
             if (newsCache) {
@@ -771,24 +800,20 @@
                     const latestNews = newsData.data.slice(0, 2);
                     newsSummary = latestNews.map(n => `"${n.title}"`).join(', ');
                 } catch (e) {
-                    newsSummary = 'ニュース取得失敗';
+                    newsSummary = '';
                 }
             }
 
-            // 季節・日付情報
             const now = new Date();
             const season = ['冬', '冬', '春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬'][now.getMonth()];
             const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
 
-            // 前回のメッセージとタイプ
             const lastMessage = localStorage.getItem(LAST_MESSAGE_STORAGE) || '';
             const lastType = localStorage.getItem(MESSAGE_TYPE_STORAGE) || '';
 
-            // ランダムにメッセージタイプを選択（前回と異なるもの）
             const typeKeys = Object.keys(messageTypes);
             let selectedType = typeKeys[Math.floor(Math.random() * typeKeys.length)];
             if (selectedType === lastType && typeKeys.length > 1) {
-                // 前回と同じ場合は次のタイプに
                 const currentIndex = typeKeys.indexOf(selectedType);
                 selectedType = typeKeys[(currentIndex + 1) % typeKeys.length];
             }
@@ -820,9 +845,9 @@
 【メッセージ要件】
 - タイプ: ${selectedType}
 - 内容: ${typePrompts[selectedType]}
-- 長さ: 300字程度
+- 長さ: 200字程度（厳守）
 - トーン: 親しみやすく、具体的で実用的
-- 絵文字: 1-2個使用
+- 絵文字: 1個使用
 - 前回と異なる内容にする
 
 【前回のメッセージ】
@@ -837,10 +862,10 @@ ${lastMessage || 'なし'}
 ユーザーの毎日のホーム画面訪問時に、励ましとなる一言メッセージを提供します。
 
 重要な要件:
-- 300字程度（厳守）
+- 200字程度（厳守）
 - 親しみやすく具体的
 - 前回のメッセージと内容が重複しないこと
-- 絵文字を1-2個使用
+- 絵文字を1個使用
 - ポジティブでモチベーティング`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -855,7 +880,7 @@ ${lastMessage || 'なし'}
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: context.summary }
                     ],
-                    max_tokens: 500,
+                    max_tokens: 350,
                     temperature: 0.8
                 })
             });
@@ -874,7 +899,6 @@ ${lastMessage || 'なし'}
             const container = document.getElementById('coachMessageContent');
             container.innerHTML = `<div class="coach-message-text">${message}</div>`;
 
-            // メッセージタイプバッジ更新
             if (type && messageTypes[type]) {
                 document.getElementById('messageTypeBadge').textContent = messageTypes[type].label;
             }
@@ -892,10 +916,76 @@ ${lastMessage || 'なし'}
 
         // メッセージ更新
         async function refreshMessage() {
-            if (!confirm('新しいメッセージを生成しますか？（今日のメッセージが上書きされます）')) {
+            if (!confirm('新しいメッセージを生成しますか？')) {
                 return;
             }
             await generateDailyMessage(true);
+        }
+
+        // 最新ニュース読み込み
+        async function loadLatestNews() {
+            const container = document.getElementById('newsContainer');
+            
+            try {
+                const newsCache = localStorage.getItem('triathlon_news_feed_cache');
+                if (!newsCache) {
+                    container.innerHTML = `
+                        <div class="no-data-message">
+                            <p>ニュースページで最新情報をチェックしてください</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const newsData = JSON.parse(newsCache);
+                const latestNews = newsData.data.slice(0, 3);
+
+                if (latestNews.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-data-message">
+                            <p>ニュースがありません</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="news-grid">
+                        ${latestNews.map(news => `
+                            <a href="${news.url}" target="_blank" class="news-card">
+                                <div class="news-card-header">
+                                    <span>${news.type === 'video' ? '🎬' : '📰'}</span>
+                                    <span>${news.source}</span>
+                                    <span style="margin-left: auto;">${formatNewsTime(news.pubDate)}</span>
+                                </div>
+                                <div class="news-card-title">${news.title}</div>
+                                ${news.summary ? `<div class="news-card-summary">${news.summary.substring(0, 100)}...</div>` : ''}
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('ニュース読み込みエラー:', error);
+                container.innerHTML = `
+                    <div class="no-data-message">
+                        <p>ニュースの読み込みに失敗しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ニュースの時刻フォーマット
+        function formatNewsTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (hours < 24) return `${hours}時間前`;
+            if (days < 7) return `${days}日前`;
+            return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
         }
 
         console.log('🏠 Home Page Ready');

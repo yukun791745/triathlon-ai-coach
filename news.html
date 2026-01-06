@@ -141,111 +141,69 @@
             color: #667eea;
         }
 
-        .language-filter {
+        .unified-filters {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            align-items: flex-end;
             background: white;
-            padding: 10px;
+            padding: 15px 20px;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .lang-btn {
+        .filter-dropdown {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
             flex: 1;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            min-width: 150px;
+        }
+
+        .dropdown-label {
+            font-size: 0.75rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f3f4f6;
             color: #6b7280;
         }
 
-        .lang-btn:hover {
-            background: #e5e7eb;
+        .filter-select {
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
         }
 
-        .lang-btn.active {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
+        .filter-select:hover {
+            border-color: #667eea;
         }
 
-        .category-filter {
+        .filter-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
             display: flex;
             gap: 8px;
-            margin-bottom: 15px;
-            background: white;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            flex-wrap: wrap;
+            align-items: flex-end;
         }
 
-        .category-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .category-btn:hover {
-            background: #e5e7eb;
-        }
-
-        .category-btn.active {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-
-        .tab-navigation {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px 20px;
+        .translate-btn, .refresh-btn, .settings-btn-inline {
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .tab-btn:hover {
-            background: #e5e7eb;
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .translate-btn, .refresh-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .translate-btn {
@@ -253,20 +211,35 @@
             color: white;
         }
 
+        .translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
         .translate-btn:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+            transform: none;
         }
 
         .refresh-btn {
             background: #f3f4f6;
             color: #6b7280;
-            padding: 12px 16px;
         }
 
         .refresh-btn:hover {
             background: #e5e7eb;
             transform: rotate(180deg);
+        }
+
+        .settings-btn-inline {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .settings-btn-inline:hover {
+            background: #667eea;
+            color: white;
         }
 
         .modal {
@@ -590,9 +563,25 @@
                 width: 100%;
             }
 
-            .category-btn {
-                font-size: 0.7rem;
-                padding: 6px 12px;
+            .unified-filters {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+
+            .filter-dropdown {
+                min-width: 100%;
+            }
+
+            .filter-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .translate-btn, .refresh-btn, .settings-btn-inline {
+                flex: 1;
+                padding: 10px;
+                font-size: 0.85rem;
             }
 
             .feed-card.video {
@@ -647,29 +636,50 @@
         <div class="page-header">
             <h1>📰 トライアスロン ニュース & 動画</h1>
             <p>最新のトライアスロン情報をお届けします</p>
-            <button class="settings-btn" onclick="openSettings()">⚙️ ソース設定</button>
+            <button class="settings-btn" onclick="openSettings()">⚙️ 設定</button>
         </div>
 
-        <div class="language-filter">
-            <button class="lang-btn active" data-lang="all">🌐 すべて</button>
-            <button class="lang-btn" data-lang="ja">🇯🇵 日本語のみ</button>
-        </div>
+        <!-- 統合フィルター（ドロップダウン式） -->
+        <div class="unified-filters">
+            <!-- 言語選択 -->
+            <div class="filter-dropdown">
+                <label class="dropdown-label">🌐 言語</label>
+                <select id="langFilter" class="filter-select">
+                    <option value="all">すべて</option>
+                    <option value="ja">日本語のみ</option>
+                    <option value="en">英語のみ</option>
+                </select>
+            </div>
 
-        <div class="category-filter">
-            <button class="category-btn active" data-category="all">📑 すべて</button>
-            <button class="category-btn" data-category="training">🏃 トレーニング</button>
-            <button class="category-btn" data-category="gear">🚴 機材・ギア</button>
-            <button class="category-btn" data-category="race">🏆 レース</button>
-            <button class="category-btn" data-category="nutrition">🥗 栄養</button>
-            <button class="category-btn" data-category="technique">💡 テクニック</button>
-        </div>
+            <!-- トピック選択 -->
+            <div class="filter-dropdown">
+                <label class="dropdown-label">📑 トピック</label>
+                <select id="categoryFilter" class="filter-select">
+                    <option value="all">すべて</option>
+                    <option value="training">🏃 トレーニング</option>
+                    <option value="gear">🚴 機材・ギア</option>
+                    <option value="race">🏆 レース</option>
+                    <option value="nutrition">🥗 栄養</option>
+                    <option value="technique">💡 テクニック</option>
+                </select>
+            </div>
 
-        <div class="tab-navigation">
-            <button class="tab-btn active" data-tab="all">🌐 すべて</button>
-            <button class="tab-btn" data-tab="videos">🎬 動画</button>
-            <button class="tab-btn" data-tab="news">📰 ニュース</button>
-            <button class="translate-btn" id="translateBtn" onclick="translateAllItems()">🌐 日本語に翻訳</button>
-            <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
+            <!-- 情報タイプ選択 -->
+            <div class="filter-dropdown">
+                <label class="dropdown-label">📱 情報タイプ</label>
+                <select id="typeFilter" class="filter-select">
+                    <option value="all">すべて</option>
+                    <option value="news">📰 記事</option>
+                    <option value="video">🎬 動画/Podcast</option>
+                </select>
+            </div>
+
+            <!-- アクションボタン -->
+            <div class="filter-actions">
+                <button class="translate-btn" id="translateBtn" onclick="translateAllItems()">🌐 翻訳</button>
+                <button class="refresh-btn" onclick="refreshFeed()" title="最新情報を取得">🔄</button>
+                <button class="settings-btn-inline" onclick="openSettings()">⚙️</button>
+            </div>
         </div>
 
         <div class="feed-container" id="feedContainer">
@@ -743,38 +753,37 @@
         let translationCache = {};
         let enabledSources = loadSourceSettings();
 
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const langButtons = document.querySelectorAll('.lang-btn');
-        const categoryButtons = document.querySelectorAll('.category-btn');
+        // ドロップダウンフィルターのイベントリスナー
+        document.addEventListener('DOMContentLoaded', () => {
+            const langFilter = document.getElementById('langFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const typeFilter = document.getElementById('typeFilter');
 
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentTab = btn.dataset.tab;
-                currentPage = 1;
-                filterFeed();
-            });
-        });
+            if (langFilter) {
+                langFilter.addEventListener('change', (e) => {
+                    currentLang = e.target.value;
+                    currentPage = 1;
+                    filterFeed();
+                });
+            }
 
-        langButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                langButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentLang = btn.dataset.lang;
-                currentPage = 1;
-                filterFeed();
-            });
-        });
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', (e) => {
+                    currentCategory = e.target.value;
+                    currentPage = 1;
+                    filterFeed();
+                });
+            }
 
-        categoryButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                categoryButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentCategory = btn.dataset.category;
-                currentPage = 1;
-                filterFeed();
-            });
+            if (typeFilter) {
+                typeFilter.addEventListener('change', (e) => {
+                    currentTab = e.target.value;
+                    currentPage = 1;
+                    filterFeed();
+                });
+            }
+
+            fetchFeed();
         });
 
         function loadSourceSettings() {
@@ -1053,15 +1062,20 @@
         function filterFeed() {
             filteredData = feedData;
             
+            // 言語フィルター
             if (currentLang === 'ja') {
                 filteredData = filteredData.filter(item => item.language === 'ja');
+            } else if (currentLang === 'en') {
+                filteredData = filteredData.filter(item => item.language === 'en');
             }
             
+            // カテゴリフィルター
             if (currentCategory !== 'all') {
                 filteredData = filteredData.filter(item => item.category === currentCategory);
             }
             
-            if (currentTab === 'videos') {
+            // タイプフィルター
+            if (currentTab === 'video') {
                 filteredData = filteredData.filter(item => item.type === 'video');
             } else if (currentTab === 'news') {
                 filteredData = filteredData.filter(item => item.type === 'news');

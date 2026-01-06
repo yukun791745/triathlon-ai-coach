@@ -319,70 +319,84 @@
             try {
                 console.log('🔍 Searching for activity ID:', activityId);
                 
-                // まずキャッシュされたアクティビティから検索
-                const cachedActivities = JSON.parse(localStorage.getItem('cached_activities') || '[]');
-                console.log('📦 Cached activities count:', cachedActivities.length);
+                // キャッシュされたアクティビティから検索（data.htmlと同じキー名を使用）
+                const cachedActivities = localStorage.getItem('strava_activities');
+                if (!cachedActivities) {
+                    throw new Error('キャッシュされたアクティビティが見つかりません。data.htmlで先にデータを同期してください。');
+                }
                 
-                const activity = cachedActivities.find(a => a.id.toString() === activityId.toString());
+                const activities = JSON.parse(cachedActivities);
+                console.log('📦 Cached activities count:', activities.length);
                 
-                if (activity) {
-                    console.log('✅ Activity found in cache:', activity);
+                const activity = activities.find(a => a.id.toString() === activityId.toString());
+                
+                if (!activity) {
+                    throw new Error(`アクティビティID ${activityId} が見つかりません`);
+                }
+                
+                console.log('✅ Activity found in cache:', activity);
+                
+                // 詳細データがキャッシュに含まれているか確認
+                if (activity.detailData) {
+                    console.log('✅ Detail data found in cache');
+                    return {
+                        activity: activity,
+                        raw: activity.detailData.raw,
+                        detailedMetrics: generateDetailedMetrics(activity),
+                        zoneAnalysis: generateZoneAnalysis(activity, activity.detailData.raw)
+                    };
+                }
+                
+                // 詳細データがない場合はAPIで取得
+                console.log('🔍 Fetching detail data from API...');
+                const authData = localStorage.getItem('strava_auth');
+                if (!authData) {
+                    console.log('⚠️ No auth data, using basic data only');
                     return {
                         activity: activity,
                         detailedMetrics: generateDetailedMetrics(activity),
-                        zoneAnalysis: generateZoneAnalysis(activity)
+                        zoneAnalysis: generateZoneAnalysis(activity, null)
                     };
                 }
                 
-                console.log('❌ Activity not found in cache, trying API...');
+                const auth = JSON.parse(authData);
                 
-                // キャッシュにない場合、API経由で取得を試行
-                let stravaToken = localStorage.getItem('strava_access_token');
-                
-                if (!stravaToken && window.opener) {
-                    try {
-                        stravaToken = window.opener.stravaToken;
-                        if (stravaToken) {
-                            localStorage.setItem('strava_access_token', stravaToken);
+                try {
+                    const detailResponse = await fetch('/.netlify/functions/strava-activity-detail', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: auth.access_token,
+                            activityId: activityId
+                        })
+                    });
+                    
+                    if (detailResponse.ok) {
+                        const detailData = await detailResponse.json();
+                        console.log('✅ Detail data fetched from API');
+                        console.log('💓 Raw data:', detailData.raw);
+                        
+                        if (detailData.raw && detailData.raw.zones) {
+                            console.log('🎯 Zone情報発見:', detailData.raw.zones);
                         }
-                    } catch (e) {
-                        console.log('⚠️ Cannot access parent window token');
+                        
+                        return {
+                            activity: activity,
+                            raw: detailData.raw,
+                            detailedMetrics: generateDetailedMetrics(activity),
+                            zoneAnalysis: generateZoneAnalysis(activity, detailData.raw)
+                        };
                     }
+                } catch (apiError) {
+                    console.log('⚠️ API call failed, using basic data:', apiError.message);
                 }
                 
-                if (!stravaToken) {
-                    throw new Error('Stravaトークンが見つかりません。data.htmlで先にStravaに接続してください。');
-                }
-                
-                // 全アクティビティを再取得してキャッシュを更新
-                const response = await fetch('/.netlify/functions/strava-activities', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: stravaToken })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API呼び出しが失敗しました: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                const allActivities = data.activities || [];
-                
-                // キャッシュを更新
-                localStorage.setItem('cached_activities', JSON.stringify(allActivities));
-                
-                // 再度検索
-                const foundActivity = allActivities.find(a => a.id.toString() === activityId.toString());
-                
-                if (foundActivity) {
-                    return {
-                        activity: foundActivity,
-                        detailedMetrics: generateDetailedMetrics(foundActivity),
-                        zoneAnalysis: generateZoneAnalysis(foundActivity)
-                    };
-                }
-                
-                throw new Error('指定されたアクティビティが見つかりません');
+                // APIでも取得できない場合は基本データのみ使用
+                return {
+                    activity: activity,
+                    detailedMetrics: generateDetailedMetrics(activity),
+                    zoneAnalysis: generateZoneAnalysis(activity, null)
+                };
                 
             } catch (error) {
                 console.error('❌ Error fetching activity detail:', error);
@@ -404,57 +418,86 @@
                 calories: activity.kilojoules ? Math.round(activity.kilojoules * 4.184) : null
             };
             
-            // ペース計算
-            if (activity.sport_type === 'Swim' && metrics.distance && metrics.movingTime) {
-                metrics.pace = calculateSwimPace(metrics.distance, metrics.movingTime);
-            } else if (activity.sport_type === 'Run' && metrics.avgSpeed) {
-                metrics.pace = calculateRunPace(metrics.avgSpeed * 3.6);
-            }
-            
             return metrics;
         }
         
-        // ゾーン分析を生成
-        function generateZoneAnalysis(activity) {
+        // ゾーン分析を生成（実際のZoneデータを使用）
+        function generateZoneAnalysis(activity, rawData) {
             const analysis = {};
             
-            // 心拍ゾーン分析（推定）
-            if (activity.average_heartrate) {
-                const avgHR = activity.average_heartrate;
-                const maxHR = 185; // 推定最大心拍数
+            // 実際のZoneデータがある場合はそれを使用
+            if (rawData && rawData.zones) {
+                console.log('🎯 Using real zone data from Strava');
                 
-                analysis.heartRateZones = [
-                    {
-                        name: 'Zone 5 (90-100%)',
-                        range: `${Math.round(maxHR * 0.9)}-${maxHR}`,
-                        time: avgHR >= maxHR * 0.9 ? activity.moving_time : 0,
-                        percentage: avgHR >= maxHR * 0.9 ? '100' : '0'
-                    },
-                    {
-                        name: 'Zone 4 (80-90%)',
-                        range: `${Math.round(maxHR * 0.8)}-${Math.round(maxHR * 0.9)}`,
-                        time: (avgHR >= maxHR * 0.8 && avgHR < maxHR * 0.9) ? activity.moving_time : 0,
-                        percentage: (avgHR >= maxHR * 0.8 && avgHR < maxHR * 0.9) ? '100' : '0'
-                    },
-                    {
-                        name: 'Zone 3 (70-80%)',
-                        range: `${Math.round(maxHR * 0.7)}-${Math.round(maxHR * 0.8)}`,
-                        time: (avgHR >= maxHR * 0.7 && avgHR < maxHR * 0.8) ? activity.moving_time : 0,
-                        percentage: (avgHR >= maxHR * 0.7 && avgHR < maxHR * 0.8) ? '100' : '0'
-                    },
-                    {
-                        name: 'Zone 2 (60-70%)',
-                        range: `${Math.round(maxHR * 0.6)}-${Math.round(maxHR * 0.7)}`,
-                        time: (avgHR >= maxHR * 0.6 && avgHR < maxHR * 0.7) ? activity.moving_time : 0,
-                        percentage: (avgHR >= maxHR * 0.6 && avgHR < maxHR * 0.7) ? '100' : '0'
-                    },
-                    {
-                        name: 'Zone 1 (50-60%)',
-                        range: `${Math.round(maxHR * 0.5)}-${Math.round(maxHR * 0.6)}`,
-                        time: avgHR < maxHR * 0.6 ? activity.moving_time : 0,
-                        percentage: avgHR < maxHR * 0.6 ? '100' : '0'
-                    }
-                ];
+                // 心拍ゾーン
+                const heartRateZones = rawData.zones.find(z => z.type === 'heartrate');
+                if (heartRateZones && heartRateZones.distribution_buckets) {
+                    analysis.heartRateZones = heartRateZones.distribution_buckets.map((bucket, index) => ({
+                        name: `Zone ${index + 1}`,
+                        range: `${bucket.min}-${bucket.max}`,
+                        time: bucket.time,
+                        timeFormatted: formatDuration(bucket.time),
+                        percentage: ((bucket.time / activity.moving_time) * 100).toFixed(1)
+                    })).reverse(); // 高い順に表示
+                }
+                
+                // パワーゾーン
+                const powerZones = rawData.zones.find(z => z.type === 'power');
+                if (powerZones && powerZones.distribution_buckets) {
+                    analysis.powerZones = powerZones.distribution_buckets.map((bucket, index) => ({
+                        name: `Zone ${index + 1}`,
+                        range: `${bucket.min}-${bucket.max}`,
+                        time: bucket.time,
+                        timeFormatted: formatDuration(bucket.time),
+                        percentage: ((bucket.time / activity.moving_time) * 100).toFixed(1)
+                    })).reverse();
+                }
+            } else {
+                // Zoneデータがない場合は推定値を使用
+                console.log('⚠️ Using estimated zone data');
+                
+                if (activity.average_heartrate) {
+                    const avgHR = activity.average_heartrate;
+                    const maxHR = 185; // 推定最大心拍数
+                    
+                    analysis.heartRateZones = [
+                        {
+                            name: 'Zone 5 (90-100%)',
+                            range: `${Math.round(maxHR * 0.9)}-${maxHR}`,
+                            time: avgHR >= maxHR * 0.9 ? activity.moving_time : 0,
+                            timeFormatted: formatDuration(avgHR >= maxHR * 0.9 ? activity.moving_time : 0),
+                            percentage: avgHR >= maxHR * 0.9 ? '100' : '0'
+                        },
+                        {
+                            name: 'Zone 4 (80-90%)',
+                            range: `${Math.round(maxHR * 0.8)}-${Math.round(maxHR * 0.9)}`,
+                            time: (avgHR >= maxHR * 0.8 && avgHR < maxHR * 0.9) ? activity.moving_time : 0,
+                            timeFormatted: formatDuration((avgHR >= maxHR * 0.8 && avgHR < maxHR * 0.9) ? activity.moving_time : 0),
+                            percentage: (avgHR >= maxHR * 0.8 && avgHR < maxHR * 0.9) ? '100' : '0'
+                        },
+                        {
+                            name: 'Zone 3 (70-80%)',
+                            range: `${Math.round(maxHR * 0.7)}-${Math.round(maxHR * 0.8)}`,
+                            time: (avgHR >= maxHR * 0.7 && avgHR < maxHR * 0.8) ? activity.moving_time : 0,
+                            timeFormatted: formatDuration((avgHR >= maxHR * 0.7 && avgHR < maxHR * 0.8) ? activity.moving_time : 0),
+                            percentage: (avgHR >= maxHR * 0.7 && avgHR < maxHR * 0.8) ? '100' : '0'
+                        },
+                        {
+                            name: 'Zone 2 (60-70%)',
+                            range: `${Math.round(maxHR * 0.6)}-${Math.round(maxHR * 0.7)}`,
+                            time: (avgHR >= maxHR * 0.6 && avgHR < maxHR * 0.7) ? activity.moving_time : 0,
+                            timeFormatted: formatDuration((avgHR >= maxHR * 0.6 && avgHR < maxHR * 0.7) ? activity.moving_time : 0),
+                            percentage: (avgHR >= maxHR * 0.6 && avgHR < maxHR * 0.7) ? '100' : '0'
+                        },
+                        {
+                            name: 'Zone 1 (50-60%)',
+                            range: `${Math.round(maxHR * 0.5)}-${Math.round(maxHR * 0.6)}`,
+                            time: avgHR < maxHR * 0.6 ? activity.moving_time : 0,
+                            timeFormatted: formatDuration(avgHR < maxHR * 0.6 ? activity.moving_time : 0),
+                            percentage: avgHR < maxHR * 0.6 ? '100' : '0'
+                        }
+                    ];
+                }
             }
             
             return analysis;
@@ -462,7 +505,7 @@
         
         // アクティビティ詳細を表示
         function displayActivityDetail(data) {
-            const { activity, detailedMetrics, zoneAnalysis } = data;
+            const { activity, raw, detailedMetrics, zoneAnalysis } = data;
             
             // ヘッダー更新
             document.getElementById('activityTitle').textContent = 
@@ -471,13 +514,13 @@
                 new Date(activity.start_date).toLocaleString('ja-JP');
             
             // メトリクス表示
-            displayMetrics(detailedMetrics || activity, activity.sport_type || activity.type);
+            displayMetrics(detailedMetrics, activity.sport_type || activity.type);
             
             // ゾーン分析表示
             displayZoneAnalysis(zoneAnalysis, activity.sport_type || activity.type);
             
             // AI分析生成
-            generateAIAnalysis(activity, detailedMetrics || activity, zoneAnalysis);
+            generateAIAnalysis(activity, detailedMetrics, zoneAnalysis);
             
             // コンテンツ表示
             document.getElementById('loadingSection').style.display = 'none';
@@ -497,7 +540,7 @@
             `).join('');
         }
         
-        // メトリクスカード生成（速度計算修正版）
+        // メトリクスカード生成
         function createMetricCards(metrics, sportType) {
             const cards = [];
             
@@ -508,96 +551,80 @@
             });
             
             cards.push({
-                value: formatDuration(metrics.movingTime || metrics.moving_time || metrics.elapsed_time),
+                value: formatDuration(metrics.movingTime),
                 label: '時間'
             });
             
             // 種目別メトリクス
             if (sportType === 'Swim') {
-                if (metrics.pace || (metrics.distance && metrics.movingTime)) {
-                    const pace = metrics.pace || calculateSwimPace(metrics.distance, metrics.movingTime);
+                if (metrics.distance && metrics.movingTime) {
+                    const pace = calculateSwimPace(metrics.distance, metrics.movingTime);
                     cards.push({
                         value: pace,
                         label: 'ペース (分:秒/100m)'
                     });
                 }
             } else if (sportType === 'Ride') {
-                // 速度計算修正：Strava APIのaverage_speedはm/s単位なので3.6を掛けてkm/hに変換
-                if (metrics.avgSpeed || metrics.average_speed) {
-                    const speedMs = metrics.avgSpeed || metrics.average_speed;
-                    const speedKmh = speedMs * 3.6;
+                if (metrics.avgSpeed) {
+                    const speedKmh = metrics.avgSpeed * 3.6;
                     cards.push({
                         value: speedKmh.toFixed(1),
                         label: '平均速度 (km/h)'
                     });
                 }
                 
-                if (metrics.avgCadence || metrics.average_cadence) {
+                if (metrics.avgCadence) {
                     cards.push({
-                        value: Math.round(metrics.avgCadence || metrics.average_cadence),
+                        value: Math.round(metrics.avgCadence),
                         label: 'ケイデンス (rpm)'
                     });
                 }
                 
-                if (metrics.avgPower || metrics.average_watts) {
+                if (metrics.avgPower) {
                     cards.push({
-                        value: Math.round(metrics.avgPower || metrics.average_watts),
+                        value: Math.round(metrics.avgPower),
                         label: '平均パワー (W)'
                     });
                 }
                 
-                if (metrics.normalizedPower || metrics.weighted_average_watts) {
+                if (metrics.normalizedPower) {
                     cards.push({
-                        value: Math.round(metrics.normalizedPower || metrics.weighted_average_watts),
+                        value: Math.round(metrics.normalizedPower),
                         label: 'NP (W)'
                     });
                 }
             } else if (sportType === 'Run') {
-                if (metrics.pace || (metrics.avgSpeed || metrics.average_speed)) {
-                    const pace = metrics.pace || calculateRunPace((metrics.avgSpeed || metrics.average_speed) * 3.6);
+                if (metrics.avgSpeed) {
+                    const pace = calculateRunPace(metrics.avgSpeed * 3.6);
                     cards.push({
                         value: pace,
                         label: 'ペース (分:秒/km)'
                     });
                 }
                 
-                if (metrics.avgCadence || metrics.average_cadence) {
-                    const cadence = Math.round((metrics.avgCadence || metrics.average_cadence) * 2);
+                if (metrics.avgCadence) {
+                    const cadence = Math.round(metrics.avgCadence * 2);
                     cards.push({
                         value: cadence,
                         label: 'ピッチ (spm)'
                     });
                 }
-                
-                // ストライド計算
-                if ((metrics.avgSpeed || metrics.average_speed) && (metrics.avgCadence || metrics.average_cadence)) {
-                    const speed = (metrics.avgSpeed || metrics.average_speed) * 3.6;
-                    const cadence = (metrics.avgCadence || metrics.average_cadence) * 2;
-                    const stride = ((speed * 1000 / 3600) / cadence).toFixed(2);
-                    cards.push({
-                        value: stride + 'm',
-                        label: 'ストライド'
-                    });
-                }
             }
             
             // 心拍数
-            if (metrics.avgHeartRate || metrics.average_heartrate) {
+            if (metrics.avgHeartRate) {
                 cards.push({
-                    value: Math.round(metrics.avgHeartRate || metrics.average_heartrate),
+                    value: Math.round(metrics.avgHeartRate),
                     label: '平均心拍 (bpm)'
                 });
             }
             
             // 獲得標高
-            if (metrics.elevationGain || metrics.total_elevation_gain) {
-                const elevation = metrics.elevationGain || metrics.total_elevation_gain;
-                if (elevation > 10) {
-                    cards.push({
-                        value: Math.round(elevation),
-                        label: '獲得標高 (m)'
-                    });
-                }
+            if (metrics.elevationGain && metrics.elevationGain > 10) {
+                cards.push({
+                    value: Math.round(metrics.elevationGain),
+                    label: '獲得標高 (m)'
+                });
             }
             
             // カロリー
@@ -633,8 +660,6 @@
         
         // ゾーンテーブル作成
         function createZoneTable(title, zones, unit) {
-            const totalTime = zones.reduce((sum, zone) => sum + parseFloat(zone.percentage || 0), 0);
-            
             return `
                 <h3 style="margin-bottom: 15px; color: #333;">${title}</h3>
                 <table class="zone-table">
@@ -652,11 +677,11 @@
                             <tr>
                                 <td><strong>${zone.name}</strong></td>
                                 <td>${zone.range}</td>
-                                <td>${zone.timeFormatted || formatDuration(zone.time || 0)}</td>
+                                <td>${zone.timeFormatted}</td>
                                 <td><strong>${zone.percentage}%</strong></td>
                                 <td>
                                     <div class="zone-progress">
-                                        <div class="zone-fill zone-${5-index}" style="width: ${zone.percentage}%"></div>
+                                        <div class="zone-fill zone-${zones.length - index}" style="width: ${zone.percentage}%"></div>
                                     </div>
                                 </td>
                             </tr>
@@ -669,8 +694,6 @@
         // AI分析生成
         async function generateAIAnalysis(activity, metrics, zoneAnalysis) {
             const container = document.getElementById('aiContent');
-            
-            // フォールバック分析を表示
             container.innerHTML = generateFallbackAnalysis(activity, metrics, zoneAnalysis);
         }
         
@@ -678,7 +701,7 @@
         function generateFallbackAnalysis(activity, metrics, zoneAnalysis) {
             const sportType = activity.sport_type || activity.type;
             const distance = metrics.distance ? (metrics.distance / 1000).toFixed(1) : '0';
-            const avgHR = metrics.avgHeartRate || metrics.average_heartrate;
+            const avgHR = metrics.avgHeartRate;
             
             let feedback = '<strong>【運動生理学的分析】</strong><br><br>';
             
@@ -717,7 +740,6 @@
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('errorSection').style.display = 'block';
             
-            // カスタムエラーメッセージ
             const errorContainer = document.getElementById('errorSection');
             errorContainer.innerHTML = `
                 <div class="error-message">
@@ -735,12 +757,10 @@
         // 戻るボタンの処理
         function goBackToData() {
             try {
-                // 親ウィンドウ（data.html）がある場合はそこに戻る
                 if (window.opener && !window.opener.closed) {
                     window.opener.focus();
                     window.close();
                 } else {
-                    // 親ウィンドウがない場合は直接data.htmlに移動
                     window.location.href = 'data.html';
                 }
             } catch (e) {
@@ -809,7 +829,7 @@
                 displayActivityDetail(data);
             } catch (error) {
                 console.error('❌ Failed to load activity detail:', error);
-                showError();
+                showError(error.message);
             }
         });
         

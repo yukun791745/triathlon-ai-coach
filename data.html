@@ -848,8 +848,10 @@
                 console.log('💓 詳細データを取得中...');
                 progressText.textContent = `詳細データ取得中...`;
                 
+                let detailSuccessCount = 0;
                 const detailPromises = allActivities.slice(0, 5).map(async (activity, index) => {
                     try {
+                        console.log(`🔍 アクティビティ ${activity.id} の詳細を取得中...`);
                         const detailResponse = await fetch('/.netlify/functions/strava-activity-detail', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -864,22 +866,32 @@
                             
                             // 詳細データをアクティビティに追加
                             activity.detailData = detailData;
+                            detailSuccessCount++;
+                            
+                            console.log(`✅ アクティビティ ${activity.id} の詳細取得成功`);
                             
                             if (index === 0) {
+                                console.log('━━━━━━━━━━━━━━━━━━━━');
                                 console.log('📍 基本情報:', detailData.activity);
                                 console.log('💓 生データ:', detailData.raw);
                                 
                                 if (detailData.raw && detailData.raw.zones) {
                                     console.log('🎯 Zone情報発見:', detailData.raw.zones);
+                                } else {
+                                    console.log('⚠️ Zone情報なし');
                                 }
+                                console.log('━━━━━━━━━━━━━━━━━━━━');
                             }
+                        } else {
+                            console.log(`❌ アクティビティ ${activity.id} の詳細取得失敗: ${detailResponse.status}`);
                         }
                     } catch (err) {
-                        console.log(`⚠️ アクティビティ${activity.id}の詳細取得失敗:`, err.message);
+                        console.log(`⚠️ アクティビティ ${activity.id} の詳細取得エラー:`, err.message);
                     }
                 });
                 
                 await Promise.all(detailPromises);
+                console.log(`✅ 詳細データ取得完了: ${detailSuccessCount}/5件成功`);
                 
                 activities = allActivities;
                 progressBar.style.width = '100%';

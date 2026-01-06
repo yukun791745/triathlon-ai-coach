@@ -162,12 +162,12 @@
 
         .chart-wrapper {
             position: relative;
-            height: 300px;
+            height: 200px;
             margin-bottom: 10px;
         }
 
         canvas {
-            max-height: 300px;
+            max-height: 200px;
         }
 
         .card-header {
@@ -377,6 +377,11 @@
                 width: 100%;
                 height: 120px;
             }
+
+            /* モバイルでグリッドを縦並びに */
+            .dashboard-card.section-full > div {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 </head>
@@ -431,14 +436,57 @@
         <div class="dashboard-grid">
             <!-- 1. アクティビティサマリー -->
             <div class="dashboard-card section-full">
-                <div class="card-header">
-                    <span class="card-icon">📊</span>
-                    <h2 class="card-title">アクティビティサマリー</h2>
-                </div>
-                <div class="card-content" id="activitySummary">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📈</div>
-                        <p>Stravaデータを読み込み中...</p>
+                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 20px;">
+                    <!-- 左側：グラフ2つ -->
+                    <div>
+                        <div class="card-header" style="border-bottom: none; padding-bottom: 10px;">
+                            <span class="card-icon">📊</span>
+                            <h2 class="card-title">アクティビティサマリー</h2>
+                            <div style="margin-left: auto; display: flex; gap: 8px;">
+                                <select id="periodSelector" style="padding: 6px 12px; border: 2px solid #667eea; border-radius: 8px; background: white; color: #667eea; font-weight: 600; cursor: pointer; font-size: 0.85em;">
+                                    <option value="today">今日</option>
+                                    <option value="week">過去1週間</option>
+                                    <option value="4weeks">過去4週間</option>
+                                    <option value="8weeks" selected>過去8週間</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-content" id="activitySummary">
+                            <div class="placeholder">
+                                <div class="placeholder-icon">📈</div>
+                                <p>Stravaデータを読み込み中...</p>
+                            </div>
+                        </div>
+                        <div style="padding: 0 25px 10px;">
+                            <a href="data.html" class="btn-primary" style="display: inline-block; margin: 0; font-size: 0.9em;">
+                                📊 アクティビティ進捗へ →
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側：ポイント表示 -->
+                    <div>
+                        <div class="card-header" style="border-bottom: none; padding-bottom: 10px;">
+                            <span class="card-icon">🏆</span>
+                            <h2 class="card-title">獲得ポイント</h2>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="margin-bottom: 20px;">
+                                <div style="font-size: 0.9em; color: #92400e; font-weight: 600; margin-bottom: 8px;">今月</div>
+                                <div id="monthlyPoints" style="font-size: 3em; font-weight: 700; color: #f59e0b; line-height: 1;">0</div>
+                                <div style="font-size: 0.85em; color: #92400e; margin-top: 5px;">ポイント</div>
+                            </div>
+                            <div style="border-top: 2px solid rgba(146, 64, 14, 0.2); padding-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <div style="font-size: 0.8em; color: #78350f; margin-bottom: 4px;">累積獲得ポイント</div>
+                                    <div style="font-size: 1.5em; font-weight: 700; color: #92400e;">xx</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.8em; color: #78350f; margin-bottom: 4px;">ポイント残高</div>
+                                    <div style="font-size: 1.5em; font-weight: 700; color: #92400e;">xx</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -555,6 +603,11 @@
             loadTopNews();
             loadDailyCoachMessage();
             updateMessageTime();
+            
+            // 期間選択のイベントリスナー
+            document.getElementById('periodSelector').addEventListener('change', (e) => {
+                loadStravaData();
+            });
         });
 
         // ========== Stravaデータ読み込み ==========
@@ -571,6 +624,7 @@
                 console.log(`📊 ${activities.length}件のアクティビティを読み込み`);
                 
                 generateActivitySummary(activities);
+                calculateMonthlyPoints(activities);
             } catch (error) {
                 console.error('データ読み込みエラー:', error);
                 showErrorMessage();
@@ -601,28 +655,116 @@
             `;
         }
 
+        // ========== 今月の獲得ポイント計算 ==========
+        function calculateMonthlyPoints(activities) {
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            let monthlyTotal = 0;
+            const dailyPoints = {};
+            
+            activities.forEach(activity => {
+                const activityDate = new Date(activity.start_date);
+                
+                // 今月のアクティビティのみ
+                if (activityDate >= firstDayOfMonth && activityDate <= now) {
+                    const sportType = activity.sport_type || activity.type;
+                    
+                    // 対象種目かチェック
+                    let sport = null;
+                    for (const [sportKey, types] of Object.entries(SPORT_TYPES)) {
+                        if (types.includes(sportType)) {
+                            sport = sportKey;
+                            break;
+                        }
+                    }
+                    
+                    if (!sport) return;
+                    
+                    const dayKey = activityDate.toISOString().split('T')[0];
+                    const duration = (activity.moving_time || activity.elapsed_time || 0) / 60; // 分
+                    
+                    if (!dailyPoints[dayKey]) {
+                        dailyPoints[dayKey] = {};
+                    }
+                    
+                    if (!dailyPoints[dayKey][sport]) {
+                        dailyPoints[dayKey][sport] = 0;
+                    }
+                    
+                    // 30分単位でポイント計算
+                    const points = Math.floor(duration / 30);
+                    dailyPoints[dayKey][sport] += points;
+                }
+            });
+            
+            // 日ごとの種目別ポイントを集計
+            Object.values(dailyPoints).forEach(day => {
+                Object.values(day).forEach(points => {
+                    monthlyTotal += points;
+                });
+            });
+            
+            document.getElementById('monthlyPoints').textContent = monthlyTotal;
+        }
+
         // ========== アクティビティサマリー生成 ==========
         function generateActivitySummary(activities) {
-            const eightWeeksAgo = new Date();
-            eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+            const period = document.getElementById('periodSelector').value;
+            
+            let startDate, filteredActivities, groupByDay;
+            const now = new Date();
+            
+            switch(period) {
+                case 'today':
+                    // 今日のみ
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    groupByDay = true;
+                    break;
+                case 'week':
+                    // 過去1週間
+                    startDate = new Date(now);
+                    startDate.setDate(startDate.getDate() - 7);
+                    groupByDay = true;
+                    break;
+                case '4weeks':
+                    // 過去4週間
+                    startDate = new Date(now);
+                    startDate.setDate(startDate.getDate() - 28);
+                    groupByDay = false;
+                    break;
+                case '8weeks':
+                default:
+                    // 過去8週間
+                    startDate = new Date(now);
+                    startDate.setDate(startDate.getDate() - 56);
+                    groupByDay = false;
+                    break;
+            }
 
-            const filteredActivities = activities.filter(activity => {
+            filteredActivities = activities.filter(activity => {
                 const activityDate = new Date(activity.start_date);
                 const sportType = activity.sport_type || activity.type;
                 
                 const isTargetSport = Object.values(SPORT_TYPES).flat().includes(sportType);
-                const isWithinPeriod = activityDate >= eightWeeksAgo;
+                const isWithinPeriod = activityDate >= startDate;
                 
                 return isTargetSport && isWithinPeriod;
             });
 
-            console.log(`📊 過去8週間の対象アクティビティ: ${filteredActivities.length}件`);
+            console.log(`📊 ${period}の対象アクティビティ: ${filteredActivities.length}件`);
 
-            const weeklyData = calculateWeeklyStats(filteredActivities);
-            const weeklyPoints = calculateWeeklyPoints(filteredActivities);
-            const weeklyZones = calculateWeeklyZones(filteredActivities);
+            let weeklyData, weeklyZones;
+            
+            if (groupByDay) {
+                weeklyData = calculateDailyStats(filteredActivities, period);
+                weeklyZones = calculateDailyZones(filteredActivities, period);
+            } else {
+                weeklyData = calculateWeeklyStats(filteredActivities, period);
+                weeklyZones = calculateWeeklyZones(filteredActivities, period);
+            }
 
-            renderSummary(weeklyData, weeklyPoints, weeklyZones);
+            renderSummary(weeklyData, weeklyZones);
         }
 
         function getWeekStart(date) {
@@ -632,8 +774,117 @@
             return new Date(d.setDate(diff));
         }
 
-        function calculateWeeklyStats(activities) {
+        // 日別統計計算
+        function calculateDailyStats(activities, period) {
+            const days = {};
+            const numDays = period === 'today' ? 1 : 7;
+
+            activities.forEach(activity => {
+                const activityDate = new Date(activity.start_date);
+                const dayKey = activityDate.toISOString().split('T')[0];
+                const sportType = activity.sport_type || activity.type;
+                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600;
+
+                if (!days[dayKey]) {
+                    days[dayKey] = { swim: 0, bike: 0, run: 0, strength: 0 };
+                }
+
+                for (const [sport, types] of Object.entries(SPORT_TYPES)) {
+                    if (types.includes(sportType)) {
+                        days[dayKey][sport] += duration;
+                        break;
+                    }
+                }
+            });
+
+            const result = [];
+            const now = new Date();
+            
+            for (let i = numDays - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                const dayKey = date.toISOString().split('T')[0];
+                const dayLabel = `${date.getMonth() + 1}/${date.getDate()}`;
+
+                result.push({
+                    week: dayLabel,
+                    data: days[dayKey] || { swim: 0, bike: 0, run: 0, strength: 0 }
+                });
+            }
+
+            return result;
+        }
+
+        // 日別Zone計算
+        function calculateDailyZones(activities, period) {
+            const days = {};
+            const userAge = 35;
+            const maxHR = 220 - userAge;
+            const numDays = period === 'today' ? 1 : 7;
+
+            activities.forEach(activity => {
+                const activityDate = new Date(activity.start_date);
+                const dayKey = activityDate.toISOString().split('T')[0];
+
+                if (!days[dayKey]) {
+                    days[dayKey] = { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
+                }
+
+                if (activity.detailData && activity.detailData.raw && activity.detailData.raw.zones) {
+                    const zones = activity.detailData.raw.zones;
+                    const heartRateZones = zones.find(z => z.type === 'heartrate');
+                    
+                    if (heartRateZones && heartRateZones.distribution_buckets) {
+                        heartRateZones.distribution_buckets.forEach((bucket, index) => {
+                            const zoneTime = bucket.time / 3600;
+                            const zoneKey = `zone${index + 1}`;
+                            
+                            if (days[dayKey][zoneKey] !== undefined) {
+                                days[dayKey][zoneKey] += zoneTime;
+                            }
+                        });
+                        return;
+                    }
+                }
+
+                const avgHR = activity.average_heartrate;
+                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600;
+
+                if (!avgHR || avgHR === 0) return;
+
+                const hrPercent = (avgHR / maxHR) * 100;
+                let zone;
+                if (hrPercent < 60) zone = 'zone1';
+                else if (hrPercent < 70) zone = 'zone2';
+                else if (hrPercent < 80) zone = 'zone3';
+                else if (hrPercent < 90) zone = 'zone4';
+                else zone = 'zone5';
+
+                days[dayKey][zone] += duration;
+            });
+
+            const result = [];
+            const now = new Date();
+            
+            for (let i = numDays - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                const dayKey = date.toISOString().split('T')[0];
+                const dayLabel = `${date.getMonth() + 1}/${date.getDate()}`;
+
+                result.push({
+                    week: dayLabel,
+                    data: days[dayKey] || { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 }
+                });
+            }
+
+            return result;
+        }
+
+        // 週別統計計算
+        function calculateWeeklyStats(activities, period) {
             const weeks = {};
+            const numWeeks = period === '4weeks' ? 4 : 8;
 
             activities.forEach(activity => {
                 const weekStart = getWeekStart(new Date(activity.start_date));
@@ -654,7 +905,7 @@
             });
 
             const result = [];
-            for (let i = 7; i >= 0; i--) {
+            for (let i = numWeeks - 1; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i * 7);
                 const weekStart = getWeekStart(date);
@@ -670,79 +921,12 @@
             return result;
         }
 
-        function calculateWeeklyPoints(activities) {
-            const weeks = {};
-
-            activities.forEach(activity => {
-                const activityDate = new Date(activity.start_date);
-                const weekStart = getWeekStart(activityDate);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const dayKey = activityDate.toISOString().split('T')[0];
-                const duration = (activity.moving_time || activity.elapsed_time || 0) / 60;
-                const sportType = activity.sport_type || activity.type;
-
-                let sport = null;
-                for (const [sportKey, types] of Object.entries(SPORT_TYPES)) {
-                    if (types.includes(sportType)) {
-                        sport = sportKey;
-                        break;
-                    }
-                }
-                if (!sport) return;
-
-                if (!weeks[weekKey]) {
-                    weeks[weekKey] = {
-                        days: {},
-                        bySport: { swim: 0, bike: 0, run: 0, strength: 0 }
-                    };
-                }
-
-                if (!weeks[weekKey].days[dayKey]) {
-                    weeks[weekKey].days[dayKey] = {};
-                }
-
-                if (!weeks[weekKey].days[dayKey][sport]) {
-                    weeks[weekKey].days[dayKey][sport] = 0;
-                }
-
-                const points = Math.floor(duration / 30);
-                weeks[weekKey].days[dayKey][sport] += points;
-            });
-
-            Object.keys(weeks).forEach(weekKey => {
-                Object.values(weeks[weekKey].days).forEach(day => {
-                    Object.entries(day).forEach(([sport, points]) => {
-                        weeks[weekKey].bySport[sport] += points;
-                    });
-                });
-            });
-
-            const result = [];
-            for (let i = 7; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i * 7);
-                const weekStart = getWeekStart(date);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
-
-                const weekData = weeks[weekKey] || { bySport: { swim: 0, bike: 0, run: 0, strength: 0 } };
-
-                result.push({
-                    week: weekLabel,
-                    swim: weekData.bySport.swim,
-                    bike: weekData.bySport.bike,
-                    run: weekData.bySport.run,
-                    strength: weekData.bySport.strength
-                });
-            }
-
-            return result;
-        }
-
-        function calculateWeeklyZones(activities) {
+        // 週別Zone計算
+        function calculateWeeklyZones(activities, period) {
             const weeks = {};
             const userAge = 35;
             const maxHR = 220 - userAge;
+            const numWeeks = period === '4weeks' ? 4 : 8;
 
             activities.forEach(activity => {
                 const weekStart = getWeekStart(new Date(activity.start_date));
@@ -786,7 +970,7 @@
             });
 
             const result = [];
-            for (let i = 7; i >= 0; i--) {
+            for (let i = numWeeks - 1; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i * 7);
                 const weekStart = getWeekStart(date);
@@ -802,35 +986,27 @@
             return result;
         }
 
-        function renderSummary(weeklyData, weeklyPoints, weeklyZones) {
+        function renderSummary(weeklyData, weeklyZones) {
             const container = document.getElementById('activitySummary');
             
             container.innerHTML = `
                 <div class="chart-container">
-                    <h3 class="chart-title">週間トレーニング時間（過去8週間）</h3>
+                    <h3 class="chart-title">トレーニング時間</h3>
                     <div class="chart-wrapper">
                         <canvas id="trainingTimeChart"></canvas>
                     </div>
                 </div>
 
                 <div class="chart-container">
-                    <h3 class="chart-title">心拍Zone別割合（過去8週間）</h3>
+                    <h3 class="chart-title">心拍Zone別割合</h3>
                     <div class="chart-wrapper">
                         <canvas id="hrZonesChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3 class="chart-title">週間獲得ポイント（過去8週間）</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="pointsChart"></canvas>
                     </div>
                 </div>
             `;
 
             renderTrainingTimeChart(weeklyData);
             renderHRZonesChart(weeklyZones);
-            renderPointsChart(weeklyPoints);
         }
 
         function renderTrainingTimeChart(weeklyData) {
@@ -931,108 +1107,6 @@
                                 ctx.font = 'bold 13px Arial';
                                 ctx.textAlign = 'center';
                                 ctx.fillText(total.toFixed(1) + 'h', x, y - 5);
-                            }
-                        });
-                    }
-                }]
-            });
-        }
-
-        function renderPointsChart(weeklyPoints) {
-            const ctx = document.getElementById('pointsChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: weeklyPoints.map(w => w.week),
-                    datasets: [
-                        {
-                            label: SPORT_LABELS.swim,
-                            data: weeklyPoints.map(w => w.swim),
-                            backgroundColor: SPORT_COLORS.swim,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.bike,
-                            data: weeklyPoints.map(w => w.bike),
-                            backgroundColor: SPORT_COLORS.bike,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.run,
-                            data: weeklyPoints.map(w => w.run),
-                            backgroundColor: SPORT_COLORS.run,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.strength,
-                            data: weeklyPoints.map(w => w.strength),
-                            backgroundColor: SPORT_COLORS.strength,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            beginAtZero: true,
-                            title: { display: true, text: 'ポイント' },
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + 'pt';
-                                },
-                                footer: function(items) {
-                                    const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
-                                    return '合計: ' + total + 'pt';
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels, {
-                    id: 'totalLabel',
-                    afterDatasetsDraw(chart) {
-                        const ctx = chart.ctx;
-                        chart.data.labels.forEach((label, index) => {
-                            let total = 0;
-                            chart.data.datasets.forEach(dataset => {
-                                total += dataset.data[index];
-                            });
-                            if (total > 0) {
-                                const meta = chart.getDatasetMeta(0);
-                                const x = meta.data[index].x;
-                                const y = chart.scales.y.top;
-                                
-                                ctx.fillStyle = '#1f2937';
-                                ctx.font = 'bold 13px Arial';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(total + 'pt', x, y - 5);
                             }
                         });
                     }

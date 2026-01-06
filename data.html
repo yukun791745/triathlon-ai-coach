@@ -803,7 +803,8 @@
                         requestBody.before = oldestTimestamp;
                     }
                     
-                    const response = await fetch('/.netlify/functions/strava-activities', {
+                    console.log('🔍 詳細データを取得中...');
+                    const response = await fetch('/.netlify/functions/strava-activity-detail', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(requestBody)
@@ -815,6 +816,13 @@
                     }
                     
                     const data = await response.json();
+                    console.log('✅ 成功!', data.activity);
+                    console.log('📍 基本情報:', data.activity);
+                    console.log('💓 Zone情報:', data.activity.raw);
+                    
+                    if (data.activity.raw.zones) {
+                        console.log('🎯 Zone情報発見:', data.activity.raw.zones);
+                    }
                     
                     if (data.activities && data.activities.length > 0) {
                         allActivities = allActivities.concat(data.activities);

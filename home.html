@@ -635,25 +635,55 @@
             return result;
         }
 
-        // 週間統計2: 心拍Zone別（平均心拍数から推定）
+        // 週間統計2: 心拍Zone別（実際のStravaデータまたは推定値を使用）
         function calculateWeeklyZones(activities) {
             const weeks = {};
             const userAge = 35; // デフォルト年齢（後で設定可能にする）
             const maxHR = 220 - userAge;
 
+            console.log('🔍 Zone計算開始:', activities.length, '件のアクティビティ');
+
             activities.forEach(activity => {
                 const weekStart = getWeekStart(new Date(activity.start_date));
                 const weekKey = weekStart.toISOString().split('T')[0];
-                const avgHR = activity.average_heartrate;
-                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600; // 時間
-
-                if (!avgHR || avgHR === 0) return;
 
                 if (!weeks[weekKey]) {
                     weeks[weekKey] = { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
                 }
 
-                // Zoneを判定
+                // 実際のStravaのZone情報がある場合はそれを使用
+                if (activity.detailData && activity.detailData.raw && activity.detailData.raw.zones) {
+                    const zones = activity.detailData.raw.zones;
+                    const heartRateZones = zones.find(z => z.type === 'heartrate');
+                    
+                    if (heartRateZones && heartRateZones.distribution_buckets) {
+                        console.log('✅ アクティビティ', activity.id, '実際のZoneデータを使用');
+                        
+                        // Stravaのゾーン情報を使用（通常5つのゾーン）
+                        heartRateZones.distribution_buckets.forEach((bucket, index) => {
+                            const zoneTime = bucket.time / 3600; // 秒から時間に変換
+                            const zoneKey = `zone${index + 1}`;
+                            
+                            if (weeks[weekKey][zoneKey] !== undefined) {
+                                weeks[weekKey][zoneKey] += zoneTime;
+                            }
+                        });
+                        return; // この行でアクティビティの処理を終了
+                    }
+                }
+
+                // Zone情報がない場合は平均心拍数から推定
+                const avgHR = activity.average_heartrate;
+                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600; // 時間
+
+                if (!avgHR || avgHR === 0) {
+                    console.log('⚠️ アクティビティ', activity.id, 'Zoneデータも心拍データもなし');
+                    return;
+                }
+
+                console.log('⚠️ アクティビティ', activity.id, '平均心拍から推定:', avgHR, 'bpm');
+
+                // Zoneを判定（推定）
                 const hrPercent = (avgHR / maxHR) * 100;
                 let zone;
                 if (hrPercent < 60) zone = 'zone1';
@@ -664,6 +694,9 @@
 
                 weeks[weekKey][zone] += duration;
             });
+
+            // デバッグ: 各週のZoneデータを確認
+            console.log('📊 週別Zone集計:', weeks);
 
             // 過去8週間分を生成
             const result = [];
@@ -680,6 +713,7 @@
                 });
             }
 
+            console.log('✅ Zone計算完了:', result);
             return result;
         }
 

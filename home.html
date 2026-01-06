@@ -417,6 +417,7 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
     <script>
         // 定数
@@ -727,22 +728,42 @@
                         {
                             label: SPORT_LABELS.swim,
                             data: weeklyData.map(w => w.data.swim),
-                            backgroundColor: SPORT_COLORS.swim
+                            backgroundColor: SPORT_COLORS.swim,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.bike,
                             data: weeklyData.map(w => w.data.bike),
-                            backgroundColor: SPORT_COLORS.bike
+                            backgroundColor: SPORT_COLORS.bike,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.run,
                             data: weeklyData.map(w => w.data.run),
-                            backgroundColor: SPORT_COLORS.run
+                            backgroundColor: SPORT_COLORS.run,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.strength,
                             data: weeklyData.map(w => w.data.strength),
-                            backgroundColor: SPORT_COLORS.strength
+                            backgroundColor: SPORT_COLORS.strength,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
+                            }
                         }
                     ]
                 },
@@ -773,18 +794,10 @@
                                     return '合計: ' + total.toFixed(1) + 'h';
                                 }
                             }
-                        },
-                        datalabels: {
-                            display: true,
-                            color: '#fff',
-                            font: { weight: 'bold', size: 10 },
-                            formatter: function(value) {
-                                return value > 0 ? value.toFixed(1) : '';
-                            }
                         }
                     }
                 },
-                plugins: [{
+                plugins: [ChartDataLabels, {
                     id: 'totalLabel',
                     afterDatasetsDraw(chart) {
                         const ctx = chart.ctx;
@@ -799,7 +812,7 @@
                                 const y = chart.scales.y.top;
                                 
                                 ctx.fillStyle = '#1f2937';
-                                ctx.font = 'bold 12px Arial';
+                                ctx.font = 'bold 13px Arial';
                                 ctx.textAlign = 'center';
                                 ctx.fillText(total.toFixed(1) + 'h', x, y - 5);
                             }
@@ -821,22 +834,42 @@
                         {
                             label: SPORT_LABELS.swim,
                             data: weeklyPoints.map(w => w.swim),
-                            backgroundColor: SPORT_COLORS.swim
+                            backgroundColor: SPORT_COLORS.swim,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0 ? value : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.bike,
                             data: weeklyPoints.map(w => w.bike),
-                            backgroundColor: SPORT_COLORS.bike
+                            backgroundColor: SPORT_COLORS.bike,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0 ? value : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.run,
                             data: weeklyPoints.map(w => w.run),
-                            backgroundColor: SPORT_COLORS.run
+                            backgroundColor: SPORT_COLORS.run,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0 ? value : ''
+                            }
                         },
                         {
                             label: SPORT_LABELS.strength,
                             data: weeklyPoints.map(w => w.strength),
-                            backgroundColor: SPORT_COLORS.strength
+                            backgroundColor: SPORT_COLORS.strength,
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value) => value > 0 ? value : ''
+                            }
                         }
                     ]
                 },
@@ -867,7 +900,7 @@
                         }
                     }
                 },
-                plugins: [{
+                plugins: [ChartDataLabels, {
                     id: 'totalLabel',
                     afterDatasetsDraw(chart) {
                         const ctx = chart.ctx;
@@ -882,7 +915,7 @@
                                 const y = chart.scales.y.top;
                                 
                                 ctx.fillStyle = '#1f2937';
-                                ctx.font = 'bold 12px Arial';
+                                ctx.font = 'bold 13px Arial';
                                 ctx.textAlign = 'center';
                                 ctx.fillText(total + 'pt', x, y - 5);
                             }
@@ -925,27 +958,52 @@
                         {
                             label: 'Zone 1 (50-60%)',
                             data: percentageData.map(w => w.zone1),
-                            backgroundColor: 'rgba(156, 163, 175, 0.8)'
+                            backgroundColor: 'rgba(156, 163, 175, 0.8)',
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
+                            }
                         },
                         {
                             label: 'Zone 2 (60-70%)',
                             data: percentageData.map(w => w.zone2),
-                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
+                            }
                         },
                         {
                             label: 'Zone 3 (70-80%)',
                             data: percentageData.map(w => w.zone3),
-                            backgroundColor: 'rgba(34, 197, 94, 0.8)'
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
+                            }
                         },
                         {
                             label: 'Zone 4 (80-90%)',
                             data: percentageData.map(w => w.zone4),
-                            backgroundColor: 'rgba(249, 115, 22, 0.8)'
+                            backgroundColor: 'rgba(249, 115, 22, 0.8)',
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
+                            }
                         },
                         {
                             label: 'Zone 5 (90-100%)',
                             data: percentageData.map(w => w.zone5),
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)'
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
+                            }
                         }
                     ]
                 },
@@ -976,7 +1034,8 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 

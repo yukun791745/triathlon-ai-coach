@@ -242,6 +242,68 @@
             color: white;
         }
 
+        /* マイチャンネルセクション */
+        .my-channel-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .my-channel-section h2 {
+            color: #92400e;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .my-channel-video {
+            display: flex;
+            gap: 15px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .my-channel-video .thumbnail {
+            width: 200px;
+            height: 112px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .my-channel-video .video-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .my-channel-video .video-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+
+        .my-channel-video .video-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -584,6 +646,15 @@
                 font-size: 0.85rem;
             }
 
+            .my-channel-video {
+                flex-direction: column;
+            }
+
+            .my-channel-video .thumbnail {
+                width: 100%;
+                height: 180px;
+            }
+
             .feed-card.video {
                 flex-direction: column;
             }
@@ -637,6 +708,18 @@
             <h1>📰 トライアスロン ニュース & 動画</h1>
             <p>最新のトライアスロン情報をお届けします</p>
             <button class="settings-btn" onclick="openSettings()">⚙️ 設定</button>
+        </div>
+
+        <!-- マイチャンネルセクション（準備中） -->
+        <div class="my-channel-section" id="myChannelSection">
+            <h2>⭐ マイチャンネル（最新動画）</h2>
+            <div class="my-channel-video">
+                <div class="thumbnail">🎬</div>
+                <div class="video-info">
+                    <div class="video-title">チャンネル準備中...</div>
+                    <div class="video-meta">YouTubeチャンネルを設定すると、最新動画がここに表示されます</div>
+                </div>
+            </div>
         </div>
 
         <!-- 統合フィルター（ドロップダウン式） -->

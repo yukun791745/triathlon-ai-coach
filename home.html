@@ -108,28 +108,192 @@
             margin: 0 auto;
         }
 
+        /* ヘッダー */
         .page-header {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
-            border-radius: 15px;
+            padding: 40px;
+            border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
 
         .page-header h1 {
-            font-size: 2em;
+            font-size: 2.5em;
             margin-bottom: 10px;
         }
 
         .page-header p {
-            font-size: 1em;
-            opacity: 0.9;
+            font-size: 1.1em;
+            opacity: 0.95;
         }
 
+        /* AIコーチひとことセクション */
+        .coach-message-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #f59e0b;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coach-message-section::before {
+            content: '💬';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 150px;
+            opacity: 0.1;
+        }
+
+        .coach-message-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .coach-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .coach-title {
+            flex: 1;
+        }
+
+        .coach-title h3 {
+            font-size: 1.4em;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .coach-title p {
+            font-size: 0.9em;
+            color: #78350f;
+            opacity: 0.8;
+        }
+
+        .coach-message-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            min-height: 150px;
+            position: relative;
+        }
+
+        .coach-message-text {
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #1f2937;
+        }
+
+        .coach-message-loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f4f6;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .coach-message-error {
+            text-align: center;
+            padding: 30px;
+            color: #dc2626;
+        }
+
+        .coach-message-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85em;
+            color: #78350f;
+        }
+
+        .message-type-badge {
+            background: rgba(146, 64, 14, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coach-action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coach-action-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .coach-action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .coach-action-btn.secondary {
+            background: white;
+            color: #78350f;
+            border: 2px solid #f59e0b;
+        }
+
+        .coach-action-btn.secondary:hover {
+            background: #fef3c7;
+            transform: translateY(-2px);
+        }
+
+        /* ダッシュボードグリッド */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -140,6 +304,10 @@
             padding: 25px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .dashboard-card:hover {
@@ -147,144 +315,106 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
-        .chart-container {
-            margin-bottom: 30px;
-        }
-
-        .chart-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            margin-bottom: 10px;
-        }
-
-        canvas {
-            max-height: 300px;
-        }
-
         .card-header {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid #f3f4f6;
         }
 
         .card-icon {
-            font-size: 2rem;
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .card-content {
-            color: #6b7280;
-            line-height: 1.6;
-        }
-
-        .section-full {
-            grid-column: 1 / -1;
-        }
-
-        .placeholder {
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            color: #9ca3af;
-        }
-
-        .placeholder-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .news-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .news-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 10px;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .news-item:hover {
-            background: #f3f4f6;
-            transform: translateX(5px);
-        }
-
-        .news-thumbnail {
-            width: 100px;
-            height: 60px;
-            background: #e5e7eb;
-            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
+            font-size: 24px;
         }
 
-        .news-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .news-content {
+        .card-title {
             flex: 1;
         }
 
-        .news-title {
-            font-weight: 600;
-            font-size: 0.95rem;
+        .card-title h3 {
+            font-size: 1.2em;
+            margin-bottom: 4px;
             color: #1f2937;
-            margin-bottom: 5px;
-            line-height: 1.4;
         }
 
-        .news-meta {
-            font-size: 0.75rem;
-            color: #9ca3af;
+        .card-title p {
+            font-size: 0.85em;
+            color: #6b7280;
         }
 
-        .btn-primary {
-            display: inline-block;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
+        .card-content {
+            font-size: 0.95em;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .card-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-action {
+            color: #667eea;
             font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 15px;
+            font-size: 0.9em;
         }
 
-        .btn-primary:hover {
+        .card-stat {
+            background: #f3f4f6;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        /* クイックアクション */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-action-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .quick-action-text {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #1f2937;
         }
 
         @media (max-width: 768px) {
@@ -327,21 +457,44 @@
                 padding-top: 280px;
             }
 
+            .page-header h1 {
+                font-size: 1.8em;
+            }
+
+            .coach-message-section {
+                padding: 20px;
+            }
+
+            .coach-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .coach-title h3 {
+                font-size: 1.2em;
+            }
+
+            .coach-message-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .message-actions {
+                flex-direction: column;
+            }
+
+            .coach-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
 
-            .page-header h1 {
-                font-size: 1.5em;
-            }
-
-            .news-item {
-                flex-direction: column;
-            }
-
-            .news-thumbnail {
-                width: 100%;
-                height: 120px;
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -389,800 +542,363 @@
 
     <div class="content-wrapper">
         <div class="main-container">
-        <div class="page-header">
-            <h1>🏠 ダッシュボード</h1>
-            <p>あなたのトライアスロンジャーニーを一目で確認</p>
-        </div>
+            <!-- ページヘッダー -->
+            <div class="page-header">
+                <h1>🏠 ホーム</h1>
+                <p>あなたのトライアスロンジャーニーをサポートします</p>
+            </div>
 
-        <div class="dashboard-grid">
-            <!-- 1. アクティビティサマリー -->
-            <div class="dashboard-card section-full">
-                <div class="card-header">
-                    <span class="card-icon">📊</span>
-                    <h2 class="card-title">アクティビティサマリー</h2>
+            <!-- AIコーチひとことセクション -->
+            <div class="coach-message-section">
+                <div class="coach-message-header">
+                    <div class="coach-avatar">🤖</div>
+                    <div class="coach-title">
+                        <h3>AIコーチからのひとこと</h3>
+                        <p id="messageDate">今日のメッセージ</p>
+                    </div>
                 </div>
-                <div class="card-content" id="activitySummary">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📈</div>
-                        <p>Stravaデータを読み込み中...</p>
+
+                <div class="coach-message-content" id="coachMessageContent">
+                    <div class="coach-message-loading">
+                        <div class="loading-spinner"></div>
+                        <p>メッセージを生成中...</p>
+                    </div>
+                </div>
+
+                <div class="coach-message-footer">
+                    <div class="message-meta">
+                        <span class="message-type-badge" id="messageTypeBadge">💡 今日のTips</span>
+                        <span id="messageTime">--:--</span>
+                    </div>
+                    <div class="message-actions">
+                        <button class="coach-action-btn secondary" onclick="refreshMessage()">
+                            🔄 新しいメッセージ
+                        </button>
+                        <a href="index.html" class="coach-action-btn primary">
+                            💬 AIコーチに相談する
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. AIコーチの一言 -->
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <span class="card-icon">💬</span>
-                    <h2 class="card-title">AIコーチの一言</h2>
-                </div>
-                <div class="card-content">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">🤖</div>
-                        <p>AIコーチからのメッセージを生成中...</p>
-                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
-                    </div>
-                </div>
+            <!-- クイックアクション -->
+            <div class="quick-actions">
+                <a href="race-selection.html" class="quick-action-btn">
+                    <div class="quick-action-icon">🎯</div>
+                    <div class="quick-action-text">レースを選ぶ</div>
+                </a>
+                <a href="goal-setting.html" class="quick-action-btn">
+                    <div class="quick-action-icon">🏆</div>
+                    <div class="quick-action-text">目標を設定</div>
+                </a>
+                <a href="training-plan.html" class="quick-action-btn">
+                    <div class="quick-action-icon">📋</div>
+                    <div class="quick-action-text">計画を作成</div>
+                </a>
+                <a href="data.html" class="quick-action-btn">
+                    <div class="quick-action-icon">📊</div>
+                    <div class="quick-action-text">進捗を確認</div>
+                </a>
             </div>
 
-            <!-- 3. 今後のレース予定 -->
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <span class="card-icon">🏁</span>
-                    <h2 class="card-title">今後のレース予定</h2>
-                </div>
-                <div class="card-content">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📅</div>
-                        <p>レース予定を読み込み中...</p>
-                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. トップ3ニュース -->
-            <div class="dashboard-card section-full">
-                <div class="card-header">
-                    <span class="card-icon">📰</span>
-                    <h2 class="card-title">最新ニュース</h2>
-                </div>
-                <div class="card-content">
-                    <div class="news-list" id="newsList">
-                        <div class="placeholder">
-                            <div class="placeholder-icon">📡</div>
-                            <p>最新ニュースを読み込み中...</p>
+            <!-- ダッシュボードカード -->
+            <div class="dashboard-grid">
+                <a href="news.html" class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">📰</div>
+                        <div class="card-title">
+                            <h3>最新ニュース</h3>
+                            <p>トライアスロン情報</p>
                         </div>
                     </div>
-                    <a href="news.html" class="btn-primary">すべてのニュースを見る →</a>
-                </div>
+                    <div class="card-content">
+                        最新のトライアスロンニュースや動画をチェック。トレーニングのヒントや最新ギア情報をキャッチアップしましょう。
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-action">ニュースを見る →</span>
+                        <span class="card-stat">更新中</span>
+                    </div>
+                </a>
+
+                <a href="simulator.html" class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">🔬</div>
+                        <div class="card-title">
+                            <h3>パフォーマンス予測</h3>
+                            <p>科学的シミュレーション</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        トレーニング効果を科学的に予測。VO2max、FTP、ランニングパフォーマンスの改善をシミュレーション。
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-action">シミュレート →</span>
+                        <span class="card-stat">計算ツール</span>
+                    </div>
+                </a>
+
+                <a href="index.html" class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">🤖</div>
+                        <div class="card-title">
+                            <h3>AIコーチに相談</h3>
+                            <p>24時間対応</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        トレーニング、栄養、機材、レース戦略など、何でもAIコーチに相談できます。経験豊富なコーチがサポート。
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-action">相談する →</span>
+                        <span class="card-stat">AI対応</span>
+                    </div>
+                </a>
             </div>
-        </div>
         </div>
     </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-
     <script>
-        // 定数
-        const SPORT_TYPES = {
-            swim: ['Swim'],
-            bike: ['Ride', 'VirtualRide'],
-            run: ['Run', 'TrailRun'],
-            strength: ['WeightTraining', 'Workout']
+        // ストレージキー
+        const API_KEY_STORAGE = 'triathlon_ai_api_key';
+        const DAILY_MESSAGE_STORAGE = 'daily_coach_message';
+        const MESSAGE_DATE_STORAGE = 'daily_coach_message_date';
+        const LAST_MESSAGE_STORAGE = 'last_coach_message';
+        const MESSAGE_TYPE_STORAGE = 'last_message_type';
+
+        // メッセージタイプの定義
+        const messageTypes = {
+            activity_praise: { label: '🎉 トレーニング賞賛', icon: '🎉' },
+            improvement_tip: { label: '💡 改善アドバイス', icon: '💡' },
+            news_share: { label: '📰 最新情報', icon: '📰' },
+            nutrition_tip: { label: '🥗 栄養アドバイス', icon: '🥗' },
+            recovery_tip: { label: '😌 リカバリー', icon: '😌' },
+            technique_focus: { label: '🎯 テクニック', icon: '🎯' },
+            mental_coaching: { label: '💪 メンタル', icon: '💪' },
+            equipment_tip: { label: '🔧 機材Tips', icon: '🔧' }
         };
 
-        const SPORT_COLORS = {
-            swim: 'rgba(79, 172, 254, 0.8)',
-            bike: 'rgba(118, 75, 162, 0.8)',
-            run: 'rgba(40, 167, 69, 0.8)',
-            strength: 'rgba(255, 193, 7, 0.8)'
-        };
+        // ページロード時
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDailyMessage();
+            updateDateTime();
+        });
 
-        const SPORT_LABELS = {
-            swim: '🏊 スイム',
-            bike: '🚴 バイク',
-            run: '🏃 ラン',
-            strength: '💪 筋トレ'
-        };
+        // メッセージのロード
+        async function loadDailyMessage() {
+            const today = new Date().toDateString();
+            const cachedMessage = localStorage.getItem(DAILY_MESSAGE_STORAGE);
+            const cacheDate = localStorage.getItem(MESSAGE_DATE_STORAGE);
 
-        // データ読み込み
-        function loadStravaData() {
-            const savedActivities = localStorage.getItem('strava_activities');
-            
-            if (!savedActivities) {
-                showNoDataMessage();
+            // 同じ日のキャッシュがあれば表示
+            if (cachedMessage && cacheDate === today) {
+                displayMessage(cachedMessage);
                 return;
             }
 
-            try {
-                const activities = JSON.parse(savedActivities);
-                console.log(`📊 ${activities.length}件のアクティビティを読み込み`);
-                
-                generateActivitySummary(activities);
-            } catch (error) {
-                console.error('データ読み込みエラー:', error);
-                showErrorMessage();
-            }
+            // 新しいメッセージを生成
+            await generateDailyMessage();
         }
 
-        function showNoDataMessage() {
-            document.getElementById('activitySummary').innerHTML = `
-                <div class="placeholder">
-                    <div class="placeholder-icon">🏃</div>
-                    <p>Stravaデータが見つかりません</p>
-                    <p style="font-size: 0.85rem; margin-top: 10px;">
-                        <a href="data.html" style="color: #667eea; text-decoration: none;">
-                            「進捗」ページ →
+        // メッセージ生成
+        async function generateDailyMessage(force = false) {
+            const apiKey = localStorage.getItem(API_KEY_STORAGE);
+            const container = document.getElementById('coachMessageContent');
+
+            if (!apiKey) {
+                container.innerHTML = `
+                    <div class="coach-message-error">
+                        <p style="margin-bottom: 15px;">💡 メッセージを生成するにはAPIキーが必要です</p>
+                        <a href="index.html" class="coach-action-btn primary" style="display: inline-flex;">
+                            AIコーチページで設定 →
                         </a>
-                        でStravaに接続してデータを同期してください
-                    </p>
-                </div>
-            `;
-        }
-
-        function showErrorMessage() {
-            document.getElementById('activitySummary').innerHTML = `
-                <div class="placeholder">
-                    <div class="placeholder-icon">⚠️</div>
-                    <p>データの読み込みに失敗しました</p>
-                </div>
-            `;
-        }
-
-        // アクティビティサマリー生成
-        function generateActivitySummary(activities) {
-            // フィルタリング：対象種目のみ、過去8週間
-            const eightWeeksAgo = new Date();
-            eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
-
-            const filteredActivities = activities.filter(activity => {
-                const activityDate = new Date(activity.start_date);
-                const sportType = activity.sport_type || activity.type;
-                
-                const isTargetSport = Object.values(SPORT_TYPES).flat().includes(sportType);
-                const isWithinPeriod = activityDate >= eightWeeksAgo;
-                
-                return isTargetSport && isWithinPeriod;
-            });
-
-            console.log(`📊 過去8週間の対象アクティビティ: ${filteredActivities.length}件`);
-
-            // 週間統計を計算
-            const weeklyData = calculateWeeklyStats(filteredActivities);
-            const weeklyPoints = calculateWeeklyPoints(filteredActivities);
-            const weeklyZones = calculateWeeklyZones(filteredActivities);
-
-            // 表示
-            renderSummary(weeklyData, weeklyPoints, weeklyZones);
-        }
-
-        // 週の開始日（月曜日）を取得
-        function getWeekStart(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        }
-
-        // 週間統計1: 種目別トレーニング時間
-        function calculateWeeklyStats(activities) {
-            const weeks = {};
-
-            activities.forEach(activity => {
-                const weekStart = getWeekStart(new Date(activity.start_date));
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const sportType = activity.sport_type || activity.type;
-                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600; // 時間に変換
-
-                if (!weeks[weekKey]) {
-                    weeks[weekKey] = { swim: 0, bike: 0, run: 0, strength: 0 };
-                }
-
-                for (const [sport, types] of Object.entries(SPORT_TYPES)) {
-                    if (types.includes(sportType)) {
-                        weeks[weekKey][sport] += duration;
-                        break;
-                    }
-                }
-            });
-
-            // 過去8週間分を生成
-            const result = [];
-            for (let i = 7; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i * 7);
-                const weekStart = getWeekStart(date);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
-
-                result.push({
-                    week: weekLabel,
-                    data: weeks[weekKey] || { swim: 0, bike: 0, run: 0, strength: 0 }
-                });
+                    </div>
+                `;
+                return;
             }
 
-            return result;
-        }
-
-        // 獲得ポイント計算（種目別も含む）
-        function calculateWeeklyPoints(activities) {
-            const weeks = {};
-
-            activities.forEach(activity => {
-                const activityDate = new Date(activity.start_date);
-                const weekStart = getWeekStart(activityDate);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const dayKey = activityDate.toISOString().split('T')[0];
-                const duration = (activity.moving_time || activity.elapsed_time || 0) / 60; // 分に変換
-                const sportType = activity.sport_type || activity.type;
-
-                // 種目を判定
-                let sport = null;
-                for (const [sportKey, types] of Object.entries(SPORT_TYPES)) {
-                    if (types.includes(sportType)) {
-                        sport = sportKey;
-                        break;
-                    }
-                }
-                if (!sport) return;
-
-                if (!weeks[weekKey]) {
-                    weeks[weekKey] = {
-                        days: {},
-                        bySport: { swim: 0, bike: 0, run: 0, strength: 0 }
-                    };
-                }
-
-                if (!weeks[weekKey].days[dayKey]) {
-                    weeks[weekKey].days[dayKey] = {};
-                }
-
-                if (!weeks[weekKey].days[dayKey][sport]) {
-                    weeks[weekKey].days[dayKey][sport] = 0;
-                }
-
-                // 30分単位でポイント計算
-                const points = Math.floor(duration / 30);
-                weeks[weekKey].days[dayKey][sport] += points;
-            });
-
-            // 週ごとの種目別ポイントを集計
-            Object.keys(weeks).forEach(weekKey => {
-                Object.values(weeks[weekKey].days).forEach(day => {
-                    Object.entries(day).forEach(([sport, points]) => {
-                        weeks[weekKey].bySport[sport] += points;
-                    });
-                });
-            });
-
-            // 過去8週間分を生成
-            const result = [];
-            for (let i = 7; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i * 7);
-                const weekStart = getWeekStart(date);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
-
-                const weekData = weeks[weekKey] || { bySport: { swim: 0, bike: 0, run: 0, strength: 0 } };
-
-                result.push({
-                    week: weekLabel,
-                    swim: weekData.bySport.swim,
-                    bike: weekData.bySport.bike,
-                    run: weekData.bySport.run,
-                    strength: weekData.bySport.strength
-                });
+            // ローディング表示
+            if (force) {
+                container.innerHTML = `
+                    <div class="coach-message-loading">
+                        <div class="loading-spinner"></div>
+                        <p>新しいメッセージを生成中...</p>
+                    </div>
+                `;
             }
 
-            return result;
-        }
-
-        // 週間統計2: 心拍Zone別（実際のStravaデータまたは推定値を使用）
-        function calculateWeeklyZones(activities) {
-            const weeks = {};
-            const userAge = 35; // デフォルト年齢（後で設定可能にする）
-            const maxHR = 220 - userAge;
-
-            console.log('🔍 Zone計算開始:', activities.length, '件のアクティビティ');
-
-            activities.forEach(activity => {
-                const weekStart = getWeekStart(new Date(activity.start_date));
-                const weekKey = weekStart.toISOString().split('T')[0];
-
-                if (!weeks[weekKey]) {
-                    weeks[weekKey] = { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
-                }
-
-                // 実際のStravaのZone情報がある場合はそれを使用
-                if (activity.detailData && activity.detailData.raw && activity.detailData.raw.zones) {
-                    const zones = activity.detailData.raw.zones;
-                    const heartRateZones = zones.find(z => z.type === 'heartrate');
-                    
-                    if (heartRateZones && heartRateZones.distribution_buckets) {
-                        console.log('✅ アクティビティ', activity.id, '実際のZoneデータを使用');
-                        
-                        // Stravaのゾーン情報を使用（通常5つのゾーン）
-                        heartRateZones.distribution_buckets.forEach((bucket, index) => {
-                            const zoneTime = bucket.time / 3600; // 秒から時間に変換
-                            const zoneKey = `zone${index + 1}`;
-                            
-                            if (weeks[weekKey][zoneKey] !== undefined) {
-                                weeks[weekKey][zoneKey] += zoneTime;
-                            }
-                        });
-                        return; // この行でアクティビティの処理を終了
-                    }
-                }
-
-                // Zone情報がない場合は平均心拍数から推定
-                const avgHR = activity.average_heartrate;
-                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600; // 時間
-
-                if (!avgHR || avgHR === 0) {
-                    console.log('⚠️ アクティビティ', activity.id, 'Zoneデータも心拍データもなし');
-                    return;
-                }
-
-                console.log('⚠️ アクティビティ', activity.id, '平均心拍から推定:', avgHR, 'bpm');
-
-                // Zoneを判定（推定）
-                const hrPercent = (avgHR / maxHR) * 100;
-                let zone;
-                if (hrPercent < 60) zone = 'zone1';
-                else if (hrPercent < 70) zone = 'zone2';
-                else if (hrPercent < 80) zone = 'zone3';
-                else if (hrPercent < 90) zone = 'zone4';
-                else zone = 'zone5';
-
-                weeks[weekKey][zone] += duration;
-            });
-
-            // デバッグ: 各週のZoneデータを確認
-            console.log('📊 週別Zone集計:', weeks);
-
-            // 過去8週間分を生成
-            const result = [];
-            for (let i = 7; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i * 7);
-                const weekStart = getWeekStart(date);
-                const weekKey = weekStart.toISOString().split('T')[0];
-                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
-
-                result.push({
-                    week: weekLabel,
-                    data: weeks[weekKey] || { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 }
-                });
-            }
-
-            console.log('✅ Zone計算完了:', result);
-            return result;
-        }
-
-        // サマリー表示
-        function renderSummary(weeklyData, weeklyPoints, weeklyZones) {
-            const container = document.getElementById('activitySummary');
-            
-            container.innerHTML = `
-                <div class="chart-container">
-                    <h3 class="chart-title">週間トレーニング時間（過去8週間）</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="trainingTimeChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3 class="chart-title">心拍Zone別割合（過去8週間）</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="hrZonesChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3 class="chart-title">週間獲得ポイント（過去8週間）</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="pointsChart"></canvas>
-                    </div>
-                </div>
-            `;
-
-            // グラフ描画
-            renderTrainingTimeChart(weeklyData);
-            renderHRZonesChart(weeklyZones);
-            renderPointsChart(weeklyPoints);
-        }
-
-        // グラフ1: トレーニング時間（合計値表示付き）
-        function renderTrainingTimeChart(weeklyData) {
-            const ctx = document.getElementById('trainingTimeChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: weeklyData.map(w => w.week),
-                    datasets: [
-                        {
-                            label: SPORT_LABELS.swim,
-                            data: weeklyData.map(w => w.data.swim),
-                            backgroundColor: SPORT_COLORS.swim,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.bike,
-                            data: weeklyData.map(w => w.data.bike),
-                            backgroundColor: SPORT_COLORS.bike,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.run,
-                            data: weeklyData.map(w => w.data.run),
-                            backgroundColor: SPORT_COLORS.run,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.strength,
-                            data: weeklyData.map(w => w.data.strength),
-                            backgroundColor: SPORT_COLORS.strength,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0.1 ? value.toFixed(1) : ''
-                            }
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            title: { display: true, text: '時間' },
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toFixed(1) + 'h';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + 'h';
-                                },
-                                footer: function(items) {
-                                    const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
-                                    return '合計: ' + total.toFixed(1) + 'h';
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels, {
-                    id: 'totalLabel',
-                    afterDatasetsDraw(chart) {
-                        const ctx = chart.ctx;
-                        chart.data.labels.forEach((label, index) => {
-                            let total = 0;
-                            chart.data.datasets.forEach(dataset => {
-                                total += dataset.data[index];
-                            });
-                            if (total > 0) {
-                                const meta = chart.getDatasetMeta(0);
-                                const x = meta.data[index].x;
-                                const y = chart.scales.y.top;
-                                
-                                ctx.fillStyle = '#1f2937';
-                                ctx.font = 'bold 13px Arial';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(total.toFixed(1) + 'h', x, y - 5);
-                            }
-                        });
-                    }
-                }]
-            });
-        }
-
-        // グラフ2: 獲得ポイント（種目別・合計表示付き）
-        function renderPointsChart(weeklyPoints) {
-            const ctx = document.getElementById('pointsChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: weeklyPoints.map(w => w.week),
-                    datasets: [
-                        {
-                            label: SPORT_LABELS.swim,
-                            data: weeklyPoints.map(w => w.swim),
-                            backgroundColor: SPORT_COLORS.swim,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.bike,
-                            data: weeklyPoints.map(w => w.bike),
-                            backgroundColor: SPORT_COLORS.bike,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.run,
-                            data: weeklyPoints.map(w => w.run),
-                            backgroundColor: SPORT_COLORS.run,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        },
-                        {
-                            label: SPORT_LABELS.strength,
-                            data: weeklyPoints.map(w => w.strength),
-                            backgroundColor: SPORT_COLORS.strength,
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value > 0 ? value : ''
-                            }
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            beginAtZero: true,
-                            title: { display: true, text: 'ポイント' },
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + 'pt';
-                                },
-                                footer: function(items) {
-                                    const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
-                                    return '合計: ' + total + 'pt';
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels, {
-                    id: 'totalLabel',
-                    afterDatasetsDraw(chart) {
-                        const ctx = chart.ctx;
-                        chart.data.labels.forEach((label, index) => {
-                            let total = 0;
-                            chart.data.datasets.forEach(dataset => {
-                                total += dataset.data[index];
-                            });
-                            if (total > 0) {
-                                const meta = chart.getDatasetMeta(0);
-                                const x = meta.data[index].x;
-                                const y = chart.scales.y.top;
-                                
-                                ctx.fillStyle = '#1f2937';
-                                ctx.font = 'bold 13px Arial';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(total + 'pt', x, y - 5);
-                            }
-                        });
-                    }
-                }]
-            });
-        }
-
-        // グラフ3: 心拍Zone（%表示）
-        function renderHRZonesChart(weeklyZones) {
-            const ctx = document.getElementById('hrZonesChart').getContext('2d');
-            
-            // 各週の合計時間を計算してパーセンテージに変換
-            const percentageData = weeklyZones.map(week => {
-                const total = week.data.zone1 + week.data.zone2 + week.data.zone3 + week.data.zone4 + week.data.zone5;
-                
-                if (total === 0) {
-                    return {
-                        week: week.week,
-                        zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0
-                    };
-                }
-                
-                return {
-                    week: week.week,
-                    zone1: (week.data.zone1 / total) * 100,
-                    zone2: (week.data.zone2 / total) * 100,
-                    zone3: (week.data.zone3 / total) * 100,
-                    zone4: (week.data.zone4 / total) * 100,
-                    zone5: (week.data.zone5 / total) * 100
-                };
-            });
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: percentageData.map(w => w.week),
-                    datasets: [
-                        {
-                            label: 'Zone 1 (50-60%)',
-                            data: percentageData.map(w => w.zone1),
-                            backgroundColor: 'rgba(156, 163, 175, 0.8)',
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 10 },
-                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
-                            }
-                        },
-                        {
-                            label: 'Zone 2 (60-70%)',
-                            data: percentageData.map(w => w.zone2),
-                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 10 },
-                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
-                            }
-                        },
-                        {
-                            label: 'Zone 3 (70-80%)',
-                            data: percentageData.map(w => w.zone3),
-                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 10 },
-                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
-                            }
-                        },
-                        {
-                            label: 'Zone 4 (80-90%)',
-                            data: percentageData.map(w => w.zone4),
-                            backgroundColor: 'rgba(249, 115, 22, 0.8)',
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 10 },
-                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
-                            }
-                        },
-                        {
-                            label: 'Zone 5 (90-100%)',
-                            data: percentageData.map(w => w.zone5),
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                            datalabels: {
-                                color: '#fff',
-                                font: { weight: 'bold', size: 10 },
-                                formatter: (value) => value > 5 ? value.toFixed(0) + '%' : ''
-                            }
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            max: 100,
-                            title: { display: true, text: '割合 (%)' },
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed.y;
-                                    return value > 0 ? context.dataset.label + ': ' + value.toFixed(1) + '%' : '';
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-        }
-
-        // ニュースを取得して表示
-        async function loadTopNews() {
             try {
-                const response = await fetch('/.netlify/functions/news');
-                if (!response.ok) throw new Error('Failed to fetch news');
-                
-                const data = await response.json();
-                const topNews = data.items.slice(0, 3);
-                
-                const newsList = document.getElementById('newsList');
-                
-                if (topNews.length === 0) {
-                    newsList.innerHTML = '<p style="text-align:center;color:#9ca3af;">ニュースがありません</p>';
-                    return;
-                }
-                
-                newsList.innerHTML = topNews.map(item => {
-                    const isEnglish = !/([\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF])/.test(item.title);
-                    const linkUrl = isEnglish 
-                        ? `article-summary.html?title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&date=${encodeURIComponent(item.pubDate)}&url=${encodeURIComponent(item.link)}&type=${encodeURIComponent(item.type)}`
-                        : item.link;
-                    const linkTarget = isEnglish ? '_self' : '_blank';
-                    
-                    let thumbnail = '📰';
-                    if (item.type === 'video' && item.thumbnail) {
-                        thumbnail = `<img src="${item.thumbnail}" alt="">`;
-                    } else if (item.type === 'video') {
-                        thumbnail = '🎬';
-                    }
-                    
-                    return `
-                        <a href="${linkUrl}" target="${linkTarget}" class="news-item">
-                            <div class="news-thumbnail">${thumbnail}</div>
-                            <div class="news-content">
-                                <div class="news-title">${item.title}</div>
-                                <div class="news-meta">${item.source} • ${formatDate(item.pubDate)}</div>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-                
+                const context = await gatherUserContext();
+                const message = await callOpenAI(apiKey, context);
+
+                // メッセージを保存
+                const today = new Date().toDateString();
+                localStorage.setItem(DAILY_MESSAGE_STORAGE, message);
+                localStorage.setItem(MESSAGE_DATE_STORAGE, today);
+                localStorage.setItem(LAST_MESSAGE_STORAGE, message);
+                localStorage.setItem(MESSAGE_TYPE_STORAGE, context.messageType);
+
+                displayMessage(message, context.messageType);
             } catch (error) {
-                console.error('Error loading news:', error);
-                document.getElementById('newsList').innerHTML = 
-                    '<p style="text-align:center;color:#ef4444;">ニュースの読み込みに失敗しました</p>';
+                console.error('メッセージ生成エラー:', error);
+                container.innerHTML = `
+                    <div class="coach-message-error">
+                        <p>⚠️ メッセージの生成に失敗しました</p>
+                        <p style="font-size: 0.9em; margin-top: 10px; color: #6b7280;">${error.message}</p>
+                        <button onclick="generateDailyMessage(true)" class="coach-action-btn secondary" style="margin-top: 15px;">
+                            🔄 再試行
+                        </button>
+                    </div>
+                `;
             }
         }
-        
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
+
+        // コンテキスト情報の収集
+        async function gatherUserContext() {
+            // 最近のアクティビティ（Stravaデータから）
+            const activities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
+            const recentActivities = activities.slice(0, 7); // 最新7件
+            
+            const activitySummary = recentActivities.length > 0
+                ? `過去7日間に${recentActivities.length}件のアクティビティ`
+                : '最近のアクティビティなし';
+
+            // 最新ニュース
+            const newsCache = localStorage.getItem('triathlon_news_feed_cache');
+            let newsSummary = '';
+            if (newsCache) {
+                try {
+                    const newsData = JSON.parse(newsCache);
+                    const latestNews = newsData.data.slice(0, 2);
+                    newsSummary = latestNews.map(n => `"${n.title}"`).join(', ');
+                } catch (e) {
+                    newsSummary = 'ニュース取得失敗';
+                }
+            }
+
+            // 季節・日付情報
             const now = new Date();
-            const diff = now - date;
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            
-            if (hours < 24) return `${hours}時間前`;
-            if (days < 7) return `${days}日前`;
-            return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+            const season = ['冬', '冬', '春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬'][now.getMonth()];
+            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+
+            // 前回のメッセージとタイプ
+            const lastMessage = localStorage.getItem(LAST_MESSAGE_STORAGE) || '';
+            const lastType = localStorage.getItem(MESSAGE_TYPE_STORAGE) || '';
+
+            // ランダムにメッセージタイプを選択（前回と異なるもの）
+            const typeKeys = Object.keys(messageTypes);
+            let selectedType = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+            if (selectedType === lastType && typeKeys.length > 1) {
+                // 前回と同じ場合は次のタイプに
+                const currentIndex = typeKeys.indexOf(selectedType);
+                selectedType = typeKeys[(currentIndex + 1) % typeKeys.length];
+            }
+
+            const typePrompts = {
+                activity_praise: '最近のトレーニングを具体的に褒め、次へのモチベーションを高める内容',
+                improvement_tip: '現在のトレーニングから改善できるポイントを1つ提案',
+                news_share: '最新ニュースを紹介し、それがトレーニングにどう役立つか説明',
+                nutrition_tip: '季節を考慮した具体的な栄養・補給のアドバイス',
+                recovery_tip: '適切なリカバリー方法を提案',
+                technique_focus: 'スイム・バイク・ランのいずれかの技術向上Tips',
+                mental_coaching: 'トレーニングや目標達成に向けたメンタル面のアドバイス',
+                equipment_tip: '季節を考慮した機材のメンテナンスや活用アドバイス'
+            };
+
+            return {
+                messageType: selectedType,
+                summary: `
+【日付・季節】
+- 今日: ${now.getMonth() + 1}月${now.getDate()}日(${dayOfWeek})
+- 季節: ${season}
+
+【ユーザー情報】
+- ${activitySummary}
+
+【最新情報】
+- 最新ニュース: ${newsSummary || '情報なし'}
+
+【メッセージ要件】
+- タイプ: ${selectedType}
+- 内容: ${typePrompts[selectedType]}
+- 長さ: 300字程度
+- トーン: 親しみやすく、具体的で実用的
+- 絵文字: 1-2個使用
+- 前回と異なる内容にする
+
+【前回のメッセージ】
+${lastMessage || 'なし'}
+`
+            };
         }
-        
-        // ページ読み込み時に実行
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStravaData();
-            loadTopNews();
-        });
+
+        // OpenAI API呼び出し
+        async function callOpenAI(apiKey, context) {
+            const systemPrompt = `あなたは親しみやすく経験豊富なトライアスロンコーチです。
+ユーザーの毎日のホーム画面訪問時に、励ましとなる一言メッセージを提供します。
+
+重要な要件:
+- 300字程度（厳守）
+- 親しみやすく具体的
+- 前回のメッセージと内容が重複しないこと
+- 絵文字を1-2個使用
+- ポジティブでモチベーティング`;
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + apiKey
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: context.summary }
+                    ],
+                    max_tokens: 500,
+                    temperature: 0.8
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'API呼び出しに失敗しました');
+            }
+
+            const data = await response.json();
+            return data.choices[0]?.message?.content?.trim() || 'メッセージを生成できませんでした';
+        }
+
+        // メッセージ表示
+        function displayMessage(message, type = null) {
+            const container = document.getElementById('coachMessageContent');
+            container.innerHTML = `<div class="coach-message-text">${message}</div>`;
+
+            // メッセージタイプバッジ更新
+            if (type && messageTypes[type]) {
+                document.getElementById('messageTypeBadge').textContent = messageTypes[type].label;
+            }
+        }
+
+        // 日時更新
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            document.getElementById('messageDate').textContent = `${dateStr} のメッセージ`;
+            document.getElementById('messageTime').textContent = timeStr;
+        }
+
+        // メッセージ更新
+        async function refreshMessage() {
+            if (!confirm('新しいメッセージを生成しますか？（今日のメッセージが上書きされます）')) {
+                return;
+            }
+            await generateDailyMessage(true);
+        }
+
+        console.log('🏠 Home Page Ready');
     </script>
 </body>
 </html>

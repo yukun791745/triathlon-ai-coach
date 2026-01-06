@@ -106,9 +106,19 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .connection-footer {
+            margin-top: 10px;
         }
         
         .panel {
@@ -118,6 +128,22 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        .panel.compact {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .panel.compact .header {
+            padding: 12px 20px;
+        }
+
+        .panel.compact .header h1 {
+            font-size: 1.1em;
+        }
+
+        .panel.compact .content {
+            padding: 15px 20px;
         }
         
         .header {
@@ -446,8 +472,8 @@
         }
         
         @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr 1fr;
+            .main-content {
+                grid-template-columns: 1fr;
             }
         }
         
@@ -491,7 +517,7 @@
                 padding-top: 280px;
             }
             
-            .container {
+            .main-content {
                 grid-template-columns: 1fr;
             }
         }
@@ -540,108 +566,107 @@
 
     <div class="content-wrapper">
         <div class="container">
-        <!-- Strava連携パネル -->
-        <div class="panel">
-            <div class="header strava-header">
-                <h1>🔗 Strava連携</h1>
-                <p>トレーニングデータを同期</p>
+        <!-- メインコンテンツ：アクティビティ一覧とサマリー -->
+        <div class="main-content">
+            <!-- アクティビティ一覧パネル -->
+            <div class="panel">
+                <div class="header">
+                    <h1>📋 アクティビティ一覧</h1>
+                    <p id="activityCount">データ未取得</p>
+                </div>
+                
+                <div class="content">
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label class="filter-label">種目</label>
+                            <select id="typeFilter" class="filter-select">
+                                <option value="all">すべて</option>
+                                <option value="Swim">🏊 スイム</option>
+                                <option value="Ride">🚴 バイク</option>
+                                <option value="Run">🏃 ラン</option>
+                                <option value="other">💪 その他</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">期間</label>
+                            <select id="periodFilter" class="filter-select">
+                                <option value="all">すべて</option>
+                                <option value="thisMonth">今月</option>
+                                <option value="last3Months">過去3ヶ月</option>
+                                <option value="last6Months">過去6ヶ月</option>
+                            </select>
+                        </div>
+                        <button id="resetFilterBtn" class="btn-reset">フィルターをリセット</button>
+                    </div>
+                    
+                    <div id="activityList">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🏃</div>
+                            <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="content">
-                <div id="connectionStatus" class="status disconnected">
-                    <span>○ 未接続</span>
+            <!-- サマリーパネル -->
+            <div class="panel">
+                <div class="header summary-header">
+                    <h1>📊 トレーニングサマリー</h1>
+                    <p>統計情報</p>
                 </div>
                 
-                <div id="athleteCard" class="athlete-card" style="display: none;">
-                    <img id="athleteAvatar" class="athlete-avatar" src="" alt="Avatar">
-                    <div id="athleteName" class="athlete-name"></div>
-                    <div id="athleteLocation" class="athlete-location"></div>
-                </div>
-                
-                <div class="stay-connected-box">
-                    <input type="checkbox" id="stayConnected" checked>
-                    <label for="stayConnected">
-                        次回から自動的に連携する<br>
-                        <small style="opacity: 0.8;">（ブラウザにログイン情報を保存）</small>
-                    </label>
-                </div>
-                
-                <div id="connectSection">
-                    <button id="connectBtn" class="btn btn-strava">
-                        Stravaに接続
-                    </button>
-                </div>
-                
-                <div id="syncSection" style="display: none;">
-                    <button id="syncBtn" class="btn btn-sync">
-                        🔄 データを同期
-                    </button>
-                    <button id="disconnectBtn" class="btn btn-disconnect">
-                        連携を解除
-                    </button>
-                </div>
-                
-                <div id="progressContainer" class="progress-container">
-                    <div class="progress-bar-bg">
-                        <div id="progressBar" class="progress-bar"></div>
-                    </div>
-                    <div id="progressText" class="progress-text"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- アクティビティ一覧パネル -->
-        <div class="panel">
-            <div class="header">
-                <h1>📋 アクティビティ一覧</h1>
-                <p id="activityCount">データ未取得</p>
-            </div>
-            
-            <div class="content">
-                <div class="filter-section">
-                    <div class="filter-group">
-                        <label class="filter-label">種目</label>
-                        <select id="typeFilter" class="filter-select">
-                            <option value="all">すべて</option>
-                            <option value="Swim">🏊 スイム</option>
-                            <option value="Ride">🚴 バイク</option>
-                            <option value="Run">🏃 ラン</option>
-                            <option value="other">💪 その他</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">期間</label>
-                        <select id="periodFilter" class="filter-select">
-                            <option value="all">すべて</option>
-                            <option value="thisMonth">今月</option>
-                            <option value="last3Months">過去3ヶ月</option>
-                            <option value="last6Months">過去6ヶ月</option>
-                        </select>
-                    </div>
-                    <button id="resetFilterBtn" class="btn-reset">フィルターをリセット</button>
-                </div>
-                
-                <div id="activityList">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🏃</div>
-                        <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
+                <div class="content">
+                    <div id="summaryContent">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📈</div>
+                            <p>データ同期後に<br>サマリーを表示します</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- サマリーパネル -->
-        <div class="panel">
-            <div class="header summary-header">
-                <h1>📊 トレーニングサマリー</h1>
-                <p>統計情報</p>
-            </div>
-            
-            <div class="content">
-                <div id="summaryContent">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📈</div>
-                        <p>データ同期後に<br>サマリーを表示します</p>
+
+        <!-- フッター：Strava連携（コンパクト版） -->
+        <div class="connection-footer">
+            <div class="panel compact">
+                <div class="header strava-header">
+                    <h1>🔗 Strava連携</h1>
+                    <p id="lastSyncTime">未同期</p>
+                </div>
+                
+                <div class="content">
+                    <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 15px; align-items: center;">
+                        <div id="connectionStatus" class="status disconnected" style="margin: 0;">
+                            <span>○ 未接続</span>
+                        </div>
+                        
+                        <div id="athleteInfo" style="display: none; font-size: 0.9em; color: #666;">
+                            <span id="athleteNameCompact"></span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <div id="connectSection">
+                                <button id="connectBtn" class="btn btn-strava" style="margin: 0; padding: 10px 20px; font-size: 0.9em;">
+                                    Stravaに接続
+                                </button>
+                            </div>
+                            
+                            <div id="syncSection" style="display: none;">
+                                <button id="syncBtn" class="btn btn-sync" style="margin: 0; padding: 10px 20px; font-size: 0.9em;">
+                                    🔄 データを同期
+                                </button>
+                                <button id="disconnectBtn" class="btn btn-disconnect" style="margin: 0; padding: 8px 16px; font-size: 0.85em;">
+                                    連携を解除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="progressContainer" class="progress-container">
+                        <div class="progress-bar-bg">
+                            <div id="progressBar" class="progress-bar"></div>
+                        </div>
+                        <div id="progressText" class="progress-text"></div>
                     </div>
                 </div>
             </div>
@@ -788,20 +813,24 @@
             updateStatus('connected', '● 接続済み');
             
             if (athlete) {
-                const athleteCard = document.getElementById('athleteCard');
-                const avatarUrl = athlete.profile_medium || athlete.profile || '';
-                if (avatarUrl) {
-                    document.getElementById('athleteAvatar').src = avatarUrl;
-                }
-                document.getElementById('athleteName').textContent = 
-                    `${athlete.firstname || ''} ${athlete.lastname || ''}`.trim() || 'アスリート';
-                document.getElementById('athleteLocation').textContent = 
-                    `${athlete.city || ''} ${athlete.country || ''}`.trim() || '';
-                athleteCard.style.display = 'block';
+                const athleteInfo = document.getElementById('athleteInfo');
+                const athleteName = `${athlete.firstname || ''} ${athlete.lastname || ''}`.trim() || 'アスリート';
+                document.getElementById('athleteNameCompact').textContent = athleteName;
+                athleteInfo.style.display = 'block';
             }
             
             document.getElementById('connectSection').style.display = 'none';
-            document.getElementById('syncSection').style.display = 'block';
+            document.getElementById('syncSection').style.display = 'flex';
+            
+            // 最終同期時刻を復元
+            const lastSync = localStorage.getItem('last_sync_time');
+            if (lastSync) {
+                updateLastSyncTime(lastSync);
+            }
+        }
+
+        function updateLastSyncTime(timeStr) {
+            document.getElementById('lastSyncTime').textContent = `最終同期: ${timeStr}`;
         }
         
         // ===== データ同期 =====
@@ -820,34 +849,100 @@
             syncBtn.innerHTML = '<span class="loading-spinner"></span> 同期中...';
             progressContainer.style.display = 'block';
             
-            activities = [];
-            let allActivities = [];
-            let hasMore = true;
-            let oldestTimestamp = null;
-            let pageCount = 0;
-            
             try {
-                // ステップ1: アクティビティ一覧を取得
-                console.log('📥 アクティビティ一覧を取得中...');
-                while (hasMore) {
-                    pageCount++;
-                    progressText.textContent = `一覧取得中... (${allActivities.length}件)`;
-                    progressBar.style.width = `${Math.min(pageCount * 10, 50)}%`;
+                // 既存データを確認
+                const existingActivities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
+                const isInitialSync = existingActivities.length === 0;
+                
+                let allActivities = [...existingActivities];
+                let newActivitiesCount = 0;
+                
+                if (isInitialSync) {
+                    // 初回：過去1年分を取得
+                    console.log('📥 初回同期：過去1年分のデータを取得中...');
+                    progressText.textContent = '初回同期中...';
                     
-                    const requestBody = {
-                        token: accessToken,
-                        per_page: 200
-                    };
+                    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+                    let hasMore = true;
+                    let oldestTimestamp = null;
+                    let pageCount = 0;
                     
-                    // 2回目以降はbeforeパラメータを使用
-                    if (oldestTimestamp) {
-                        requestBody.before = oldestTimestamp;
+                    while (hasMore && pageCount < 20) { // 最大20ページ（4000件）
+                        pageCount++;
+                        progressBar.style.width = `${Math.min(pageCount * 5, 90)}%`;
+                        progressText.textContent = `初回同期中... (${allActivities.length}件)`;
+                        
+                        const requestBody = {
+                            token: accessToken,
+                            per_page: 200,
+                            after: oneYearAgo
+                        };
+                        
+                        if (oldestTimestamp) {
+                            requestBody.before = oldestTimestamp;
+                        }
+                        
+                        const response = await fetch('/.netlify/functions/strava-activities', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || 'データ取得に失敗');
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.activities && data.activities.length > 0) {
+                            allActivities = allActivities.concat(data.activities);
+                            
+                            const lastActivity = data.activities[data.activities.length - 1];
+                            const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
+                            
+                            // 1年以上前のデータに到達したら終了
+                            if (lastActivityTime < oneYearAgo) {
+                                console.log('📅 1年分のデータ取得完了');
+                                hasMore = false;
+                            } else {
+                                oldestTimestamp = lastActivityTime;
+                            }
+                            
+                            if (data.activities.length < 200) {
+                                hasMore = false;
+                            }
+                        } else {
+                            hasMore = false;
+                        }
                     }
+                    
+                    newActivitiesCount = allActivities.length;
+                    console.log(`✅ 初回同期完了: ${newActivitiesCount}件`);
+                    
+                } else {
+                    // 2回目以降：最新データのみ取得
+                    console.log('🔄 差分更新：最新データを取得中...');
+                    progressText.textContent = '最新データを確認中...';
+                    progressBar.style.width = '30%';
+                    
+                    // 既存データの最新の日時を取得
+                    const latestActivity = existingActivities.reduce((latest, current) => {
+                        const currentTime = new Date(current.start_date).getTime();
+                        const latestTime = new Date(latest.start_date).getTime();
+                        return currentTime > latestTime ? current : latest;
+                    }, existingActivities[0]);
+                    
+                    const afterTimestamp = Math.floor(new Date(latestActivity.start_date).getTime() / 1000) + 1;
                     
                     const response = await fetch('/.netlify/functions/strava-activities', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestBody)
+                        body: JSON.stringify({
+                            token: accessToken,
+                            per_page: 200,
+                            after: afterTimestamp
+                        })
                     });
                     
                     if (!response.ok) {
@@ -858,39 +953,34 @@
                     const data = await response.json();
                     
                     if (data.activities && data.activities.length > 0) {
-                        allActivities = allActivities.concat(data.activities);
+                        // 重複チェック
+                        const existingIds = new Set(existingActivities.map(a => a.id));
+                        const newActivities = data.activities.filter(a => !existingIds.has(a.id));
                         
-                        // 最も古いアクティビティの日付を取得
-                        const lastActivity = data.activities[data.activities.length - 1];
-                        oldestTimestamp = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
+                        allActivities = [...newActivities, ...existingActivities];
+                        newActivitiesCount = newActivities.length;
                         
-                        console.log(`📥 ${data.activities.length}件取得 (合計: ${allActivities.length}件)`);
-                        
-                        // 200件未満なら終了
-                        if (data.activities.length < 200) {
-                            hasMore = false;
-                        }
+                        console.log(`✅ 差分更新完了: ${newActivitiesCount}件の新規データ`);
                     } else {
-                        hasMore = false;
+                        console.log('✅ 新規データなし');
+                        newActivitiesCount = 0;
                     }
                     
-                    // 安全のため最大10回まで
-                    if (pageCount >= 10) {
-                        hasMore = false;
-                    }
+                    progressBar.style.width = '70%';
                 }
                 
-                console.log(`✅ 一覧取得完了: ${allActivities.length}件`);
-                progressBar.style.width = '60%';
-                
-                // ステップ2: 各アクティビティの詳細情報を取得（最初の5件のみサンプルとして）
+                // 詳細データ取得（最新5件のみ）
                 console.log('💓 詳細データを取得中...');
                 progressText.textContent = `詳細データ取得中...`;
                 
+                const activitiesNeedingDetails = allActivities
+                    .filter(a => !a.detailData)
+                    .slice(0, 5);
+                
                 let detailSuccessCount = 0;
-                const detailPromises = allActivities.slice(0, 5).map(async (activity, index) => {
+                
+                for (const activity of activitiesNeedingDetails) {
                     try {
-                        console.log(`🔍 アクティビティ ${activity.id} の詳細を取得中...`);
                         const detailResponse = await fetch('/.netlify/functions/strava-activity-detail', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -902,48 +992,41 @@
                         
                         if (detailResponse.ok) {
                             const detailData = await detailResponse.json();
-                            
-                            // 詳細データをアクティビティに追加
                             activity.detailData = detailData;
                             detailSuccessCount++;
-                            
-                            console.log(`✅ アクティビティ ${activity.id} の詳細取得成功`);
-                            
-                            if (index === 0) {
-                                console.log('━━━━━━━━━━━━━━━━━━━━');
-                                console.log('📍 基本情報:', detailData.activity);
-                                console.log('💓 生データ:', detailData.raw);
-                                
-                                if (detailData.raw && detailData.raw.zones) {
-                                    console.log('🎯 Zone情報発見:', detailData.raw.zones);
-                                } else {
-                                    console.log('⚠️ Zone情報なし');
-                                }
-                                console.log('━━━━━━━━━━━━━━━━━━━━');
-                            }
-                        } else {
-                            console.log(`❌ アクティビティ ${activity.id} の詳細取得失敗: ${detailResponse.status}`);
                         }
                     } catch (err) {
                         console.log(`⚠️ アクティビティ ${activity.id} の詳細取得エラー:`, err.message);
                     }
-                });
+                }
                 
-                await Promise.all(detailPromises);
-                console.log(`✅ 詳細データ取得完了: ${detailSuccessCount}/5件成功`);
+                console.log(`✅ 詳細データ取得完了: ${detailSuccessCount}/${activitiesNeedingDetails.length}件成功`);
                 
                 activities = allActivities;
                 progressBar.style.width = '100%';
-                progressText.textContent = `${activities.length}件のアクティビティを取得しました`;
+                
+                if (isInitialSync) {
+                    progressText.textContent = `${activities.length}件のアクティビティを取得しました（過去1年分）`;
+                } else if (newActivitiesCount > 0) {
+                    progressText.textContent = `${newActivitiesCount}件の新規アクティビティを追加しました（合計${activities.length}件）`;
+                } else {
+                    progressText.textContent = `最新の状態です（合計${activities.length}件）`;
+                }
                 
                 localStorage.setItem('strava_activities', JSON.stringify(activities));
+                
+                // 最終同期時刻を保存
+                const now = new Date();
+                const syncTimeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                localStorage.setItem('last_sync_time', syncTimeStr);
+                updateLastSyncTime(syncTimeStr);
                 
                 filteredActivities = [...activities];
                 displayActivities();
                 generateSummary();
                 updateActivityCount();
                 
-                console.log(`✅ ${activities.length}件のアクティビティを同期`);
+                console.log(`✅ 同期完了: ${activities.length}件のアクティビティ`);
                 
             } catch (error) {
                 console.error('❌ 同期エラー:', error);
@@ -969,6 +1052,7 @@
             
             localStorage.removeItem('strava_auth');
             localStorage.removeItem('strava_activities');
+            localStorage.removeItem('last_sync_time');
             
             accessToken = null;
             athlete = null;
@@ -976,9 +1060,10 @@
             filteredActivities = [];
             
             updateStatus('disconnected', '○ 未接続');
-            document.getElementById('athleteCard').style.display = 'none';
+            document.getElementById('athleteInfo').style.display = 'none';
             document.getElementById('connectSection').style.display = 'block';
             document.getElementById('syncSection').style.display = 'none';
+            document.getElementById('lastSyncTime').textContent = '未同期';
             
             document.getElementById('activityList').innerHTML = `
                 <div class="empty-state">

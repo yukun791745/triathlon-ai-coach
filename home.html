@@ -240,6 +240,16 @@
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
         }
 
+        .race-item.b-race {
+            border-left-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .race-item.c-race {
+            border-left-color: #a855f7;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        }
+
         .race-countdown {
             min-width: 70px;
             text-align: center;
@@ -296,6 +306,16 @@
         .race-badge.a-badge {
             background: #fef3c7;
             color: #b45309;
+        }
+
+        .race-badge.b-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .race-badge.c-badge {
+            background: #f3e8ff;
+            color: #7c3aed;
         }
 
         .race-badge.other-badge {
@@ -728,10 +748,11 @@
             try {
                 const raceData = JSON.parse(savedRaces);
                 const aRaces = raceData.a || [];
-                const oRaces = raceData.o || [];
+                const bRaces = raceData.b || raceData.o || []; // 旧形式対応
+                const cRaces = raceData.c || [];
                 const details = raceData.details || {};
                 
-                if (aRaces.length === 0 && oRaces.length === 0) {
+                if (aRaces.length === 0 && bRaces.length === 0 && cRaces.length === 0) {
                     showNoRacesMessage(container);
                     return;
                 }
@@ -743,9 +764,14 @@
                         allRaces.push({ ...details[id], type: 'a' });
                     }
                 });
-                oRaces.forEach(id => {
+                bRaces.forEach(id => {
                     if (details[id]) {
-                        allRaces.push({ ...details[id], type: 'o' });
+                        allRaces.push({ ...details[id], type: 'b' });
+                    }
+                });
+                cRaces.forEach(id => {
+                    if (details[id]) {
+                        allRaces.push({ ...details[id], type: 'c' });
                     }
                 });
                 
@@ -784,10 +810,24 @@
             const dateStr = `${raceDate.getFullYear()}/${raceDate.getMonth() + 1}/${raceDate.getDate()}`;
             const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][raceDate.getDay()];
             
-            const isARace = race.type === 'a';
-            const itemClass = isARace ? 'race-item a-race' : 'race-item';
-            const badgeClass = isARace ? 'race-badge a-badge' : 'race-badge other-badge';
-            const badgeText = isARace ? '🏆 Aレース' : '🎪 参加予定';
+            // タイプに応じたスタイル
+            let itemClass = 'race-item';
+            let badgeClass = 'race-badge';
+            let badgeText = '';
+            
+            if (race.type === 'a') {
+                itemClass += ' a-race';
+                badgeClass += ' a-badge';
+                badgeText = '🏆 Aレース';
+            } else if (race.type === 'b') {
+                itemClass += ' b-race';
+                badgeClass += ' b-badge';
+                badgeText = '🎯 Bレース';
+            } else {
+                itemClass += ' c-race';
+                badgeClass += ' c-badge';
+                badgeText = '🤔 検討中';
+            }
             
             let countdownText = '';
             if (diffDays === 0) {

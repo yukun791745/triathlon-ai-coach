@@ -14,116 +14,156 @@
             display: flex;
         }
         .flow-navbar {
-            position: fixed;
-            top: 0; left: 0; bottom: 0;
-            width: 240px;
+            position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
             background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            padding: 24px 0;
-            overflow-y: auto;
+            z-index: 1000; padding: 24px 0; overflow-y: auto;
         }
         .flow-nav-logo {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: white;
-            text-align: center;
-            padding: 0 20px 30px;
-            margin-bottom: 20px;
+            font-size: 1.3rem; font-weight: 700; color: white; text-align: center;
+            padding: 0 20px 30px; margin-bottom: 20px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
         .flow-nav-steps { display: flex; flex-direction: column; gap: 8px; padding: 0 16px; }
         .flow-nav-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            color: rgba(255, 255, 255, 0.8);
-            transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+            text-decoration: none; color: rgba(255, 255, 255, 0.8); transition: all 0.3s;
         }
         .flow-nav-step .nav-icon { font-size: 1.4rem; }
         .flow-nav-step.current { background: rgba(255, 255, 255, 0.25); color: white; }
         .flow-nav-step.available:hover { background: rgba(255, 255, 255, 0.15); color: white; transform: translateX(5px); }
-        .content-wrapper { margin-left: 240px; flex: 1; padding: 24px; width: calc(100% - 240px); }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .title { font-size: 28px; font-weight: bold; color: #1f2937; margin-bottom: 6px; }
-        .subtitle { font-size: 14px; color: #4b5563; }
-        .stats { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-        .stat-card { background: white; border-radius: 8px; padding: 10px 14px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); text-align: center; }
-        .stat-number { font-size: 18px; font-weight: bold; color: #2563eb; }
+        .content-wrapper { margin-left: 240px; flex: 1; padding: 20px; width: calc(100% - 240px); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 16px; }
+        .title { font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
+        .subtitle { font-size: 13px; color: #4b5563; }
+        
+        .stats-row {
+            display: flex; justify-content: center; gap: 20px; margin-bottom: 16px;
+            background: white; padding: 12px 20px; border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .stat-item { text-align: center; }
+        .stat-number { font-size: 20px; font-weight: bold; color: #2563eb; }
         .stat-label { font-size: 10px; color: #6b7280; }
-        .source-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-        .source-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 2px solid transparent; opacity: 0.5; transition: all 0.2s; }
-        .source-badge.active { opacity: 1; border-color: currentColor; }
-        .source-badge.jtu { background: #e0f2fe; color: #0369a1; }
-        .source-badge.lumina { background: #fef3c7; color: #b45309; }
-        .source-badge.ironman { background: #fce7f3; color: #be185d; }
-        .source-badge.challenge { background: #dcfce7; color: #166534; }
-        .source-badge.t100 { background: #f3e8ff; color: #7c3aed; }
-        .source-badge.xterra { background: #fed7aa; color: #c2410c; }
-        .selection-panel { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .selection-title { font-size: 14px; font-weight: 600; }
+        
+        .selection-panel {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white; border-radius: 10px; padding: 12px 18px; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        .selection-title { font-size: 13px; font-weight: 600; }
         .selection-stat { display: flex; align-items: center; gap: 6px; }
-        .selection-stat-number { font-size: 20px; font-weight: bold; }
-        .selection-stat-label { font-size: 12px; opacity: 0.9; }
-        .goal-button { background: white; color: #d97706; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; margin-left: auto; }
+        .selection-stat-number { font-size: 18px; font-weight: bold; }
+        .selection-stat-label { font-size: 11px; opacity: 0.9; }
+        .goal-button {
+            background: white; color: #d97706; border: none; padding: 8px 16px;
+            border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; margin-left: auto;
+        }
         .goal-button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .filters-panel { background: white; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+        
+        .filters-panel {
+            background: white; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
         .filters-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .filter-group { display: flex; flex-direction: column; gap: 3px; }
-        .filter-label { font-size: 10px; color: #6b7280; font-weight: 600; }
-        .filter-select, .filter-input { padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; min-width: 120px; }
-        .filter-input { min-width: 180px; }
-        .refresh-btn { padding: 7px 14px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; }
-        .refresh-btn:disabled { opacity: 0.6; }
-        .search-result { margin-left: auto; font-size: 13px; color: #6b7280; font-weight: 600; }
-        .races-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 20px; }
-        .race-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: all 0.2s; position: relative; }
-        .race-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); }
-        .race-card.selected-a-race { border: 3px solid #f59e0b; }
-        .race-card.selected-other-race { border: 3px solid #8b5cf6; }
-        .selection-badge { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 10; }
-        .selection-badge.a-race { background: #f59e0b; color: white; }
-        .selection-badge.other-race { background: #8b5cf6; color: white; }
-        .race-content { padding: 14px; }
-        .race-header { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-        .category-badge { padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 600; }
-        .category-jtu { background: #dbeafe; color: #1e40af; }
-        .category-lumina { background: #fef3c7; color: #92400e; }
-        .category-ironman { background: #fce7f3; color: #9d174d; }
-        .category-challenge { background: #d1fae5; color: #065f46; }
-        .category-t100 { background: #ede9fe; color: #5b21b6; }
-        .category-xterra { background: #ffedd5; color: #9a3412; }
-        .race-title { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 8px; line-height: 1.3; }
-        .race-info { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; font-size: 11px; color: #4b5563; }
-        .distance-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
-        .distance-badge { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 600; }
-        .race-features { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-        .feature-tag { background: #f3f4f6; color: #4b5563; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
-        .race-actions { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
-        .race-button { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 10px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 500; }
-        .selection-buttons { display: flex; gap: 5px; }
-        .selection-button { flex: 1; padding: 6px; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 10px; font-weight: 600; cursor: pointer; }
-        .selection-button.a-race:hover, .selection-button.a-race.active { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
-        .selection-button.other-race:hover, .selection-button.other-race.active { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
-        .selection-button.remove { flex: 0; padding: 6px 10px; background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        .loading-spinner { width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
-        .loading-text { margin-top: 12px; font-size: 14px; color: #4b5563; }
+        .filter-group { display: flex; align-items: center; gap: 6px; }
+        .filter-label { font-size: 11px; color: #6b7280; font-weight: 600; }
+        .filter-select, .filter-input {
+            padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 12px;
+        }
+        .filter-input { width: 160px; }
+        .filter-select { min-width: 100px; }
+        .refresh-btn {
+            padding: 6px 12px; background: #3b82f6; color: white; border: none;
+            border-radius: 5px; cursor: pointer; font-size: 11px;
+        }
+        .search-result { margin-left: auto; font-size: 12px; color: #6b7280; }
+        
+        .races-table {
+            background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .race-header-row {
+            display: grid;
+            grid-template-columns: 50px 100px 1fr 120px 80px 80px;
+            gap: 8px; padding: 10px 16px;
+            background: #f8fafc; font-size: 11px; font-weight: 600; color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .race-row {
+            display: grid;
+            grid-template-columns: 50px 100px 1fr 120px 80px 80px;
+            gap: 8px; padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .race-row:hover { background: #f8fafc; }
+        .race-row.selected-a { background: #fffbeb; }
+        .race-row.selected-other { background: #f5f3ff; }
+        
+        .race-selection {
+            display: flex; gap: 8px; justify-content: center;
+        }
+        .race-radio {
+            display: flex; align-items: center; gap: 3px; cursor: pointer;
+        }
+        .race-radio input { cursor: pointer; }
+        .race-radio label { font-size: 10px; color: #666; cursor: pointer; }
+        
+        .race-date { font-size: 12px; color: #374151; font-weight: 500; }
+        .race-name {
+            font-size: 13px; color: #1e40af; font-weight: 500;
+            text-decoration: none; cursor: pointer;
+        }
+        .race-name:hover { text-decoration: underline; color: #1d4ed8; }
+        .race-location { font-size: 11px; color: #6b7280; }
+        .race-distance {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px;
+            background: #dbeafe; color: #1e40af; text-align: center;
+        }
+        .race-category {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            background: #f3f4f6; color: #4b5563; text-align: center;
+        }
+        
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            width: 36px; height: 36px; border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text { margin-top: 10px; font-size: 13px; color: #4b5563; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .no-results { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #6b7280; }
-        .footer { text-align: center; padding: 16px; color: #6b7280; font-size: 12px; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #6b7280; }
+        .footer { text-align: center; padding: 12px; color: #9ca3af; font-size: 11px; }
+        
+        @media (max-width: 1024px) {
+            .race-header-row, .race-row {
+                grid-template-columns: 40px 80px 1fr 100px 70px;
+            }
+            .race-row > :last-child, .race-header-row > :last-child { display: none; }
+        }
         @media (max-width: 768px) {
-            .flow-navbar { width: 100%; height: 60px; bottom: auto; padding: 10px; }
+            .flow-navbar { width: 100%; height: 50px; bottom: auto; padding: 10px; }
             .flow-nav-logo { padding: 0; margin: 0; border: none; font-size: 1rem; }
             .flow-nav-steps { display: none; }
-            .content-wrapper { margin-left: 0; padding: 16px; padding-top: 80px; width: 100%; }
-            .races-grid { grid-template-columns: 1fr; }
+            .content-wrapper { margin-left: 0; padding: 12px; padding-top: 65px; width: 100%; }
+            .race-header-row, .race-row {
+                grid-template-columns: 35px 70px 1fr 60px;
+                font-size: 10px; padding: 8px 10px;
+            }
+            .race-row > :nth-child(4), .race-header-row > :nth-child(4) { display: none; }
+            .race-row > :nth-child(5), .race-header-row > :nth-child(5) { display: none; }
+            .race-row > :last-child, .race-header-row > :last-child { display: none; }
         }
     </style>
 </head>
@@ -150,79 +190,85 @@
     <div class="content-wrapper">
         <div class="container">
             <div class="header">
-                <h1 class="title">🏊🚴🏃 レース選択</h1>
+                <h1 class="title">🎯 レース選択</h1>
                 <p class="subtitle">目標レースを選択してトレーニング計画を立てましょう</p>
             </div>
             
-            <div class="stats">
-                <div class="stat-card"><div class="stat-number" id="total-count">0</div><div class="stat-label">全大会</div></div>
-                <div class="stat-card"><div class="stat-number" id="filtered-count">0</div><div class="stat-label">表示中</div></div>
-                <div class="stat-card"><div class="stat-number" id="japan-count">0</div><div class="stat-label">国内</div></div>
-                <div class="stat-card"><div class="stat-number" id="overseas-count">0</div><div class="stat-label">海外</div></div>
-            </div>
-
-            <div class="source-badges">
-                <span class="source-badge jtu active" data-source="jtu" onclick="toggleSource('jtu')">JTU公認</span>
-                <span class="source-badge lumina active" data-source="lumina" onclick="toggleSource('lumina')">LUMINA</span>
-                <span class="source-badge ironman active" data-source="ironman" onclick="toggleSource('ironman')">IRONMAN</span>
-                <span class="source-badge challenge active" data-source="challenge" onclick="toggleSource('challenge')">Challenge</span>
-                <span class="source-badge t100 active" data-source="t100" onclick="toggleSource('t100')">T100</span>
-                <span class="source-badge xterra active" data-source="xterra" onclick="toggleSource('xterra')">XTERRA</span>
+            <div class="stats-row">
+                <div class="stat-item"><div class="stat-number" id="total-count">0</div><div class="stat-label">全大会</div></div>
+                <div class="stat-item"><div class="stat-number" id="japan-count">0</div><div class="stat-label">国内</div></div>
+                <div class="stat-item"><div class="stat-number" id="overseas-count">0</div><div class="stat-label">海外</div></div>
+                <div class="stat-item"><div class="stat-number" id="filtered-count">0</div><div class="stat-label">表示中</div></div>
             </div>
             
             <div class="selection-panel">
-                <div class="selection-title">📌 選択中のレース</div>
-                <div class="selection-stat"><span class="selection-stat-number" id="a-race-count">0</span><span class="selection-stat-label">🏆 Aレース</span></div>
-                <div class="selection-stat"><span class="selection-stat-number" id="other-race-count">0</span><span class="selection-stat-label">🎪 その他</span></div>
-                <button class="goal-button" id="goal-setting-button" disabled onclick="goToGoalSetting()">🎯 目標設定ページへ進む</button>
+                <div class="selection-title">📌 選択中</div>
+                <div class="selection-stat">
+                    <span class="selection-stat-number" id="a-race-count">0</span>
+                    <span class="selection-stat-label">🏆Aレース</span>
+                </div>
+                <div class="selection-stat">
+                    <span class="selection-stat-number" id="other-race-count">0</span>
+                    <span class="selection-stat-label">🎪その他</span>
+                </div>
+                <button class="goal-button" id="goal-setting-button" disabled onclick="goToGoalSetting()">
+                    目標設定ページへ →
+                </button>
             </div>
             
             <div class="filters-panel">
                 <div class="filters-row">
                     <div class="filter-group">
-                        <label class="filter-label">🔍 キーワード</label>
-                        <input type="text" class="filter-input" id="search-input" placeholder="大会名・場所で検索...">
+                        <label class="filter-label">検索</label>
+                        <input type="text" class="filter-input" id="search-input" placeholder="大会名・場所...">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label">📅 開催月</label>
+                        <label class="filter-label">地域</label>
+                        <select class="filter-select" id="region-select">
+                            <option value="">全て</option>
+                            <option value="japan">国内</option>
+                            <option value="overseas">海外</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">距離</label>
+                        <select class="filter-select" id="distance-select">
+                            <option value="">全て</option>
+                            <option value="スプリント">スプリント</option>
+                            <option value="スタンダード">スタンダード</option>
+                            <option value="ミドル">ミドル</option>
+                            <option value="ロング">ロング</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">月</label>
                         <select class="filter-select" id="month-select">
-                            <option value="">全ての月</option>
+                            <option value="">全て</option>
                             <option value="01">1月</option><option value="02">2月</option><option value="03">3月</option>
                             <option value="04">4月</option><option value="05">5月</option><option value="06">6月</option>
                             <option value="07">7月</option><option value="08">8月</option><option value="09">9月</option>
                             <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label class="filter-label">🌍 地域</label>
-                        <select class="filter-select" id="region-select">
-                            <option value="">全地域</option>
-                            <option value="japan">日本国内</option>
-                            <option value="overseas">海外</option>
-                            <option value="asia">アジア</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">🏆 競技距離</label>
-                        <select class="filter-select" id="distance-select">
-                            <option value="">全ての距離</option>
-                            <option value="スプリント">スプリント</option>
-                            <option value="スタンダード">スタンダード</option>
-                            <option value="ミドル">ミドル / 70.3</option>
-                            <option value="ロング">ロング / フル</option>
-                            <option value="オフロード">オフロード</option>
-                        </select>
-                    </div>
-                    <button class="refresh-btn" id="refresh-btn" onclick="refreshRaces()">🔄 更新</button>
-                    <div class="search-result" id="search-result">0 件の大会</div>
+                    <button class="refresh-btn" onclick="refreshRaces()">🔄 更新</button>
+                    <div class="search-result" id="search-result">0件</div>
                 </div>
             </div>
             
-            <div class="races-grid" id="races-container"></div>
+            <div class="races-table">
+                <div class="race-header-row">
+                    <div>選択</div>
+                    <div>開催日</div>
+                    <div>大会名</div>
+                    <div>開催地</div>
+                    <div>距離</div>
+                    <div>カテゴリ</div>
+                </div>
+                <div id="races-container"></div>
+            </div>
             
             <div class="footer">
-                <p>🌐 データソース: JTU、LUMINA、IRONMAN、Challenge Family、T100、XTERRA</p>
-                <p id="last-updated">最終更新: --</p>
+                <span id="last-updated">最終更新: --</span>
             </div>
         </div>
     </div>
@@ -231,162 +277,146 @@
         let races = [];
         let filteredRaces = [];
         let selectedRaces = { aRaces: new Set(), otherRaces: new Set() };
-        let activeSources = new Set(['jtu', 'lumina', 'ironman', 'challenge', 't100', 'xterra']);
         
         document.addEventListener('DOMContentLoaded', async () => {
-            const cached = localStorage.getItem('races_cache');
+            const cached = localStorage.getItem('races_cache_v2');
             if (cached) {
                 try {
                     const data = JSON.parse(cached);
-                    const cacheAge = Date.now() - new Date(data.lastUpdated).getTime();
-                    if (cacheAge < 3600000) {
+                    if (Date.now() - new Date(data.lastUpdated).getTime() < 3600000) {
                         races = data.races;
-                        updateStats();
+                        updateStats(data.japanCount, data.overseasCount);
                         filterRaces();
                         document.getElementById('loadingOverlay').style.display = 'none';
                         document.getElementById('last-updated').textContent = '最終更新: ' + new Date(data.lastUpdated).toLocaleString('ja-JP');
                         return;
                     }
-                } catch (e) { console.error('Cache error:', e); }
+                } catch (e) {}
             }
             await fetchRacesFromAPI();
         });
         
         async function fetchRacesFromAPI() {
             document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('refresh-btn').disabled = true;
-            
             try {
                 const response = await fetch('/.netlify/functions/fetch-races');
                 if (!response.ok) throw new Error('API error');
                 const data = await response.json();
-                
                 if (data.success && data.races) {
                     races = data.races;
-                    localStorage.setItem('races_cache', JSON.stringify({ races: races, lastUpdated: data.lastUpdated }));
-                    document.getElementById('last-updated').textContent = '最終更新: ' + new Date(data.lastUpdated).toLocaleString('ja-JP');
-                    updateStats();
+                    localStorage.setItem('races_cache_v2', JSON.stringify(data));
+                    updateStats(data.japanCount, data.overseasCount);
                     filterRaces();
+                    document.getElementById('last-updated').textContent = '最終更新: ' + new Date(data.lastUpdated).toLocaleString('ja-JP');
                 }
             } catch (error) {
-                console.error('Fetch error:', error);
                 races = getStaticRaces();
-                updateStats();
+                updateStats(
+                    races.filter(r => r.country === '日本').length,
+                    races.filter(r => r.country !== '日本').length
+                );
                 filterRaces();
-                document.getElementById('last-updated').textContent = '⚠️ オフラインデータ使用中';
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
-                document.getElementById('refresh-btn').disabled = false;
             }
         }
         
         function getStaticRaces() {
             return [
-                { id: 'jtu_miyako_2026', name: '全日本トライアスロン宮古島大会', date: '2026-04-19', location: '沖縄県宮古島市', country: '日本', distance: 'ロング', category: 'JTU公認大会', source: 'JTU', url: 'https://tri-miyako.com/', description: '国内最高峰のロング大会', features: ['JTU', 'ロング'] },
-                { id: 'jtu_ishigaki_2026', name: '石垣島トライアスロン大会', date: '2026-04-26', location: '沖縄県石垣市', country: '日本', distance: 'ロング', category: 'JTU公認大会', source: 'JTU', url: 'https://ishigaki-triathlon.jp/', description: '美しい海を泳ぐ', features: ['JTU', 'ロング'] },
-                { id: 'jtu_yokohama_2026', name: 'ワールドトライアスロンシリーズ横浜大会', date: '2026-05-16', location: '神奈川県横浜市', country: '日本', distance: 'スタンダード', category: 'JTU国際大会', source: 'JTU', url: 'https://yokohamatriathlon.jp/', description: 'WTSシリーズ戦', features: ['WTS', '国際'] },
-                { id: 'jtu_sado_2026', name: '佐渡国際トライアスロン大会', date: '2026-09-06', location: '新潟県佐渡市', country: '日本', distance: 'ロング', category: 'JTU選手権', source: 'JTU', url: 'https://www.scsf.jp/', description: '日本ロング選手権', features: ['JTU選手権', 'ロング'] },
-                { id: 'lumina_shonan_2026', name: '湘南国際トライアスロン', date: '2026-05-17', location: '神奈川県藤沢市', country: '日本', distance: 'スタンダード', category: 'LUMINA大会', source: 'LUMINA', url: '#', description: '関東最大級', features: ['LUMINA'] },
-                { id: 'ironman_japan_2026', name: 'IRONMAN Japan South Hokkaido', date: '2026-09-13', location: '北海道', country: '日本', distance: 'ロング', category: 'IRONMAN', source: 'IRONMAN', url: 'https://www.ironman.com/', description: '日本唯一のフルアイアンマン', features: ['IRONMAN', 'ロング'] },
-                { id: 'ironman703_japan_2026', name: 'IRONMAN 70.3 Japan', date: '2026-11-01', location: '愛知県', country: '日本', distance: 'ミドル', category: 'IRONMAN 70.3', source: 'IRONMAN', url: 'https://www.ironman.com/', description: 'IRONMAN 70.3 日本大会', features: ['IRONMAN 70.3', 'ミドル'] },
-                { id: 'ironman_kona_2026', name: 'IRONMAN World Championship', date: '2026-10-10', location: 'Kona, Hawaii', country: 'アメリカ', distance: 'ロング', category: 'World Championship', source: 'IRONMAN', url: 'https://www.ironman.com/', description: 'トライアスロンの最高峰', features: ['Kona', 'World Championship'] },
-                { id: 'challenge_taiwan_2026', name: 'Challenge Taiwan', date: '2026-04-26', location: 'Taitung', country: '台湾', distance: 'ロング', category: 'Challenge Family', source: 'Challenge', url: 'https://challengefamily.com/', description: 'アジア最大級のロング大会', features: ['Challenge', 'アジア'] },
-                { id: 'challenge_roth_2026', name: 'DATEV Challenge Roth', date: '2026-07-05', location: 'Roth', country: 'ドイツ', distance: 'ロング', category: 'Challenge Family', source: 'Challenge', url: 'https://challengefamily.com/', description: '世界最大のロング大会', features: ['Challenge', 'Roth'] },
-                { id: 't100_singapore_2026', name: 'T100 Singapore', date: '2026-02-28', location: 'Singapore', country: 'シンガポール', distance: 'T100', category: 'T100 World Tour', source: 'T100', url: 'https://t100triathlon.com/', description: 'PTO T100ワールドツアー', features: ['T100', 'アジア'] },
-                { id: 'xterra_japan_2026', name: 'XTERRA Japan', date: '2026-05-16', location: '長野県', country: '日本', distance: 'オフロード', category: 'XTERRA', source: 'XTERRA', url: 'https://www.xterrajapan.com/', description: 'オフロードトライアスロン', features: ['XTERRA', 'MTB'] }
+                { id: '1', name: '全日本トライアスロン宮古島大会', date: '2026-04-19', location: '沖縄県宮古島市', country: '日本', distance: 'ロング', category: 'JTU選手権', url: 'https://tri-miyako.com/' },
+                { id: '2', name: '石垣島トライアスロン', date: '2026-04-26', location: '沖縄県石垣市', country: '日本', distance: 'ロング', category: 'JTU公認', url: 'https://ishigaki-triathlon.jp/' },
+                { id: '3', name: 'ワールドトライアスロンシリーズ横浜', date: '2026-05-16', location: '神奈川県横浜市', country: '日本', distance: 'スタンダード', category: 'WTS', url: 'https://yokohamatriathlon.jp/' },
+                { id: '4', name: '佐渡国際トライアスロン', date: '2026-09-06', location: '新潟県佐渡市', country: '日本', distance: 'ロング', category: 'JTU選手権', url: 'https://www.scsf.jp/' },
+                { id: '5', name: 'IRONMAN Japan みなみ北海道', date: '2026-09-13', location: '北海道函館市', country: '日本', distance: 'ロング', category: 'IRONMAN', url: 'https://www.ironman.com/' },
+                { id: '6', name: 'IRONMAN 70.3 セントレア', date: '2026-06-14', location: '愛知県常滑市', country: '日本', distance: 'ミドル', category: 'IRONMAN 70.3', url: 'https://www.ironman.com/' },
+                { id: '7', name: 'XTERRA Japan', date: '2026-05-16', location: '長野県', country: '日本', distance: 'オフロード', category: 'XTERRA', url: 'https://www.xterrajapan.com/' },
+                { id: '8', name: 'Challenge Taiwan', date: '2026-04-26', location: '台東', country: '台湾', distance: 'ロング', category: 'Challenge', url: 'https://challengefamily.com/' },
+                { id: '9', name: 'IRONMAN World Championship', date: '2026-10-10', location: 'コナ', country: 'アメリカ', distance: 'ロング', category: 'IRONMAN WC', url: 'https://www.ironman.com/' },
+                { id: '10', name: 'Challenge Roth', date: '2026-07-05', location: 'ロート', country: 'ドイツ', distance: 'ロング', category: 'Challenge', url: 'https://challengefamily.com/' },
             ];
         }
         
-        async function refreshRaces() {
-            localStorage.removeItem('races_cache');
-            await fetchRacesFromAPI();
+        function refreshRaces() {
+            localStorage.removeItem('races_cache_v2');
+            fetchRacesFromAPI();
         }
         
-        function toggleSource(source) {
-            const badge = document.querySelector('.source-badge[data-source="' + source + '"]');
-            if (activeSources.has(source)) {
-                activeSources.delete(source);
-                badge.classList.remove('active');
-            } else {
-                activeSources.add(source);
-                badge.classList.add('active');
-            }
-            filterRaces();
-        }
-        
-        function updateStats() {
-            document.getElementById('total-count').textContent = races.length;
-            document.getElementById('japan-count').textContent = races.filter(r => r.country === '日本').length;
-            document.getElementById('overseas-count').textContent = races.filter(r => r.country !== '日本').length;
+        function updateStats(japan, overseas) {
+            document.getElementById('total-count').textContent = japan + overseas;
+            document.getElementById('japan-count').textContent = japan;
+            document.getElementById('overseas-count').textContent = overseas;
         }
         
         function filterRaces() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const selectedMonth = document.getElementById('month-select').value;
-            const selectedRegion = document.getElementById('region-select').value;
-            const selectedDistance = document.getElementById('distance-select').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const region = document.getElementById('region-select').value;
+            const distance = document.getElementById('distance-select').value;
+            const month = document.getElementById('month-select').value;
             
-            filteredRaces = races.filter(race => {
-                if (!activeSources.has(race.source.toLowerCase())) return false;
-                const matchesSearch = !searchTerm || race.name.toLowerCase().includes(searchTerm) || race.location.toLowerCase().includes(searchTerm);
-                const matchesMonth = !selectedMonth || race.date.substring(5, 7) === selectedMonth;
-                let matchesRegion = true;
-                if (selectedRegion === 'japan') matchesRegion = race.country === '日本';
-                else if (selectedRegion === 'overseas') matchesRegion = race.country !== '日本';
-                else if (selectedRegion === 'asia') matchesRegion = ['日本', '台湾', '韓国', 'フィリピン', 'シンガポール', 'タイ', 'マレーシア'].includes(race.country);
-                const matchesDistance = !selectedDistance || race.distance === selectedDistance || (selectedDistance === 'ミドル' && race.distance.includes('70.3'));
-                return matchesSearch && matchesMonth && matchesRegion && matchesDistance;
+            filteredRaces = races.filter(r => {
+                if (search && !r.name.toLowerCase().includes(search) && !r.location.toLowerCase().includes(search)) return false;
+                if (region === 'japan' && r.country !== '日本') return false;
+                if (region === 'overseas' && r.country === '日本') return false;
+                if (distance && r.distance !== distance && !(distance === 'ミドル' && r.distance.includes('70.3'))) return false;
+                if (month && r.date.substring(5, 7) !== month) return false;
+                return true;
             });
             
             document.getElementById('filtered-count').textContent = filteredRaces.length;
-            document.getElementById('search-result').textContent = filteredRaces.length + ' 件の大会';
+            document.getElementById('search-result').textContent = filteredRaces.length + '件';
             renderRaces();
         }
         
         function renderRaces() {
             const container = document.getElementById('races-container');
             if (filteredRaces.length === 0) {
-                container.innerHTML = '<div class="no-results"><h3>該当する大会が見つかりませんでした</h3><p>フィルター条件を変更してください</p></div>';
+                container.innerHTML = '<div class="empty-state">該当する大会がありません</div>';
                 return;
             }
+            
             container.innerHTML = filteredRaces.map(race => {
-                const selectionState = selectedRaces.aRaces.has(race.id) ? 'a-race' : selectedRaces.otherRaces.has(race.id) ? 'other-race' : null;
-                const cardClass = selectionState ? 'race-card selected-' + selectionState : 'race-card';
-                const selectionBadge = selectionState ? '<div class="selection-badge ' + selectionState + '">' + (selectionState === 'a-race' ? '🏆 Aレース' : '🎪 その他') + '</div>' : '';
-                const catClass = 'category-' + race.source.toLowerCase();
-                const features = (race.features || []).map(f => '<span class="feature-tag">' + f + '</span>').join('');
-                const date = new Date(race.date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+                const isA = selectedRaces.aRaces.has(race.id);
+                const isOther = selectedRaces.otherRaces.has(race.id);
+                const rowClass = isA ? 'race-row selected-a' : isOther ? 'race-row selected-other' : 'race-row';
+                const date = new Date(race.date);
+                const dateStr = `${date.getMonth()+1}/${date.getDate()}`;
+                const yearStr = date.getFullYear();
                 
-                return '<div class="' + cardClass + '" data-id="' + race.id + '">' + selectionBadge +
-                    '<div class="race-content">' +
-                    '<div class="race-header"><span class="category-badge ' + catClass + '">' + race.source + '</span><span class="category-badge">' + race.category + '</span></div>' +
-                    '<h3 class="race-title">' + race.name + '</h3>' +
-                    '<div class="race-info"><div>📅 ' + date + '</div><div>📍 ' + race.location + (race.country !== '日本' ? ' (' + race.country + ')' : '') + '</div></div>' +
-                    '<div class="distance-badges"><span class="distance-badge">' + race.distance + '</span></div>' +
-                    '<div class="race-features">' + features + '</div>' +
-                    '<p style="font-size:11px;color:#6b7280;margin-bottom:10px;">' + (race.description || '') + '</p>' +
-                    '<div class="race-actions">' +
-                    '<a href="' + race.url + '" target="_blank" class="race-button">🔗 公式サイト</a>' +
-                    '<div class="selection-buttons">' +
-                    '<button class="selection-button a-race' + (selectionState === 'a-race' ? ' active' : '') + '" onclick="selectRace(\'' + race.id + '\', \'a-race\')">🏆 Aレース</button>' +
-                    '<button class="selection-button other-race' + (selectionState === 'other-race' ? ' active' : '') + '" onclick="selectRace(\'' + race.id + '\', \'other-race\')">🎪 その他</button>' +
-                    (selectionState ? '<button class="selection-button remove" onclick="removeSelection(\'' + race.id + '\')">❌</button>' : '') +
-                    '</div></div></div></div>';
+                return `
+                    <div class="${rowClass}" data-id="${race.id}">
+                        <div class="race-selection">
+                            <div class="race-radio">
+                                <input type="radio" name="race_${race.id}" id="a_${race.id}" ${isA ? 'checked' : ''} onchange="selectRace('${race.id}', 'a')">
+                                <label for="a_${race.id}">A</label>
+                            </div>
+                            <div class="race-radio">
+                                <input type="radio" name="race_${race.id}" id="o_${race.id}" ${isOther ? 'checked' : ''} onchange="selectRace('${race.id}', 'other')">
+                                <label for="o_${race.id}">他</label>
+                            </div>
+                        </div>
+                        <div class="race-date">${yearStr}/${dateStr}</div>
+                        <a href="${race.url}" target="_blank" class="race-name">${race.name}</a>
+                        <div class="race-location">${race.location}${race.country !== '日本' ? ' ('+race.country+')' : ''}</div>
+                        <div class="race-distance">${race.distance}</div>
+                        <div class="race-category">${race.category || ''}</div>
+                    </div>
+                `;
             }).join('');
         }
         
         function selectRace(raceId, type) {
+            // 同じレースの別選択を解除
             selectedRaces.aRaces.delete(raceId);
             selectedRaces.otherRaces.delete(raceId);
-            if (type === 'a-race') selectedRaces.aRaces.add(raceId);
-            else if (type === 'other-race') selectedRaces.otherRaces.add(raceId);
-            updateSelectionStats();
-            renderRaces();
-        }
-        
-        function removeSelection(raceId) {
-            selectedRaces.aRaces.delete(raceId);
-            selectedRaces.otherRaces.delete(raceId);
+            
+            // 新しい選択を追加（再クリックで解除）
+            const radio = document.querySelector(`#${type === 'a' ? 'a' : 'o'}_${raceId}`);
+            if (type === 'a') {
+                selectedRaces.aRaces.add(raceId);
+            } else {
+                selectedRaces.otherRaces.add(raceId);
+            }
+            
             updateSelectionStats();
             renderRaces();
         }
@@ -397,11 +427,15 @@
             document.getElementById('other-race-count').textContent = selectedRaces.otherRaces.size;
             const btn = document.getElementById('goal-setting-button');
             btn.disabled = total === 0;
-            btn.textContent = total > 0 ? '🎯 目標設定ページへ (' + total + '大会)' : '🎯 目標設定ページへ進む';
+            btn.textContent = total > 0 ? `目標設定ページへ (${total}件) →` : '目標設定ページへ →';
         }
         
         function goToGoalSetting() {
-            const data = { aRaces: [...selectedRaces.aRaces], otherRaces: [...selectedRaces.otherRaces], raceDetails: {} };
+            const data = {
+                aRaces: [...selectedRaces.aRaces],
+                otherRaces: [...selectedRaces.otherRaces],
+                raceDetails: {}
+            };
             [...selectedRaces.aRaces, ...selectedRaces.otherRaces].forEach(id => {
                 const race = races.find(r => r.id === id);
                 if (race) data.raceDetails[id] = race;
@@ -411,9 +445,9 @@
         }
         
         document.getElementById('search-input').addEventListener('input', filterRaces);
-        document.getElementById('month-select').addEventListener('change', filterRaces);
         document.getElementById('region-select').addEventListener('change', filterRaces);
         document.getElementById('distance-select').addEventListener('change', filterRaces);
+        document.getElementById('month-select').addEventListener('change', filterRaces);
     </script>
 </body>
 </html>

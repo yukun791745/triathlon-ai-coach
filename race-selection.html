@@ -23,8 +23,6 @@
         .stat-num { font-size: 16px; font-weight: bold; color: #2563eb; }
         .stat-label { font-size: 9px; color: #6b7280; }
         .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 6px 12px; background: #f0fdf4; border-radius: 6px; font-size: 10px; color: #166534; }
-        .status-bar.warning { background: #fefce8; color: #854d0e; }
-        .status-bar.error { background: #fef2f2; color: #991b1b; }
         .selection-bar { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 8px; padding: 8px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
         .sel-title { font-size: 11px; font-weight: 600; }
         .sel-stat { display: flex; align-items: center; gap: 3px; }
@@ -38,12 +36,10 @@
         .filter-input, .filter-select { padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 10px; }
         .filter-input { width: 120px; }
         .filter-select { min-width: 70px; }
-        .refresh-btn { padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
-        .refresh-btn:disabled { opacity: 0.5; }
         .result-count { margin-left: auto; font-size: 10px; color: #6b7280; }
         .table-wrap { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); max-height: calc(100vh - 280px); overflow-y: auto; }
         .table-header { display: grid; grid-template-columns: 55px 80px 1fr 110px 65px 70px; gap: 4px; padding: 6px 10px; background: #f1f5f9; font-size: 9px; font-weight: 600; color: #64748b; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; }
-        .table-row { display: grid; grid-template-columns: 55px 80px 1fr 110px 65px 70px; gap: 4px; padding: 5px 10px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 10px; transition: background 0.15s; }
+        .table-row { display: grid; grid-template-columns: 55px 80px 1fr 110px 65px 70px; gap: 4px; padding: 5px 10px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 10px; }
         .table-row:hover { background: #f8fafc; }
         .table-row.sel-a { background: #fffbeb; }
         .table-row.sel-o { background: #f5f3ff; }
@@ -54,25 +50,11 @@
         .race-name { color: #1e40af; text-decoration: none; font-weight: 500; font-size: 11px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .race-name:hover { text-decoration: underline; }
         .race-loc { color: #6b7280; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .race-dist { font-size: 8px; padding: 1px 5px; border-radius: 6px; background: #dbeafe; color: #1e40af; text-align: center; white-space: nowrap; }
-        .race-cat { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: #f3f4f6; color: #4b5563; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .race-dist { font-size: 8px; padding: 1px 5px; border-radius: 6px; background: #dbeafe; color: #1e40af; text-align: center; }
+        .race-cat { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: #f3f4f6; color: #4b5563; text-align: center; overflow: hidden; text-overflow: ellipsis; }
         .empty { text-align: center; padding: 30px; color: #9ca3af; }
-        .loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { margin-top: 8px; font-size: 12px; color: #6b7280; }
-        @media (max-width: 900px) {
-            .table-header, .table-row { grid-template-columns: 45px 70px 1fr 55px; }
-            .table-header > :nth-child(4), .table-row > :nth-child(4) { display: none; }
-            .table-header > :nth-child(6), .table-row > :nth-child(6) { display: none; }
-        }
-        @media (max-width: 768px) {
-            .navbar { width: 100%; height: 45px; bottom: auto; padding: 8px; }
-            .nav-logo { padding: 0 10px; margin: 0; border: none; font-size: 0.9rem; }
-            .nav-steps { display: none; }
-            .content { margin-left: 0; padding: 8px; padding-top: 55px; }
-            .table-wrap { max-height: calc(100vh - 320px); }
-        }
+        @media (max-width: 900px) { .table-header, .table-row { grid-template-columns: 45px 70px 1fr 55px; } .table-header > :nth-child(4), .table-row > :nth-child(4), .table-header > :nth-child(6), .table-row > :nth-child(6) { display: none; } }
+        @media (max-width: 768px) { .navbar { width: 100%; height: 45px; bottom: auto; padding: 8px; } .nav-logo { padding: 0 10px; margin: 0; border: none; font-size: 0.9rem; } .nav-steps { display: none; } .content { margin-left: 0; padding: 8px; padding-top: 55px; } }
     </style>
 </head>
 <body>
@@ -88,23 +70,16 @@
             <a href="data.html" class="nav-step">📊 進捗</a>
         </div>
     </nav>
-    <div id="loading" class="loading"><div class="spinner"></div><div class="loading-text">レースデータを取得中...</div></div>
     <div class="content">
         <div class="container">
-            <div class="header">
-                <h1 class="title">🎯 レース選択</h1>
-                <p class="subtitle">目標レースを選んでトレーニング計画を立てましょう</p>
-            </div>
+            <div class="header"><h1 class="title">🎯 レース選択</h1><p class="subtitle">目標レースを選んでトレーニング計画を立てましょう</p></div>
             <div class="stats-bar">
                 <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">全大会</div></div>
                 <div class="stat"><div class="stat-num" id="japan-count">0</div><div class="stat-label">国内</div></div>
                 <div class="stat"><div class="stat-num" id="overseas-count">0</div><div class="stat-label">海外</div></div>
                 <div class="stat"><div class="stat-num" id="filtered-count">0</div><div class="stat-label">表示中</div></div>
             </div>
-            <div class="status-bar" id="status-bar">
-                <span id="status-text">データ取得中...</span>
-                <span id="last-updated"></span>
-            </div>
+            <div class="status-bar" id="status-bar"><span id="status-text">静的データ (JTU/IRONMAN/Challenge/T100/XTERRA)</span><span id="last-updated"></span></div>
             <div class="selection-bar">
                 <div class="sel-title">📌 選択中</div>
                 <div class="sel-stat"><span class="sel-num" id="a-count">0</span><span class="sel-label">🏆A</span></div>
@@ -116,201 +91,304 @@
                 <div class="filter-group"><span class="filter-label">地域</span><select class="filter-select" id="f-region"><option value="">全て</option><option value="japan">国内</option><option value="overseas">海外</option></select></div>
                 <div class="filter-group"><span class="filter-label">距離</span><select class="filter-select" id="f-dist"><option value="">全て</option><option value="スプリント">スプリント</option><option value="スタンダード">スタンダード</option><option value="ミドル">ミドル</option><option value="ロング">ロング</option></select></div>
                 <div class="filter-group"><span class="filter-label">月</span><select class="filter-select" id="f-month"><option value="">全て</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
-                <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">🔄 更新</button>
                 <div class="result-count" id="result-count">0件</div>
             </div>
-            <div class="table-wrap">
-                <div class="table-header"><div>選択</div><div>開催日</div><div>大会名</div><div>開催地</div><div>距離</div><div>カテゴリ</div></div>
-                <div id="races"></div>
-            </div>
+            <div class="table-wrap"><div class="table-header"><div>選択</div><div>開催日</div><div>大会名</div><div>開催地</div><div>距離</div><div>カテゴリ</div></div><div id="races"></div></div>
         </div>
     </div>
 <script>
-// 静的データ（フォールバック用）
-const STATIC_RACES = [
-    // JTU 国内主要大会
-    {id:'s1',name:'石垣島トライアスロン大会',date:'2026-04-12',loc:'沖縄県石垣市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/78271/'},
-    {id:'s2',name:'全日本トライアスロン宮古島大会',date:'2026-04-19',loc:'沖縄県宮古島市',country:'日本',dist:'ロング',cat:'JTU主要',url:'https://tri-miyako.com/'},
-    {id:'s3',name:'ワールドトライアスロンCS横浜',date:'2026-05-16',loc:'神奈川県横浜市',country:'日本',dist:'スタンダード',cat:'WTS',url:'https://www.jtu.or.jp/event/77637/'},
-    {id:'s4',name:'アジアトライアスロンカップ大阪城',date:'2026-05-31',loc:'大阪府大阪市',country:'日本',dist:'スタンダード',cat:'アジア',url:'https://www.jtu.or.jp/event/79177/'},
-    {id:'s5',name:'館山わかしおトライアスロン',date:'2026-06-07',loc:'千葉県館山市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s6',name:'五島長崎国際トライアスロン',date:'2026-06-14',loc:'長崎県五島市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s7',name:'IRONMAN 70.3 セントレア知多半島',date:'2026-06-14',loc:'愛知県常滑市',country:'日本',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s8',name:'蒲郡オレンジトライアスロン',date:'2026-06-21',loc:'愛知県蒲郡市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s9',name:'野尻湖トライアスロン',date:'2026-06-28',loc:'長野県信濃町',country:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s10',name:'榛名湖リゾートトライアスロン',date:'2026-07-05',loc:'群馬県高崎市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s11',name:'みなと酒田トライアスロンおしん',date:'2026-07-12',loc:'山形県酒田市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s12',name:'日本アクアスロン選手権 海の森',date:'2026-07-12',loc:'東京都江東区',country:'日本',dist:'アクアスロン',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79192/'},
-    {id:'s13',name:'皆生トライアスロン',date:'2026-07-19',loc:'鳥取県米子市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s14',name:'九十九里トライアスロン',date:'2026-07-19',loc:'千葉県九十九里町',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s15',name:'長良川国際トライアスロン',date:'2026-07-26',loc:'岐阜県海津市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/'},
-    {id:'s16',name:'うつくしまトライアスロンinあいづ',date:'2026-08-02',loc:'福島県猪苗代町',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s17',name:'全国高等学校トライアスロン選手権',date:'2026-08-23',loc:'福島県いわき市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79202/'},
-    {id:'s18',name:'珠洲トライアスロン',date:'2026-08-23',loc:'石川県珠洲市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s19',name:'佐渡国際トライアスロン大会 Aタイプ',date:'2026-09-06',loc:'新潟県佐渡市',country:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.scsf.jp/'},
-    {id:'s20',name:'佐渡国際トライアスロン大会 Bタイプ',date:'2026-09-06',loc:'新潟県佐渡市',country:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.scsf.jp/'},
-    {id:'s21',name:'IRONMAN Japan みなみ北海道',date:'2026-09-13',loc:'北海道北斗市',country:'日本',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/im-japan'},
-    {id:'s22',name:'天草宝島国際トライアスロン',date:'2026-09-13',loc:'熊本県天草市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s23',name:'青森国民スポーツ大会',date:'2026-09-13',loc:'青森県青森市',country:'日本',dist:'スタンダード',cat:'国スポ',url:'https://www.jtu.or.jp/event/79188/'},
-    {id:'s24',name:'アジア競技大会トライアスロン',date:'2026-09-20',loc:'愛知県蒲郡市',country:'日本',dist:'スタンダード',cat:'アジア大会',url:'https://www.jtu.or.jp/event/79174/'},
-    {id:'s25',name:'村上笹川流れトライアスロン',date:'2026-09-20',loc:'新潟県村上市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s26',name:'日本スプリントトライアスロン選手権 宮崎',date:'2026-09-27',loc:'宮崎県宮崎市',country:'日本',dist:'スプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79205/'},
-    {id:'s27',name:'びわ湖トライアスロンin近江八幡',date:'2026-09-27',loc:'滋賀県近江八幡市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
-    {id:'s28',name:'WTパラカップ千葉',date:'2026-10-12',loc:'千葉県千葉市',country:'日本',dist:'スタンダード',cat:'WT Para',url:'https://www.jtu.or.jp/event/79184/'},
-    {id:'s29',name:'日本SSPトライアスロン選手権 海の森',date:'2026-10-17',loc:'東京都江東区',country:'日本',dist:'スーパースプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79207/'},
-    {id:'s30',name:'日本トライアスロン選手権 台場',date:'2026-11-01',loc:'東京都港区',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79210/'},
-    {id:'s31',name:'ワールドトライアスロンカップ宮崎',date:'2026-11-15',loc:'宮崎県宮崎市',country:'日本',dist:'スタンダード',cat:'WT Cup',url:'https://www.jtu.or.jp/event/79186/'},
-    {id:'s32',name:'日本エイジSD/SPトライアスロン選手権 宮崎',date:'2026-11-15',loc:'宮崎県宮崎市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79213/'},
-    {id:'s33',name:'日本エイジLDトライアスロン選手権 沖縄',date:'2026-11-22',loc:'沖縄県金武町',country:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79215/'},
-    {id:'s34',name:'XTERRA Japan',date:'2026-05-16',loc:'長野県',country:'日本',dist:'オフロード',cat:'XTERRA',url:'https://www.xterrajapan.com/'},
-    // 海外 IRONMAN
-    {id:'s40',name:'IRONMAN 70.3 Colombo',date:'2026-02-22',loc:'コロンボ',country:'スリランカ',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s41',name:'IRONMAN New Zealand',date:'2026-03-07',loc:'タウポ',country:'ニュージーランド',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s42',name:'IRONMAN 70.3 Davao',date:'2026-03-22',loc:'ダバオ',country:'フィリピン',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s43',name:'IRONMAN 70.3 Geelong',date:'2026-03-22',loc:'ジーロング',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s44',name:'IRONMAN 70.3 Taiwan',date:'2026-04-12',loc:'台東',country:'台湾',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s45',name:'IRONMAN Texas',date:'2026-04-18',loc:'テキサス',country:'アメリカ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s46',name:'IRONMAN 70.3 Vietnam',date:'2026-05-10',loc:'ダナン',country:'ベトナム',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s47',name:'IRONMAN Hamburg',date:'2026-06-07',loc:'ハンブルク',country:'ドイツ',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
-    {id:'s48',name:'IRONMAN 70.3 Cairns',date:'2026-06-14',loc:'ケアンズ',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s49',name:'IRONMAN Cairns',date:'2026-06-14',loc:'ケアンズ',country:'オーストラリア',dist:'ロング',cat:'IRONMAN AP',url:'https://www.ironman.com/'},
-    {id:'s50',name:'IRONMAN 70.3 Goseong',date:'2026-06-14',loc:'高城',country:'韓国',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
-    {id:'s51',name:'IRONMAN Frankfurt',date:'2026-06-28',loc:'フランクフルト',country:'ドイツ',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
-    {id:'s52',name:'IRONMAN Canada Whistler',date:'2026-07-26',loc:'ウィスラー',country:'カナダ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s53',name:'IRONMAN Lake Placid',date:'2026-07-26',loc:'レイクプラシッド',country:'アメリカ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s54',name:'IRONMAN Kalmar',date:'2026-08-15',loc:'カルマル',country:'スウェーデン',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s55',name:'IRONMAN Vichy',date:'2026-08-30',loc:'ヴィシー',country:'フランス',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s56',name:'IRONMAN Nice',date:'2026-09-06',loc:'ニース',country:'フランス',dist:'ロング',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
-    {id:'s57',name:'IRONMAN Wales',date:'2026-09-13',loc:'テンビー',country:'イギリス',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s58',name:'IRONMAN Italy Emilia-Romagna',date:'2026-09-19',loc:'エミリアロマーニャ',country:'イタリア',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
-    {id:'s59',name:'IRONMAN 70.3 World Championship',date:'2026-09-20',loc:'タスマニア',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
-    {id:'s60',name:'IRONMAN World Championship',date:'2026-10-10',loc:'コナ',country:'アメリカ',dist:'ロング',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
-    {id:'s61',name:'IRONMAN Cozumel',date:'2026-11-22',loc:'コスメル',country:'メキシコ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
-    {id:'s62',name:'IRONMAN Western Australia',date:'2026-12-06',loc:'バッセルトン',country:'オーストラリア',dist:'ロング',cat:'IRONMAN AP',url:'https://www.ironman.com/'},
-    // Challenge
-    {id:'s70',name:'Challenge Wanaka',date:'2026-02-21',loc:'ワナカ',country:'ニュージーランド',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s71',name:'Challenge Taiwan',date:'2026-04-26',loc:'台東',country:'台湾',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s72',name:'Challenge St. Pölten',date:'2026-05-31',loc:'サンクトペルテン',country:'オーストリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s73',name:'Challenge Gdansk',date:'2026-06-07',loc:'グダニスク',country:'ポーランド',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s74',name:'Challenge Kaiserwinkl-Walchsee',date:'2026-06-14',loc:'ヴァルヒゼー',country:'オーストリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s75',name:'Challenge Roth',date:'2026-07-05',loc:'ロート',country:'ドイツ',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s76',name:'Challenge Geraardsbergen',date:'2026-07-12',loc:'ベルギー',country:'ベルギー',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s77',name:'Challenge Turku',date:'2026-08-01',loc:'トゥルク',country:'フィンランド',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s78',name:'Challenge Vietnam',date:'2026-08-02',loc:'ニャチャン',country:'ベトナム',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s79',name:'Challenge Gunsan-Saemangeum',date:'2026-08-17',loc:'群山',country:'韓国',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s80',name:'Challenge Malaysia',date:'2026-08-23',loc:'フォレストシティ',country:'マレーシア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s81',name:'Challenge Samarkand',date:'2026-08-24',loc:'サマルカンド',country:'ウズベキスタン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s82',name:'Challenge Almere-Amsterdam',date:'2026-09-12',loc:'アルメーレ',country:'オランダ',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s83',name:'Challenge Sanremo',date:'2026-09-20',loc:'サンレモ',country:'イタリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s84',name:'Challenge Barcelona',date:'2026-10-04',loc:'バルセロナ',country:'スペイン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s85',name:'Challenge Peguera-Mallorca',date:'2026-10-11',loc:'マヨルカ',country:'スペイン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s86',name:'Challenge Sardinia',date:'2026-10-18',loc:'サルデーニャ',country:'イタリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    {id:'s87',name:'Challenge Canberra',date:'2026-11-22',loc:'キャンベラ',country:'オーストラリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
-    // T100
-    {id:'s90',name:'T100 Singapore',date:'2026-02-28',loc:'シンガポール',country:'シンガポール',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s91',name:'T100 Gold Coast',date:'2026-03-21',loc:'ゴールドコースト',country:'オーストラリア',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s92',name:'T100 San Francisco',date:'2026-05-30',loc:'サンフランシスコ',country:'アメリカ',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s93',name:'T100 London',date:'2026-08-02',loc:'ロンドン',country:'イギリス',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s94',name:'T100 Las Vegas',date:'2026-10-25',loc:'ラスベガス',country:'アメリカ',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s95',name:'T100 Saudi Arabia',date:'2026-11-01',loc:'サウジアラビア',country:'サウジアラビア',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s96',name:'T100 Dubai',date:'2026-11-13',loc:'ドバイ',country:'UAE',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    {id:'s97',name:'T100 Finals Qatar',date:'2026-12-11',loc:'ドーハ',country:'カタール',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
-    // XTERRA / World Triathlon
-    {id:'s100',name:'XTERRA Philippines',date:'2026-02-22',loc:'スービック',country:'フィリピン',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
-    {id:'s101',name:'XTERRA Asia-Pacific Championship',date:'2026-03-28',loc:'オーストラリア',country:'オーストラリア',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
-    {id:'s102',name:'XTERRA Czech',date:'2026-06-20',loc:'チェコ',country:'チェコ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
-    {id:'s103',name:'XTERRA Germany',date:'2026-08-08',loc:'ドイツ',country:'ドイツ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
-    {id:'s104',name:'XTERRA World Championship',date:'2026-10-25',loc:'マウイ',country:'アメリカ',dist:'オフロード',cat:'XTERRA WC',url:'https://www.xterraplanet.com/'},
-    {id:'s105',name:'WTエイジグループ世界選手権ポンテベドラ',date:'2026-09-24',loc:'ポンテベドラ',country:'スペイン',dist:'スタンダード',cat:'WT World',url:'https://triathlon.org/'},
-    {id:'s106',name:'WTマルチスポーツ世界選手権アブダビ',date:'2026-11-13',loc:'アブダビ',country:'UAE',dist:'その他',cat:'WT World',url:'https://triathlon.org/'},
+// ===== IRONMAN Full Distance =====
+const IM_FULL = [
+{s:'south-hokkaido',n:'IRONMAN Japan みなみ北海道',d:'2026-09-13',l:'北海道北斗市',c:'日本'},
+{s:'new-zealand',n:'IRONMAN New Zealand',d:'2026-03-07',l:'タウポ',c:'ニュージーランド'},
+{s:'australia',n:'IRONMAN Australia',d:'2026-05-03',l:'ポートマッコーリー',c:'オーストラリア'},
+{s:'cairns',n:'IRONMAN Cairns',d:'2026-06-14',l:'ケアンズ',c:'オーストラリア'},
+{s:'western-australia',n:'IRONMAN Western Australia',d:'2026-12-06',l:'バッセルトン',c:'オーストラリア'},
+{s:'taiwan',n:'IRONMAN Taiwan',d:'2026-10-18',l:'澎湖',c:'台湾'},
+{s:'philippines',n:'IRONMAN Philippines',d:'2026-11-08',l:'セブ',c:'フィリピン'},
+{s:'vietnam',n:'IRONMAN Vietnam',d:'2026-05-03',l:'ダナン',c:'ベトナム'},
+{s:'malaysia',n:'IRONMAN Malaysia',d:'2026-11-14',l:'ランカウイ',c:'マレーシア'},
+{s:'texas',n:'IRONMAN Texas',d:'2026-04-18',l:'ウッドランズ',c:'アメリカ'},
+{s:'tulsa',n:'IRONMAN Tulsa',d:'2026-05-17',l:'タルサ',c:'アメリカ'},
+{s:'jacksonville',n:'IRONMAN Jacksonville',d:'2026-05-16',l:'ジャクソンビル',c:'アメリカ'},
+{s:'lake-placid',n:'IRONMAN Lake Placid',d:'2026-07-19',l:'レイクプラシッド',c:'アメリカ'},
+{s:'boulder',n:'IRONMAN Boulder',d:'2026-08-02',l:'ボルダー',c:'アメリカ'},
+{s:'wisconsin',n:'IRONMAN Wisconsin',d:'2026-09-13',l:'マディソン',c:'アメリカ'},
+{s:'maryland',n:'IRONMAN Maryland',d:'2026-09-19',l:'ケンブリッジ',c:'アメリカ'},
+{s:'chattanooga',n:'IRONMAN Chattanooga',d:'2026-09-27',l:'チャタヌーガ',c:'アメリカ'},
+{s:'california',n:'IRONMAN California',d:'2026-10-18',l:'サクラメント',c:'アメリカ'},
+{s:'florida',n:'IRONMAN Florida',d:'2026-11-07',l:'パナマシティ',c:'アメリカ'},
+{s:'arizona',n:'IRONMAN Arizona',d:'2026-11-22',l:'テンペ',c:'アメリカ'},
+{s:'cozumel',n:'IRONMAN Cozumel',d:'2026-11-22',l:'コスメル',c:'メキシコ'},
+{s:'canada',n:'IRONMAN Canada Whistler',d:'2026-07-26',l:'ウィスラー',c:'カナダ'},
+{s:'canada-ottawa',n:'IRONMAN Canada Ottawa',d:'2026-08-23',l:'オタワ',c:'カナダ'},
+{s:'world-championship',n:'IRONMAN World Championship',d:'2026-10-10',l:'コナ',c:'アメリカ'},
+{s:'lanzarote',n:'IRONMAN Lanzarote',d:'2026-05-23',l:'ランサローテ',c:'スペイン'},
+{s:'hamburg',n:'IRONMAN Hamburg',d:'2026-06-07',l:'ハンブルク',c:'ドイツ'},
+{s:'france',n:'IRONMAN France Nice',d:'2026-06-28',l:'ニース',c:'フランス'},
+{s:'frankfurt',n:'IRONMAN Frankfurt',d:'2026-06-28',l:'フランクフルト',c:'ドイツ'},
+{s:'uk',n:'IRONMAN UK',d:'2026-07-12',l:'スウォンジー',c:'イギリス'},
+{s:'switzerland',n:'IRONMAN Switzerland',d:'2026-07-19',l:'チューリッヒ',c:'スイス'},
+{s:'kalmar',n:'IRONMAN Kalmar',d:'2026-08-15',l:'カルマル',c:'スウェーデン'},
+{s:'tallinn',n:'IRONMAN Tallinn',d:'2026-08-22',l:'タリン',c:'エストニア'},
+{s:'vichy',n:'IRONMAN Vichy',d:'2026-08-30',l:'ヴィシー',c:'フランス'},
+{s:'zell-am-see',n:'IRONMAN Zell am See',d:'2026-08-30',l:'ツェルアムゼー',c:'オーストリア'},
+{s:'copenhagen',n:'IRONMAN Copenhagen',d:'2026-08-23',l:'コペンハーゲン',c:'デンマーク'},
+{s:'wales',n:'IRONMAN Wales',d:'2026-09-13',l:'テンビー',c:'イギリス'},
+{s:'emilia-romagna',n:'IRONMAN Italy',d:'2026-09-19',l:'チェルビア',c:'イタリア'},
+{s:'barcelona',n:'IRONMAN Barcelona',d:'2026-10-04',l:'バルセロナ',c:'スペイン'},
+{s:'brazil-florianopolis',n:'IRONMAN Brazil',d:'2026-05-31',l:'フロリアノポリス',c:'ブラジル'},
+{s:'argentina',n:'IRONMAN Argentina',d:'2026-12-06',l:'マルデルプラタ',c:'アルゼンチン'},
+{s:'south-africa',n:'IRONMAN South Africa',d:'2026-04-19',l:'ポートエリザベス',c:'南アフリカ'},
+];
+// ===== IRONMAN 70.3 =====
+const IM703 = [
+{s:'centrair',n:'IRONMAN 70.3 セントレア知多半島',d:'2026-06-14',l:'愛知県常滑市',c:'日本'},
+{s:'taiwan',n:'IRONMAN 70.3 Taiwan',d:'2026-04-12',l:'台東',c:'台湾'},
+{s:'davao',n:'IRONMAN 70.3 Davao',d:'2026-03-22',l:'ダバオ',c:'フィリピン'},
+{s:'subic-bay',n:'IRONMAN 70.3 Subic Bay',d:'2026-03-29',l:'スービックベイ',c:'フィリピン'},
+{s:'vietnam',n:'IRONMAN 70.3 Vietnam',d:'2026-05-10',l:'ダナン',c:'ベトナム'},
+{s:'goseong',n:'IRONMAN 70.3 Goseong',d:'2026-06-14',l:'高城',c:'韓国'},
+{s:'bintan',n:'IRONMAN 70.3 Bintan',d:'2026-08-23',l:'ビンタン',c:'インドネシア'},
+{s:'colombo',n:'IRONMAN 70.3 Colombo',d:'2026-02-22',l:'コロンボ',c:'スリランカ'},
+{s:'geelong',n:'IRONMAN 70.3 Geelong',d:'2026-03-22',l:'ジーロング',c:'オーストラリア'},
+{s:'cairns',n:'IRONMAN 70.3 Cairns',d:'2026-06-14',l:'ケアンズ',c:'オーストラリア'},
+{s:'western-australia',n:'IRONMAN 70.3 Western Australia',d:'2026-12-06',l:'バッセルトン',c:'オーストラリア'},
+{s:'sunshine-coast',n:'IRONMAN 70.3 Sunshine Coast',d:'2026-09-06',l:'サンシャインコースト',c:'オーストラリア'},
+{s:'taupo',n:'IRONMAN 70.3 New Zealand',d:'2026-01-11',l:'タウポ',c:'ニュージーランド'},
+{s:'world-championship',n:'IRONMAN 70.3 World Championship',d:'2026-09-12',l:'ニース',c:'フランス'},
+{s:'oceanside',n:'IRONMAN 70.3 Oceanside',d:'2026-03-28',l:'オーシャンサイド',c:'アメリカ'},
+{s:'texas',n:'IRONMAN 70.3 Texas',d:'2026-04-05',l:'ガルベストン',c:'アメリカ'},
+{s:'chattanooga',n:'IRONMAN 70.3 Chattanooga',d:'2026-05-17',l:'チャタヌーガ',c:'アメリカ'},
+{s:'eagleman',n:'IRONMAN 70.3 Eagleman',d:'2026-06-14',l:'ケンブリッジ',c:'アメリカ'},
+{s:'coeur-dalene',n:'IRONMAN 70.3 Coeur d\'Alene',d:'2026-06-28',l:'コーダレーン',c:'アメリカ'},
+{s:'ohio',n:'IRONMAN 70.3 Ohio',d:'2026-07-26',l:'デラウェア',c:'アメリカ'},
+{s:'boulder',n:'IRONMAN 70.3 Boulder',d:'2026-08-02',l:'ボルダー',c:'アメリカ'},
+{s:'santa-cruz',n:'IRONMAN 70.3 Santa Cruz',d:'2026-09-13',l:'サンタクルーズ',c:'アメリカ'},
+{s:'maine',n:'IRONMAN 70.3 Maine',d:'2026-08-09',l:'オールドオーチャードビーチ',c:'アメリカ'},
+{s:'atlantic-city',n:'IRONMAN 70.3 Atlantic City',d:'2026-09-20',l:'アトランティックシティ',c:'アメリカ'},
+{s:'waco',n:'IRONMAN 70.3 Waco',d:'2026-10-18',l:'ウェイコ',c:'アメリカ'},
+{s:'arizona',n:'IRONMAN 70.3 Arizona',d:'2026-10-18',l:'テンペ',c:'アメリカ'},
+{s:'florida',n:'IRONMAN 70.3 Florida',d:'2026-04-19',l:'ハインズシティ',c:'アメリカ'},
+{s:'mont-tremblant',n:'IRONMAN 70.3 Mont-Tremblant',d:'2026-06-28',l:'モントランブラン',c:'カナダ'},
+{s:'muskoka',n:'IRONMAN 70.3 Muskoka',d:'2026-07-05',l:'マスコカ',c:'カナダ'},
+{s:'victoria',n:'IRONMAN 70.3 Victoria',d:'2026-06-07',l:'ビクトリア',c:'カナダ'},
+{s:'calgary',n:'IRONMAN 70.3 Calgary',d:'2026-07-26',l:'カルガリー',c:'カナダ'},
+{s:'puerto-rico',n:'IRONMAN 70.3 Puerto Rico',d:'2026-03-15',l:'サンファン',c:'プエルトリコ'},
+{s:'cozumel',n:'IRONMAN 70.3 Cozumel',d:'2026-09-27',l:'コスメル',c:'メキシコ'},
+{s:'monterrey',n:'IRONMAN 70.3 Monterrey',d:'2026-04-05',l:'モンテレイ',c:'メキシコ'},
+{s:'dallas-little-elm',n:'IRONMAN 70.3 Dallas-Little Elm',d:'2026-03-15',l:'リトルエルム',c:'アメリカ'},
+{s:'omaha',n:'IRONMAN 70.3 Omaha',d:'2026-06-07',l:'オマハ',c:'アメリカ'},
+{s:'ruidoso-new-mexico',n:'IRONMAN 70.3 Ruidoso',d:'2026-07-12',l:'ルイドソ',c:'アメリカ'},
+{s:'northern-california',n:'IRONMAN 70.3 Northern California',d:'2026-08-16',l:'レディング',c:'アメリカ'},
+{s:'pennsylvania',n:'IRONMAN 70.3 Pennsylvania',d:'2026-06-14',l:'ステートカレッジ',c:'アメリカ'},
+{s:'boise',n:'IRONMAN 70.3 Boise',d:'2026-07-25',l:'ボイジー',c:'アメリカ'},
+{s:'marbella',n:'IRONMAN 70.3 Marbella',d:'2026-04-26',l:'マルベーリャ',c:'スペイン'},
+{s:'barcelona',n:'IRONMAN 70.3 Barcelona',d:'2026-05-17',l:'バルセロナ',c:'スペイン'},
+{s:'aix-en-provence',n:'IRONMAN 70.3 Aix-en-Provence',d:'2026-05-17',l:'エクサンプロヴァンス',c:'フランス'},
+{s:'nice',n:'IRONMAN 70.3 Nice',d:'2026-06-28',l:'ニース',c:'フランス'},
+{s:'les-sables',n:'IRONMAN 70.3 Les Sables',d:'2026-06-21',l:'レサーブル',c:'フランス'},
+{s:'vichy',n:'IRONMAN 70.3 Vichy',d:'2026-08-30',l:'ヴィシー',c:'フランス'},
+{s:'staffordshire',n:'IRONMAN 70.3 Staffordshire',d:'2026-06-14',l:'スタッフォードシャー',c:'イギリス'},
+{s:'weymouth',n:'IRONMAN 70.3 Weymouth',d:'2026-09-20',l:'ウェイマス',c:'イギリス'},
+{s:'ireland',n:'IRONMAN 70.3 Ireland',d:'2026-08-09',l:'コーク',c:'アイルランド'},
+{s:'kraichgau',n:'IRONMAN 70.3 Kraichgau',d:'2026-06-07',l:'クライヒガウ',c:'ドイツ'},
+{s:'luxembourg',n:'IRONMAN 70.3 Luxembourg',d:'2026-06-14',l:'ルクセンブルク',c:'ルクセンブルク'},
+{s:'elsinore',n:'IRONMAN 70.3 Elsinore',d:'2026-06-21',l:'エルシノア',c:'デンマーク'},
+{s:'tallinn',n:'IRONMAN 70.3 Tallinn',d:'2026-08-01',l:'タリン',c:'エストニア'},
+{s:'gdynia',n:'IRONMAN 70.3 Gdynia',d:'2026-08-09',l:'グディニャ',c:'ポーランド'},
+{s:'italy',n:'IRONMAN 70.3 Italy',d:'2026-06-07',l:'ペスカーラ',c:'イタリア'},
+{s:'erkner',n:'IRONMAN 70.3 Erkner',d:'2026-06-28',l:'エルクナー',c:'ドイツ'},
+{s:'rapperswil-jona',n:'IRONMAN 70.3 Switzerland',d:'2026-06-07',l:'ラッパースヴィル',c:'スイス'},
+{s:'zell-am-see',n:'IRONMAN 70.3 Zell am See',d:'2026-08-30',l:'ツェルアムゼー',c:'オーストリア'},
+{s:'brazil-fortaleza',n:'IRONMAN 70.3 Fortaleza',d:'2026-09-06',l:'フォルタレザ',c:'ブラジル'},
+{s:'rio',n:'IRONMAN 70.3 Rio',d:'2026-10-25',l:'リオデジャネイロ',c:'ブラジル'},
+{s:'buenos-aires',n:'IRONMAN 70.3 Buenos Aires',d:'2026-03-22',l:'ブエノスアイレス',c:'アルゼンチン'},
+{s:'pucon',n:'IRONMAN 70.3 Pucón',d:'2026-01-11',l:'プコン',c:'チリ'},
+{s:'cartagena',n:'IRONMAN 70.3 Cartagena',d:'2026-12-06',l:'カルタヘナ',c:'コロンビア'},
+{s:'barranquilla',n:'IRONMAN 70.3 Barranquilla',d:'2026-06-07',l:'バランキージャ',c:'コロンビア'},
+{s:'san-salvador',n:'IRONMAN 70.3 San Salvador',d:'2026-02-22',l:'サンサルバドル',c:'エルサルバドル'},
+{s:'ecuador',n:'IRONMAN 70.3 Ecuador',d:'2026-08-02',l:'マンタ',c:'エクアドル'},
+{s:'lima',n:'IRONMAN 70.3 Lima',d:'2026-04-26',l:'リマ',c:'ペルー'},
+{s:'dubai',n:'IRONMAN 70.3 Dubai',d:'2026-02-06',l:'ドバイ',c:'UAE'},
+{s:'bahrain',n:'IRONMAN 70.3 Bahrain',d:'2026-12-04',l:'バーレーン',c:'バーレーン'},
+{s:'south-africa',n:'IRONMAN 70.3 South Africa',d:'2026-01-25',l:'バッファローシティ',c:'南アフリカ'},
+{s:'durban',n:'IRONMAN 70.3 Durban',d:'2026-06-14',l:'ダーバン',c:'南アフリカ'},
+];
+// ===== JTU 国内大会 =====
+const JTU = [
+{n:'カーフマン・シグネーチャーデュアスロンin東扇島',d:'2026-02-15',l:'神奈川県川崎市',c:'日本',dist:'デュアスロン',cat:'カーフマン',url:'https://www.mspo.jp/events/66044'},
+{n:'タングラム斑尾ウインタートライアスロン',d:'2026-03-08',l:'長野県信濃町',c:'日本',dist:'ウィンター',cat:'JTU',url:'https://do.l-tike.com/'},
+{n:'石垣島トライアスロン大会',d:'2026-04-12',l:'沖縄県石垣市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/78271/'},
+{n:'全日本トライアスロン宮古島大会',d:'2026-04-19',l:'沖縄県宮古島市',c:'日本',dist:'ロング',cat:'JTU主要',url:'https://tri-miyako.com/'},
+{n:'XTERRA JAPAN 根の上高原',d:'2026-05-16',l:'岐阜県中津川市',c:'日本',dist:'オフロード',cat:'XTERRA',url:'https://triathlon-lumina.com/e001146l/'},
+{n:'ワールドトライアスロンCS横浜',d:'2026-05-16',l:'神奈川県横浜市',c:'日本',dist:'スタンダード',cat:'WTS',url:'https://yokohamatriathlon.jp/wts/'},
+{n:'館山わかしおトライアスロン',d:'2026-05-24',l:'千葉県館山市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://tateyama-tri.com/'},
+{n:'大阪城トライアスロン',d:'2026-05-31',l:'大阪府大阪市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://eventdev.osaka-triathlon.com/'},
+{n:'アジアトライアスロンカップ大阪城',d:'2026-05-31',l:'大阪府大阪市',c:'日本',dist:'スタンダード',cat:'アジア',url:'https://www.jtu.or.jp/event/79177/'},
+{n:'和歌浦トライアスロンフェスタ',d:'2026-06-07',l:'和歌山県和歌山市',c:'日本',dist:'スタンダード',cat:'JTU',url:'https://triathlon-lumina.com/r001299lp/'},
+{n:'あやはしトライアスロン',d:'2026-06-07',l:'沖縄県うるま市',c:'日本',dist:'スタンダード',cat:'JTU',url:'https://www.mspo.jp/events/66257'},
+{n:'五島長崎国際トライアスロン',d:'2026-06-14',l:'長崎県五島市',c:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://gototri.com/'},
+{n:'吹田市長杯トライアスロン',d:'2026-06-20',l:'大阪府吹田市',c:'日本',dist:'スタンダード',cat:'JTU',url:'https://www.mspo.jp/events/66333'},
+{n:'木更津トライアスロン',d:'2026-06-21',l:'千葉県木更津市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://kisarazu-tri.com/'},
+{n:'福山かわまちトライアスロン',d:'2026-06-21',l:'広島県福山市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.mspo.jp/events/66273'},
+{n:'蒲郡オレンジトライアスロン',d:'2026-06-21',l:'愛知県蒲郡市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'スワコエイトピークスミドルトライアスロン',d:'2026-06-28',l:'長野県諏訪地域',c:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.mspo.jp/events/66236'},
+{n:'レイクハマナ・トライアスロンin村櫛',d:'2026-06-28',l:'静岡県浜松市',c:'日本',dist:'スタンダード',cat:'JTU',url:'http://www.lakehamana-triathlon.com/'},
+{n:'野尻湖トライアスロン',d:'2026-06-28',l:'長野県信濃町',c:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'トライアスロンIN徳之島',d:'2026-07-05',l:'鹿児島県徳之島',c:'日本',dist:'スタンダード',cat:'JTU',url:'https://www.mspo.jp/events/66113'},
+{n:'榛名湖リゾートトライアスロン',d:'2026-07-05',l:'群馬県高崎市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'日本アクアスロン選手権 海の森',d:'2026-07-12',l:'東京都江東区',c:'日本',dist:'アクアスロン',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79192/'},
+{n:'みなと酒田トライアスロンおしん',d:'2026-07-12',l:'山形県酒田市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'皆生トライアスロン',d:'2026-07-19',l:'鳥取県米子市',c:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'九十九里トライアスロン',d:'2026-07-19',l:'千葉県九十九里町',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'長良川国際トライアスロン',d:'2026-07-26',l:'岐阜県海津市',c:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/'},
+{n:'うつくしまトライアスロンinあいづ',d:'2026-08-02',l:'福島県猪苗代町',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'エクステラ・ジャパン丸沼',d:'2026-08-22',l:'群馬県片品村',c:'日本',dist:'オフロード',cat:'XTERRA',url:'https://triathlon-lumina.com/e001158l/'},
+{n:'珠洲トライアスロン',d:'2026-08-23',l:'石川県珠洲市',c:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'佐渡国際トライアスロン大会 Aタイプ',d:'2026-09-06',l:'新潟県佐渡市',c:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.scsf.jp/triathlon/'},
+{n:'佐渡国際トライアスロン大会 Bタイプ',d:'2026-09-06',l:'新潟県佐渡市',c:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.scsf.jp/triathlon/'},
+{n:'天草宝島国際トライアスロン',d:'2026-09-13',l:'熊本県天草市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'青森国民スポーツ大会',d:'2026-09-13',l:'青森県青森市',c:'日本',dist:'スタンダード',cat:'国スポ',url:'https://www.jtu.or.jp/event/79188/'},
+{n:'上五島トライアスロン',d:'2026-09-20',l:'長崎県新上五島町',c:'日本',dist:'スタンダード',cat:'JTU',url:'https://www.mspo.jp/events/66323'},
+{n:'アジア競技大会トライアスロン',d:'2026-09-20',l:'愛知県蒲郡市',c:'日本',dist:'スタンダード',cat:'アジア大会',url:'https://www.jtu.or.jp/event/79174/'},
+{n:'村上笹川流れトライアスロン',d:'2026-09-20',l:'新潟県村上市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'日本スプリントトライアスロン選手権 宮崎',d:'2026-09-27',l:'宮崎県宮崎市',c:'日本',dist:'スプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79205/'},
+{n:'びわ湖トライアスロンin近江八幡',d:'2026-09-27',l:'滋賀県近江八幡市',c:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+{n:'WTパラカップ千葉',d:'2026-10-12',l:'千葉県千葉市',c:'日本',dist:'スタンダード',cat:'WT Para',url:'https://www.jtu.or.jp/event/79184/'},
+{n:'日本SSPトライアスロン選手権 海の森',d:'2026-10-17',l:'東京都江東区',c:'日本',dist:'スーパースプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79207/'},
+{n:'日本トライアスロン選手権 台場',d:'2026-11-01',l:'東京都港区',c:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79210/'},
+{n:'ワールドトライアスロンカップ宮崎',d:'2026-11-15',l:'宮崎県宮崎市',c:'日本',dist:'スタンダード',cat:'WT Cup',url:'https://www.jtu.or.jp/event/79186/'},
+{n:'日本エイジSD/SPトライアスロン選手権 宮崎',d:'2026-11-15',l:'宮崎県宮崎市',c:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79213/'},
+{n:'日本エイジLDトライアスロン選手権 沖縄',d:'2026-11-22',l:'沖縄県金武町',c:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79215/'},
+];
+// ===== Challenge =====
+const CHAL = [
+{s:'wanaka',n:'Challenge Wanaka',d:'2026-02-21',l:'ワナカ',c:'ニュージーランド'},
+{s:'taiwan',n:'Challenge Taiwan',d:'2026-04-26',l:'台東',c:'台湾'},
+{s:'st-polten',n:'Challenge St. Pölten',d:'2026-05-31',l:'サンクトペルテン',c:'オーストリア'},
+{s:'gdansk',n:'Challenge Gdansk',d:'2026-06-07',l:'グダニスク',c:'ポーランド'},
+{s:'walchsee',n:'Challenge Kaiserwinkl-Walchsee',d:'2026-06-14',l:'ヴァルヒゼー',c:'オーストリア'},
+{s:'roth',n:'Challenge Roth',d:'2026-07-05',l:'ロート',c:'ドイツ'},
+{s:'geraardsbergen',n:'Challenge Geraardsbergen',d:'2026-07-12',l:'ベルギー',c:'ベルギー'},
+{s:'turku',n:'Challenge Turku',d:'2026-08-01',l:'トゥルク',c:'フィンランド'},
+{s:'vietnam',n:'Challenge Vietnam',d:'2026-08-02',l:'ニャチャン',c:'ベトナム'},
+{s:'saemangeum',n:'Challenge Gunsan-Saemangeum',d:'2026-08-17',l:'群山',c:'韓国'},
+{s:'malaysia',n:'Challenge Malaysia',d:'2026-08-23',l:'フォレストシティ',c:'マレーシア'},
+{s:'samarkand',n:'Challenge Samarkand',d:'2026-08-24',l:'サマルカンド',c:'ウズベキスタン'},
+{s:'almere-amsterdam',n:'Challenge Almere-Amsterdam',d:'2026-09-12',l:'アルメーレ',c:'オランダ'},
+{s:'sanremo',n:'Challenge Sanremo',d:'2026-09-20',l:'サンレモ',c:'イタリア'},
+{s:'barcelona',n:'Challenge Barcelona',d:'2026-10-04',l:'バルセロナ',c:'スペイン'},
+{s:'peguera-mallorca',n:'Challenge Peguera-Mallorca',d:'2026-10-11',l:'マヨルカ',c:'スペイン'},
+{s:'sardinia',n:'Challenge Sardinia',d:'2026-10-18',l:'サルデーニャ',c:'イタリア'},
+{s:'canberra',n:'Challenge Canberra',d:'2026-11-22',l:'キャンベラ',c:'オーストラリア'},
+];
+// ===== T100 =====
+const T100 = [
+{s:'singapore',n:'T100 Singapore',d:'2026-02-28',l:'シンガポール',c:'シンガポール'},
+{s:'gold-coast',n:'T100 Gold Coast',d:'2026-03-21',l:'ゴールドコースト',c:'オーストラリア'},
+{s:'san-francisco',n:'T100 San Francisco',d:'2026-05-30',l:'サンフランシスコ',c:'アメリカ'},
+{s:'london',n:'T100 London',d:'2026-08-02',l:'ロンドン',c:'イギリス'},
+{s:'las-vegas',n:'T100 Las Vegas',d:'2026-10-25',l:'ラスベガス',c:'アメリカ'},
+{s:'saudi-arabia',n:'T100 Saudi Arabia',d:'2026-11-01',l:'サウジアラビア',c:'サウジアラビア'},
+{s:'dubai',n:'T100 Dubai',d:'2026-11-13',l:'ドバイ',c:'UAE'},
+{s:'qatar',n:'T100 Finals Qatar',d:'2026-12-11',l:'ドーハ',c:'カタール'},
+];
+// ===== XTERRA / World Triathlon =====
+const OTHER = [
+{n:'XTERRA Philippines',d:'2026-02-22',l:'スービック',c:'フィリピン',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
+{n:'XTERRA Asia-Pacific Championship',d:'2026-03-28',l:'オーストラリア',c:'オーストラリア',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
+{n:'XTERRA Czech',d:'2026-06-20',l:'チェコ',c:'チェコ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
+{n:'XTERRA Germany',d:'2026-08-08',l:'ドイツ',c:'ドイツ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
+{n:'XTERRA World Championship',d:'2026-10-25',l:'マウイ',c:'アメリカ',dist:'オフロード',cat:'XTERRA WC',url:'https://www.xterraplanet.com/'},
+{n:'WTエイジグループ世界選手権ポンテベドラ',d:'2026-09-24',l:'ポンテベドラ',c:'スペイン',dist:'スタンダード',cat:'WT World',url:'https://triathlon.org/'},
+{n:'WTマルチスポーツ世界選手権アブダビ',d:'2026-11-13',l:'アブダビ',c:'UAE',dist:'その他',cat:'WT World',url:'https://triathlon.org/'},
+{n:'ホノルルトライアスロン',d:'2026-05-17',l:'ハワイ',c:'アメリカ',dist:'スタンダード',cat:'海外',url:'https://www.honolulutriathlon.com/'},
 ];
 
-let races = [];
+// Build race list with proper URLs
+const RACES = [
+  // IRONMAN Full
+  ...IM_FULL.map(r => ({
+    id: 'imf_' + r.s,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: 'ロング',
+    cat: 'IRONMAN',
+    url: 'https://www.ironman.com/im-' + r.s
+  })),
+  // IRONMAN 70.3
+  ...IM703.map(r => ({
+    id: 'im7_' + r.s,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: 'ミドル',
+    cat: 'IRONMAN 70.3',
+    url: 'https://www.ironman.com/im703-' + r.s
+  })),
+  // JTU
+  ...JTU.map((r, i) => ({
+    id: 'jtu_' + i,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: r.dist,
+    cat: r.cat,
+    url: r.url
+  })),
+  // Challenge
+  ...CHAL.map(r => ({
+    id: 'ch_' + r.s,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: r.n.includes('Half') ? 'ミドル' : 'ロング',
+    cat: 'Challenge',
+    url: 'https://challenge-family.com/race/' + r.s + '/'
+  })),
+  // T100
+  ...T100.map(r => ({
+    id: 't100_' + r.s,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: 'ミドル',
+    cat: 'T100',
+    url: 'https://t100triathlon.com/races/' + r.s + '/'
+  })),
+  // Others
+  ...OTHER.map((r, i) => ({
+    id: 'oth_' + i,
+    name: r.n,
+    date: r.d,
+    loc: r.l,
+    country: r.c,
+    dist: r.dist,
+    cat: r.cat,
+    url: r.url
+  }))
+];
+
+let races = RACES.filter(r => r.date >= new Date().toISOString().split('T')[0]).sort((a,b) => a.date.localeCompare(b.date));
 let filtered = [];
 let selected = {a: new Set(), o: new Set()};
-const CACHE_KEY = 'races_cache_v3';
-const CACHE_DURATION = 3600000; // 1時間
 
-async function init() {
-    // キャッシュ確認
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-        try {
-            const data = JSON.parse(cached);
-            if (Date.now() - new Date(data.lastUpdated).getTime() < CACHE_DURATION) {
-                races = data.races;
-                updateUI(data);
-                hideLoading();
-                return;
-            }
-        } catch (e) {}
-    }
-    await fetchData();
-}
-
-async function fetchData() {
-    showLoading();
-    try {
-        const response = await fetch('/.netlify/functions/fetch-races', { timeout: 30000 });
-        if (!response.ok) throw new Error('API error');
-        const data = await response.json();
-        
-        if (data.success && data.races && data.races.length > 0) {
-            races = data.races;
-            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-            updateUI(data);
-            
-            if (data.scrapingSuccess) {
-                setStatus('success', `✅ JTUから最新データを取得 (${data.count}件)`);
-            } else if (data.fallback) {
-                setStatus('warning', `⚠️ APIエラー - 静的データを使用 (${data.count}件)`);
-            } else {
-                setStatus('warning', `⚠️ スクレイピング一部失敗 - 静的データで補完 (${data.count}件)`);
-            }
-        } else {
-            throw new Error('No data');
-        }
-    } catch (error) {
-        console.error('Fetch error:', error);
-        // フォールバック: 静的データを使用
-        races = STATIC_RACES.filter(r => r.date >= new Date().toISOString().split('T')[0]);
-        races.sort((a, b) => a.date.localeCompare(b.date));
-        
-        const jp = races.filter(r => r.country === '日本').length;
-        const ov = races.length - jp;
-        
-        updateUI({
-            count: races.length,
-            japanCount: jp,
-            overseasCount: ov,
-            lastUpdated: new Date().toISOString()
-        });
-        setStatus('error', `⚠️ オフラインモード - 静的データを使用 (${races.length}件)`);
-    }
-    hideLoading();
-}
-
-function refreshData() {
-    localStorage.removeItem(CACHE_KEY);
-    fetchData();
-}
-
-function updateUI(data) {
-    document.getElementById('total-count').textContent = data.count;
-    document.getElementById('japan-count').textContent = data.japanCount;
-    document.getElementById('overseas-count').textContent = data.overseasCount;
-    document.getElementById('last-updated').textContent = new Date(data.lastUpdated).toLocaleString('ja-JP');
+function init() {
+    const jp = races.filter(r => r.country === '日本').length;
+    const ov = races.length - jp;
+    document.getElementById('total-count').textContent = races.length;
+    document.getElementById('japan-count').textContent = jp;
+    document.getElementById('overseas-count').textContent = ov;
+    document.getElementById('last-updated').textContent = new Date().toLocaleDateString('ja-JP');
     filter();
 }
-
-function setStatus(type, text) {
-    const bar = document.getElementById('status-bar');
-    bar.className = 'status-bar' + (type !== 'success' ? ' ' + type : '');
-    document.getElementById('status-text').textContent = text;
-}
-
-function showLoading() { document.getElementById('loading').style.display = 'flex'; document.getElementById('refresh-btn').disabled = true; }
-function hideLoading() { document.getElementById('loading').style.display = 'none'; document.getElementById('refresh-btn').disabled = false; }
 
 function filter() {
     const s = document.getElementById('f-search').value.toLowerCase();
@@ -319,14 +397,13 @@ function filter() {
     const m = document.getElementById('f-month').value;
     
     filtered = races.filter(x => {
-        if (s && !x.name.toLowerCase().includes(s) && !(x.loc||'').toLowerCase().includes(s)) return false;
+        if (s && !x.name.toLowerCase().includes(s) && !(x.loc||'').toLowerCase().includes(s) && !(x.country||'').toLowerCase().includes(s)) return false;
         if (r === 'japan' && x.country !== '日本') return false;
         if (r === 'overseas' && x.country === '日本') return false;
         if (d && x.dist !== d) return false;
         if (m && x.date.substring(5,7) !== m) return false;
         return true;
     });
-    filtered.sort((a,b) => a.date.localeCompare(b.date));
     document.getElementById('filtered-count').textContent = filtered.length;
     document.getElementById('result-count').textContent = filtered.length + '件';
     render();
@@ -359,8 +436,7 @@ function sel(id, type) {
     selected.a.delete(id); selected.o.delete(id);
     if (type === 'a') selected.a.add(id);
     else selected.o.add(id);
-    updateSel();
-    render();
+    updateSel(); render();
 }
 
 function updateSel() {

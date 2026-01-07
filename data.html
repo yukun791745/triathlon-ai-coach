@@ -1147,6 +1147,9 @@
         }
         
         // ===== アクティビティ表示 =====
+        let currentPage = 1;
+        const itemsPerPage = 200;
+
         function displayActivities() {
             const container = document.getElementById('activityList');
             
@@ -1164,7 +1167,21 @@
                 new Date(b.start_date) - new Date(a.start_date)
             );
             
-            container.innerHTML = sorted.slice(0, 50).map(activity => {
+            const totalPages = Math.ceil(sorted.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageActivities = sorted.slice(startIndex, endIndex);
+            
+            let html = '';
+            
+            // ページネーションコントロール（上部）
+            if (totalPages > 1) {
+                html += renderPagination(totalPages, 'top');
+            }
+            
+            // アクティビティリスト
+            html += '<div class="activity-list-items">';
+            html += pageActivities.map(activity => {
                 const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
                 const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
                 const duration = formatDuration(activity.moving_time || activity.elapsed_time);
@@ -1193,9 +1210,42 @@
                     </div>
                 `;
             }).join('');
+            html += '</div>';
             
-            container.style.maxHeight = '500px';
+            // ページネーションコントロール（下部）
+            if (totalPages > 1) {
+                html += renderPagination(totalPages, 'bottom');
+            }
+            
+            container.innerHTML = html;
+            container.style.maxHeight = '600px';
             container.style.overflowY = 'auto';
+        }
+        
+        function renderPagination(totalPages, position) {
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, filteredActivities.length);
+            
+            return `
+                <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin: ${position === 'top' ? '0 0 12px 0' : '12px 0 0 0'};">
+                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">≪</button>
+                    <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">＜</button>
+                    <span style="padding: 6px 12px; font-size: 0.9em; color: #666;">
+                        ${startIndex}-${endIndex}件 / 全${filteredActivities.length}件（${currentPage}/${totalPages}ページ）
+                    </span>
+                    <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">＞</button>
+                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">≫</button>
+                </div>
+            `;
+        }
+        
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            displayActivities();
+            // スクロールを上部に戻す
+            document.getElementById('activityList').scrollTop = 0;
         }
         
         function openActivityDetail(id) {
@@ -1204,6 +1254,7 @@
         
         // ===== フィルター =====
         function applyFilters() {
+            currentPage = 1;  // ページをリセット
             const typeFilter = document.getElementById('typeFilter').value;
             const periodFilter = document.getElementById('periodFilter').value;
             
@@ -1243,6 +1294,7 @@
             document.getElementById('typeFilter').value = 'all';
             document.getElementById('periodFilter').value = 'all';
             filteredActivities = [...activities];
+            currentPage = 1;  // ページをリセット
             displayActivities();
             generateSummary();
             updateActivityCount();
@@ -1292,7 +1344,8 @@
             
             const months = Object.keys(monthlyCount).sort((a, b) => b.localeCompare(a));
             
-            let tableRows = months.slice(0, 6).map((month, i) => {
+            // 全期間を表示
+            let tableRows = months.map((month, i) => {
                 const counts = monthlyCount[month];
                 const [year, monthNum] = month.split('-');
                 return `
@@ -1318,9 +1371,9 @@
                 </div>
                 
                 <h3 style="font-size: 1em; margin-bottom: 12px; color: #333;">月別トレーニング回数</h3>
-                <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
+                <div style="overflow-x: auto; max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-                        <thead>
+                        <thead style="position: sticky; top: 0; z-index: 1;">
                             <tr style="background: #f8f9fa;">
                                 <th style="padding: 10px 8px; text-align: left;">月</th>
                                 <th style="padding: 10px 8px; text-align: center; color: #4facfe;">🏊</th>

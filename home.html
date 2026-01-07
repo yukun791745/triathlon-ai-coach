@@ -212,6 +212,108 @@
             margin-bottom: 15px;
         }
 
+        /* 参加予定レース用スタイル */
+        .race-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .race-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .race-item:hover {
+            background: #f1f5f9;
+            transform: translateX(5px);
+        }
+
+        .race-item.a-race {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .race-countdown {
+            min-width: 70px;
+            text-align: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .race-countdown .days {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            line-height: 1;
+        }
+
+        .race-item.a-race .race-countdown .days {
+            color: #f59e0b;
+        }
+
+        .race-countdown .label {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .race-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .race-info .race-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .race-info .race-meta {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .race-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .race-badge.a-badge {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .race-badge.other-badge {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .no-races {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+        }
+
+        .no-races-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
         /* AIコーチメッセージ用スタイル */
         .coach-message-box {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -521,14 +623,16 @@
             <div class="dashboard-card">
                 <div class="card-header">
                     <span class="card-icon">🏁</span>
-                    <h2 class="card-title">今後のレース予定</h2>
+                    <h2 class="card-title">参加予定レース</h2>
                 </div>
                 <div class="card-content">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📅</div>
-                        <p>レース予定を読み込み中...</p>
-                        <p style="font-size: 0.85rem; margin-top: 10px;">このセクションは次のステップで実装します</p>
+                    <div id="upcomingRaces">
+                        <div class="placeholder">
+                            <div class="placeholder-icon">📅</div>
+                            <p>レース予定を読み込み中...</p>
+                        </div>
                     </div>
+                    <a href="race-selection.html" class="btn-primary" style="margin-top: 15px;">レースを選択・編集 →</a>
                 </div>
             </div>
 
@@ -603,12 +707,120 @@
             loadTopNews();
             loadDailyCoachMessage();
             updateMessageTime();
+            loadUpcomingRaces();
             
             // 期間選択のイベントリスナー
             document.getElementById('periodSelector').addEventListener('change', (e) => {
                 loadStravaData();
             });
         });
+
+        // ========== 参加予定レース読み込み ==========
+        function loadUpcomingRaces() {
+            const container = document.getElementById('upcomingRaces');
+            const savedRaces = localStorage.getItem('selected_races');
+            
+            if (!savedRaces) {
+                showNoRacesMessage(container);
+                return;
+            }
+            
+            try {
+                const raceData = JSON.parse(savedRaces);
+                const aRaces = raceData.a || [];
+                const oRaces = raceData.o || [];
+                const details = raceData.details || {};
+                
+                if (aRaces.length === 0 && oRaces.length === 0) {
+                    showNoRacesMessage(container);
+                    return;
+                }
+                
+                // 全レースを集めてソート
+                const allRaces = [];
+                aRaces.forEach(id => {
+                    if (details[id]) {
+                        allRaces.push({ ...details[id], type: 'a' });
+                    }
+                });
+                oRaces.forEach(id => {
+                    if (details[id]) {
+                        allRaces.push({ ...details[id], type: 'o' });
+                    }
+                });
+                
+                // 日付でソート（近い順）
+                allRaces.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // 過去のレースを除外し、最大5件表示
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const futureRaces = allRaces.filter(r => new Date(r.date) >= today).slice(0, 5);
+                
+                if (futureRaces.length === 0) {
+                    showNoRacesMessage(container);
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="race-list">
+                        ${futureRaces.map(race => renderRaceItem(race)).join('')}
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('レースデータ読み込みエラー:', error);
+                showNoRacesMessage(container);
+            }
+        }
+        
+        function renderRaceItem(race) {
+            const raceDate = new Date(race.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = raceDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const dateStr = `${raceDate.getFullYear()}/${raceDate.getMonth() + 1}/${raceDate.getDate()}`;
+            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][raceDate.getDay()];
+            
+            const isARace = race.type === 'a';
+            const itemClass = isARace ? 'race-item a-race' : 'race-item';
+            const badgeClass = isARace ? 'race-badge a-badge' : 'race-badge other-badge';
+            const badgeText = isARace ? '🏆 Aレース' : '🎪 参加予定';
+            
+            let countdownText = '';
+            if (diffDays === 0) {
+                countdownText = '<span class="days">TODAY</span><span class="label">本日!</span>';
+            } else if (diffDays === 1) {
+                countdownText = '<span class="days">1</span><span class="label">日後</span>';
+            } else {
+                countdownText = `<span class="days">${diffDays}</span><span class="label">日後</span>`;
+            }
+            
+            return `
+                <div class="${itemClass}">
+                    <div class="race-countdown">
+                        ${countdownText}
+                    </div>
+                    <div class="race-info">
+                        <div class="race-name">${race.name}</div>
+                        <div class="race-meta">📅 ${dateStr}(${dayOfWeek}) • 📍 ${race.loc || ''}</div>
+                    </div>
+                    <span class="${badgeClass}">${badgeText}</span>
+                </div>
+            `;
+        }
+        
+        function showNoRacesMessage(container) {
+            container.innerHTML = `
+                <div class="no-races">
+                    <div class="no-races-icon">🏁</div>
+                    <p style="margin-bottom: 8px;">まだレースが選択されていません</p>
+                    <p style="font-size: 0.85rem; color: #9ca3af;">「レースを選択・編集」から目標レースを設定しましょう</p>
+                </div>
+            `;
+        }
 
         // ========== Stravaデータ読み込み ==========
         function loadStravaData() {

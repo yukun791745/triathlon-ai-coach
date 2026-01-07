@@ -6,448 +6,387 @@
     <title>Triathlon AI Coach - レース選択</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
-            min-height: 100vh;
-            color: #333;
-            display: flex;
-        }
-        .flow-navbar {
-            position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000; padding: 24px 0; overflow-y: auto;
-        }
-        .flow-nav-logo {
-            font-size: 1.3rem; font-weight: 700; color: white; text-align: center;
-            padding: 0 20px 30px; margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .flow-nav-steps { display: flex; flex-direction: column; gap: 8px; padding: 0 16px; }
-        .flow-nav-step {
-            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-            border-radius: 10px; font-size: 0.9rem; font-weight: 600;
-            text-decoration: none; color: rgba(255, 255, 255, 0.8); transition: all 0.3s;
-        }
-        .flow-nav-step .nav-icon { font-size: 1.4rem; }
-        .flow-nav-step.current { background: rgba(255, 255, 255, 0.25); color: white; }
-        .flow-nav-step.available:hover { background: rgba(255, 255, 255, 0.15); color: white; transform: translateX(5px); }
-        .content-wrapper { margin-left: 240px; flex: 1; padding: 20px; width: calc(100% - 240px); }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 16px; }
-        .title { font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
-        .subtitle { font-size: 13px; color: #4b5563; }
-        
-        .stats-row {
-            display: flex; justify-content: center; gap: 20px; margin-bottom: 16px;
-            background: white; padding: 12px 20px; border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-        .stat-item { text-align: center; }
-        .stat-number { font-size: 20px; font-weight: bold; color: #2563eb; }
-        .stat-label { font-size: 10px; color: #6b7280; }
-        
-        .selection-panel {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white; border-radius: 10px; padding: 12px 18px; margin-bottom: 16px;
-            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-        }
-        .selection-title { font-size: 13px; font-weight: 600; }
-        .selection-stat { display: flex; align-items: center; gap: 6px; }
-        .selection-stat-number { font-size: 18px; font-weight: bold; }
-        .selection-stat-label { font-size: 11px; opacity: 0.9; }
-        .goal-button {
-            background: white; color: #d97706; border: none; padding: 8px 16px;
-            border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; margin-left: auto;
-        }
-        .goal-button:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .filters-panel {
-            background: white; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-        .filters-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .filter-group { display: flex; align-items: center; gap: 6px; }
-        .filter-label { font-size: 11px; color: #6b7280; font-weight: 600; }
-        .filter-select, .filter-input {
-            padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 12px;
-        }
-        .filter-input { width: 160px; }
-        .filter-select { min-width: 100px; }
-        .refresh-btn {
-            padding: 6px 12px; background: #3b82f6; color: white; border: none;
-            border-radius: 5px; cursor: pointer; font-size: 11px;
-        }
-        .search-result { margin-left: auto; font-size: 12px; color: #6b7280; }
-        
-        .races-table {
-            background: white; border-radius: 10px; overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-        .race-header-row {
-            display: grid;
-            grid-template-columns: 50px 100px 1fr 120px 80px 80px;
-            gap: 8px; padding: 10px 16px;
-            background: #f8fafc; font-size: 11px; font-weight: 600; color: #64748b;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .race-row {
-            display: grid;
-            grid-template-columns: 50px 100px 1fr 120px 80px 80px;
-            gap: 8px; padding: 10px 16px;
-            border-bottom: 1px solid #f1f5f9;
-            align-items: center;
-            transition: background 0.2s;
-        }
-        .race-row:hover { background: #f8fafc; }
-        .race-row.selected-a { background: #fffbeb; }
-        .race-row.selected-other { background: #f5f3ff; }
-        
-        .race-selection {
-            display: flex; gap: 8px; justify-content: center;
-        }
-        .race-radio {
-            display: flex; align-items: center; gap: 3px; cursor: pointer;
-        }
-        .race-radio input { cursor: pointer; }
-        .race-radio label { font-size: 10px; color: #666; cursor: pointer; }
-        
-        .race-date { font-size: 12px; color: #374151; font-weight: 500; }
-        .race-name {
-            font-size: 13px; color: #1e40af; font-weight: 500;
-            text-decoration: none; cursor: pointer;
-        }
-        .race-name:hover { text-decoration: underline; color: #1d4ed8; }
-        .race-location { font-size: 11px; color: #6b7280; }
-        .race-distance {
-            font-size: 10px; padding: 2px 8px; border-radius: 10px;
-            background: #dbeafe; color: #1e40af; text-align: center;
-        }
-        .race-category {
-            font-size: 10px; padding: 2px 6px; border-radius: 4px;
-            background: #f3f4f6; color: #4b5563; text-align: center;
-        }
-        
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.95);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        .loading-spinner {
-            width: 36px; height: 36px; border: 3px solid #e5e7eb;
-            border-top-color: #3b82f6; border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        .loading-text { margin-top: 10px; font-size: 13px; color: #4b5563; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #dbeafe 0%, #fff 50%, #cffafe 100%); min-height: 100vh; display: flex; }
+        .navbar { position: fixed; top: 0; left: 0; bottom: 0; width: 220px; background: linear-gradient(180deg, #667eea, #764ba2); padding: 20px 0; z-index: 1000; }
+        .nav-logo { font-size: 1.1rem; font-weight: 700; color: white; text-align: center; padding: 0 15px 25px; border-bottom: 2px solid rgba(255,255,255,0.2); margin-bottom: 15px; }
+        .nav-steps { display: flex; flex-direction: column; gap: 6px; padding: 0 12px; }
+        .nav-step { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; color: rgba(255,255,255,0.8); transition: all 0.2s; }
+        .nav-step:hover { background: rgba(255,255,255,0.15); color: white; }
+        .nav-step.current { background: rgba(255,255,255,0.25); color: white; }
+        .content { margin-left: 220px; flex: 1; padding: 16px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 12px; }
+        .title { font-size: 22px; font-weight: bold; color: #1f2937; }
+        .subtitle { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .stats-bar { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; background: white; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .stat { text-align: center; }
+        .stat-num { font-size: 16px; font-weight: bold; color: #2563eb; }
+        .stat-label { font-size: 9px; color: #6b7280; }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 6px 12px; background: #f0fdf4; border-radius: 6px; font-size: 10px; color: #166534; }
+        .status-bar.warning { background: #fefce8; color: #854d0e; }
+        .status-bar.error { background: #fef2f2; color: #991b1b; }
+        .selection-bar { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 8px; padding: 8px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .sel-title { font-size: 11px; font-weight: 600; }
+        .sel-stat { display: flex; align-items: center; gap: 3px; }
+        .sel-num { font-size: 14px; font-weight: bold; }
+        .sel-label { font-size: 9px; opacity: 0.9; }
+        .goal-btn { background: white; color: #d97706; border: none; padding: 6px 12px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 10px; margin-left: auto; }
+        .goal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .filters { background: white; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .filter-group { display: flex; align-items: center; gap: 3px; }
+        .filter-label { font-size: 9px; color: #6b7280; }
+        .filter-input, .filter-select { padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 10px; }
+        .filter-input { width: 120px; }
+        .filter-select { min-width: 70px; }
+        .refresh-btn { padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .refresh-btn:disabled { opacity: 0.5; }
+        .result-count { margin-left: auto; font-size: 10px; color: #6b7280; }
+        .table-wrap { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); max-height: calc(100vh - 280px); overflow-y: auto; }
+        .table-header { display: grid; grid-template-columns: 55px 80px 1fr 110px 65px 70px; gap: 4px; padding: 6px 10px; background: #f1f5f9; font-size: 9px; font-weight: 600; color: #64748b; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; }
+        .table-row { display: grid; grid-template-columns: 55px 80px 1fr 110px 65px 70px; gap: 4px; padding: 5px 10px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 10px; transition: background 0.15s; }
+        .table-row:hover { background: #f8fafc; }
+        .table-row.sel-a { background: #fffbeb; }
+        .table-row.sel-o { background: #f5f3ff; }
+        .sel-radios { display: flex; gap: 4px; }
+        .sel-radios label { display: flex; align-items: center; gap: 1px; cursor: pointer; font-size: 8px; color: #666; }
+        .sel-radios input { cursor: pointer; width: 11px; height: 11px; }
+        .race-date { color: #374151; font-weight: 500; font-size: 10px; }
+        .race-name { color: #1e40af; text-decoration: none; font-weight: 500; font-size: 11px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .race-name:hover { text-decoration: underline; }
+        .race-loc { color: #6b7280; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .race-dist { font-size: 8px; padding: 1px 5px; border-radius: 6px; background: #dbeafe; color: #1e40af; text-align: center; white-space: nowrap; }
+        .race-cat { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: #f3f4f6; color: #4b5563; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .empty { text-align: center; padding: 30px; color: #9ca3af; }
+        .loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .empty-state { text-align: center; padding: 40px; color: #6b7280; }
-        .footer { text-align: center; padding: 12px; color: #9ca3af; font-size: 11px; }
-        
-        @media (max-width: 1024px) {
-            .race-header-row, .race-row {
-                grid-template-columns: 40px 80px 1fr 100px 70px;
-            }
-            .race-row > :last-child, .race-header-row > :last-child { display: none; }
+        .loading-text { margin-top: 8px; font-size: 12px; color: #6b7280; }
+        @media (max-width: 900px) {
+            .table-header, .table-row { grid-template-columns: 45px 70px 1fr 55px; }
+            .table-header > :nth-child(4), .table-row > :nth-child(4) { display: none; }
+            .table-header > :nth-child(6), .table-row > :nth-child(6) { display: none; }
         }
         @media (max-width: 768px) {
-            .flow-navbar { width: 100%; height: 50px; bottom: auto; padding: 10px; }
-            .flow-nav-logo { padding: 0; margin: 0; border: none; font-size: 1rem; }
-            .flow-nav-steps { display: none; }
-            .content-wrapper { margin-left: 0; padding: 12px; padding-top: 65px; width: 100%; }
-            .race-header-row, .race-row {
-                grid-template-columns: 35px 70px 1fr 60px;
-                font-size: 10px; padding: 8px 10px;
-            }
-            .race-row > :nth-child(4), .race-header-row > :nth-child(4) { display: none; }
-            .race-row > :nth-child(5), .race-header-row > :nth-child(5) { display: none; }
-            .race-row > :last-child, .race-header-row > :last-child { display: none; }
+            .navbar { width: 100%; height: 45px; bottom: auto; padding: 8px; }
+            .nav-logo { padding: 0 10px; margin: 0; border: none; font-size: 0.9rem; }
+            .nav-steps { display: none; }
+            .content { margin-left: 0; padding: 8px; padding-top: 55px; }
+            .table-wrap { max-height: calc(100vh - 320px); }
         }
     </style>
 </head>
 <body>
-    <nav class="flow-navbar">
-        <div class="flow-nav-logo">AI Triathlon Coach</div>
-        <div class="flow-nav-steps">
-            <a href="home.html" class="flow-nav-step available"><span class="nav-icon">🏠</span><span>ホーム</span></a>
-            <a href="index.html" class="flow-nav-step available"><span class="nav-icon">🤖</span><span>AIコーチ</span></a>
-            <a href="news.html" class="flow-nav-step available"><span class="nav-icon">📰</span><span>ニュース</span></a>
-            <a href="race-selection.html" class="flow-nav-step current"><span class="nav-icon">🎯</span><span>レース選択</span></a>
-            <a href="goal-setting.html" class="flow-nav-step available"><span class="nav-icon">🏆</span><span>目標設定</span></a>
-            <a href="training-plan.html" class="flow-nav-step available"><span class="nav-icon">📋</span><span>計画</span></a>
-            <a href="simulator.html" class="flow-nav-step available"><span class="nav-icon">🔬</span><span>シミュレーター</span></a>
-            <a href="data.html" class="flow-nav-step available"><span class="nav-icon">📊</span><span>進捗</span></a>
+    <nav class="navbar">
+        <div class="nav-logo">AI Triathlon Coach</div>
+        <div class="nav-steps">
+            <a href="home.html" class="nav-step">🏠 ホーム</a>
+            <a href="news.html" class="nav-step">📰 ニュース</a>
+            <a href="race-selection.html" class="nav-step current">🎯 レース選択</a>
+            <a href="goal-setting.html" class="nav-step">🏆 目標設定</a>
+            <a href="training-plan.html" class="nav-step">📋 計画</a>
+            <a href="simulator.html" class="nav-step">🔬 シミュレーター</a>
+            <a href="data.html" class="nav-step">📊 進捗</a>
         </div>
     </nav>
-
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">レースデータを取得中...</div>
-    </div>
-
-    <div class="content-wrapper">
+    <div id="loading" class="loading"><div class="spinner"></div><div class="loading-text">レースデータを取得中...</div></div>
+    <div class="content">
         <div class="container">
             <div class="header">
                 <h1 class="title">🎯 レース選択</h1>
-                <p class="subtitle">目標レースを選択してトレーニング計画を立てましょう</p>
+                <p class="subtitle">目標レースを選んでトレーニング計画を立てましょう</p>
             </div>
-            
-            <div class="stats-row">
-                <div class="stat-item"><div class="stat-number" id="total-count">0</div><div class="stat-label">全大会</div></div>
-                <div class="stat-item"><div class="stat-number" id="japan-count">0</div><div class="stat-label">国内</div></div>
-                <div class="stat-item"><div class="stat-number" id="overseas-count">0</div><div class="stat-label">海外</div></div>
-                <div class="stat-item"><div class="stat-number" id="filtered-count">0</div><div class="stat-label">表示中</div></div>
+            <div class="stats-bar">
+                <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">全大会</div></div>
+                <div class="stat"><div class="stat-num" id="japan-count">0</div><div class="stat-label">国内</div></div>
+                <div class="stat"><div class="stat-num" id="overseas-count">0</div><div class="stat-label">海外</div></div>
+                <div class="stat"><div class="stat-num" id="filtered-count">0</div><div class="stat-label">表示中</div></div>
             </div>
-            
-            <div class="selection-panel">
-                <div class="selection-title">📌 選択中</div>
-                <div class="selection-stat">
-                    <span class="selection-stat-number" id="a-race-count">0</span>
-                    <span class="selection-stat-label">🏆Aレース</span>
-                </div>
-                <div class="selection-stat">
-                    <span class="selection-stat-number" id="other-race-count">0</span>
-                    <span class="selection-stat-label">🎪その他</span>
-                </div>
-                <button class="goal-button" id="goal-setting-button" disabled onclick="goToGoalSetting()">
-                    目標設定ページへ →
-                </button>
+            <div class="status-bar" id="status-bar">
+                <span id="status-text">データ取得中...</span>
+                <span id="last-updated"></span>
             </div>
-            
-            <div class="filters-panel">
-                <div class="filters-row">
-                    <div class="filter-group">
-                        <label class="filter-label">検索</label>
-                        <input type="text" class="filter-input" id="search-input" placeholder="大会名・場所...">
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">地域</label>
-                        <select class="filter-select" id="region-select">
-                            <option value="">全て</option>
-                            <option value="japan">国内</option>
-                            <option value="overseas">海外</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">距離</label>
-                        <select class="filter-select" id="distance-select">
-                            <option value="">全て</option>
-                            <option value="スプリント">スプリント</option>
-                            <option value="スタンダード">スタンダード</option>
-                            <option value="ミドル">ミドル</option>
-                            <option value="ロング">ロング</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">月</label>
-                        <select class="filter-select" id="month-select">
-                            <option value="">全て</option>
-                            <option value="01">1月</option><option value="02">2月</option><option value="03">3月</option>
-                            <option value="04">4月</option><option value="05">5月</option><option value="06">6月</option>
-                            <option value="07">7月</option><option value="08">8月</option><option value="09">9月</option>
-                            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-                        </select>
-                    </div>
-                    <button class="refresh-btn" onclick="refreshRaces()">🔄 更新</button>
-                    <div class="search-result" id="search-result">0件</div>
-                </div>
+            <div class="selection-bar">
+                <div class="sel-title">📌 選択中</div>
+                <div class="sel-stat"><span class="sel-num" id="a-count">0</span><span class="sel-label">🏆A</span></div>
+                <div class="sel-stat"><span class="sel-num" id="o-count">0</span><span class="sel-label">🎪他</span></div>
+                <button class="goal-btn" id="goal-btn" disabled onclick="goToGoal()">目標設定へ →</button>
             </div>
-            
-            <div class="races-table">
-                <div class="race-header-row">
-                    <div>選択</div>
-                    <div>開催日</div>
-                    <div>大会名</div>
-                    <div>開催地</div>
-                    <div>距離</div>
-                    <div>カテゴリ</div>
-                </div>
-                <div id="races-container"></div>
+            <div class="filters">
+                <div class="filter-group"><span class="filter-label">検索</span><input type="text" class="filter-input" id="f-search" placeholder="大会名・場所..."></div>
+                <div class="filter-group"><span class="filter-label">地域</span><select class="filter-select" id="f-region"><option value="">全て</option><option value="japan">国内</option><option value="overseas">海外</option></select></div>
+                <div class="filter-group"><span class="filter-label">距離</span><select class="filter-select" id="f-dist"><option value="">全て</option><option value="スプリント">スプリント</option><option value="スタンダード">スタンダード</option><option value="ミドル">ミドル</option><option value="ロング">ロング</option></select></div>
+                <div class="filter-group"><span class="filter-label">月</span><select class="filter-select" id="f-month"><option value="">全て</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+                <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">🔄 更新</button>
+                <div class="result-count" id="result-count">0件</div>
             </div>
-            
-            <div class="footer">
-                <span id="last-updated">最終更新: --</span>
+            <div class="table-wrap">
+                <div class="table-header"><div>選択</div><div>開催日</div><div>大会名</div><div>開催地</div><div>距離</div><div>カテゴリ</div></div>
+                <div id="races"></div>
             </div>
         </div>
     </div>
+<script>
+// 静的データ（フォールバック用）
+const STATIC_RACES = [
+    // JTU 国内主要大会
+    {id:'s1',name:'石垣島トライアスロン大会',date:'2026-04-12',loc:'沖縄県石垣市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/78271/'},
+    {id:'s2',name:'全日本トライアスロン宮古島大会',date:'2026-04-19',loc:'沖縄県宮古島市',country:'日本',dist:'ロング',cat:'JTU主要',url:'https://tri-miyako.com/'},
+    {id:'s3',name:'ワールドトライアスロンCS横浜',date:'2026-05-16',loc:'神奈川県横浜市',country:'日本',dist:'スタンダード',cat:'WTS',url:'https://www.jtu.or.jp/event/77637/'},
+    {id:'s4',name:'アジアトライアスロンカップ大阪城',date:'2026-05-31',loc:'大阪府大阪市',country:'日本',dist:'スタンダード',cat:'アジア',url:'https://www.jtu.or.jp/event/79177/'},
+    {id:'s5',name:'館山わかしおトライアスロン',date:'2026-06-07',loc:'千葉県館山市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s6',name:'五島長崎国際トライアスロン',date:'2026-06-14',loc:'長崎県五島市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s7',name:'IRONMAN 70.3 セントレア知多半島',date:'2026-06-14',loc:'愛知県常滑市',country:'日本',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s8',name:'蒲郡オレンジトライアスロン',date:'2026-06-21',loc:'愛知県蒲郡市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s9',name:'野尻湖トライアスロン',date:'2026-06-28',loc:'長野県信濃町',country:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s10',name:'榛名湖リゾートトライアスロン',date:'2026-07-05',loc:'群馬県高崎市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s11',name:'みなと酒田トライアスロンおしん',date:'2026-07-12',loc:'山形県酒田市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s12',name:'日本アクアスロン選手権 海の森',date:'2026-07-12',loc:'東京都江東区',country:'日本',dist:'アクアスロン',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79192/'},
+    {id:'s13',name:'皆生トライアスロン',date:'2026-07-19',loc:'鳥取県米子市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s14',name:'九十九里トライアスロン',date:'2026-07-19',loc:'千葉県九十九里町',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s15',name:'長良川国際トライアスロン',date:'2026-07-26',loc:'岐阜県海津市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/'},
+    {id:'s16',name:'うつくしまトライアスロンinあいづ',date:'2026-08-02',loc:'福島県猪苗代町',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s17',name:'全国高等学校トライアスロン選手権',date:'2026-08-23',loc:'福島県いわき市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79202/'},
+    {id:'s18',name:'珠洲トライアスロン',date:'2026-08-23',loc:'石川県珠洲市',country:'日本',dist:'ロング',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s19',name:'佐渡国際トライアスロン大会 Aタイプ',date:'2026-09-06',loc:'新潟県佐渡市',country:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.scsf.jp/'},
+    {id:'s20',name:'佐渡国際トライアスロン大会 Bタイプ',date:'2026-09-06',loc:'新潟県佐渡市',country:'日本',dist:'ミドル',cat:'JTU/NCS',url:'https://www.scsf.jp/'},
+    {id:'s21',name:'IRONMAN Japan みなみ北海道',date:'2026-09-13',loc:'北海道北斗市',country:'日本',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/im-japan'},
+    {id:'s22',name:'天草宝島国際トライアスロン',date:'2026-09-13',loc:'熊本県天草市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s23',name:'青森国民スポーツ大会',date:'2026-09-13',loc:'青森県青森市',country:'日本',dist:'スタンダード',cat:'国スポ',url:'https://www.jtu.or.jp/event/79188/'},
+    {id:'s24',name:'アジア競技大会トライアスロン',date:'2026-09-20',loc:'愛知県蒲郡市',country:'日本',dist:'スタンダード',cat:'アジア大会',url:'https://www.jtu.or.jp/event/79174/'},
+    {id:'s25',name:'村上笹川流れトライアスロン',date:'2026-09-20',loc:'新潟県村上市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s26',name:'日本スプリントトライアスロン選手権 宮崎',date:'2026-09-27',loc:'宮崎県宮崎市',country:'日本',dist:'スプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79205/'},
+    {id:'s27',name:'びわ湖トライアスロンin近江八幡',date:'2026-09-27',loc:'滋賀県近江八幡市',country:'日本',dist:'スタンダード',cat:'JTU/NCS',url:'https://www.jtu.or.jp/event/'},
+    {id:'s28',name:'WTパラカップ千葉',date:'2026-10-12',loc:'千葉県千葉市',country:'日本',dist:'スタンダード',cat:'WT Para',url:'https://www.jtu.or.jp/event/79184/'},
+    {id:'s29',name:'日本SSPトライアスロン選手権 海の森',date:'2026-10-17',loc:'東京都江東区',country:'日本',dist:'スーパースプリント',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79207/'},
+    {id:'s30',name:'日本トライアスロン選手権 台場',date:'2026-11-01',loc:'東京都港区',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79210/'},
+    {id:'s31',name:'ワールドトライアスロンカップ宮崎',date:'2026-11-15',loc:'宮崎県宮崎市',country:'日本',dist:'スタンダード',cat:'WT Cup',url:'https://www.jtu.or.jp/event/79186/'},
+    {id:'s32',name:'日本エイジSD/SPトライアスロン選手権 宮崎',date:'2026-11-15',loc:'宮崎県宮崎市',country:'日本',dist:'スタンダード',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79213/'},
+    {id:'s33',name:'日本エイジLDトライアスロン選手権 沖縄',date:'2026-11-22',loc:'沖縄県金武町',country:'日本',dist:'ロング',cat:'JTU選手権',url:'https://www.jtu.or.jp/event/79215/'},
+    {id:'s34',name:'XTERRA Japan',date:'2026-05-16',loc:'長野県',country:'日本',dist:'オフロード',cat:'XTERRA',url:'https://www.xterrajapan.com/'},
+    // 海外 IRONMAN
+    {id:'s40',name:'IRONMAN 70.3 Colombo',date:'2026-02-22',loc:'コロンボ',country:'スリランカ',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s41',name:'IRONMAN New Zealand',date:'2026-03-07',loc:'タウポ',country:'ニュージーランド',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s42',name:'IRONMAN 70.3 Davao',date:'2026-03-22',loc:'ダバオ',country:'フィリピン',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s43',name:'IRONMAN 70.3 Geelong',date:'2026-03-22',loc:'ジーロング',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s44',name:'IRONMAN 70.3 Taiwan',date:'2026-04-12',loc:'台東',country:'台湾',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s45',name:'IRONMAN Texas',date:'2026-04-18',loc:'テキサス',country:'アメリカ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s46',name:'IRONMAN 70.3 Vietnam',date:'2026-05-10',loc:'ダナン',country:'ベトナム',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s47',name:'IRONMAN Hamburg',date:'2026-06-07',loc:'ハンブルク',country:'ドイツ',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
+    {id:'s48',name:'IRONMAN 70.3 Cairns',date:'2026-06-14',loc:'ケアンズ',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s49',name:'IRONMAN Cairns',date:'2026-06-14',loc:'ケアンズ',country:'オーストラリア',dist:'ロング',cat:'IRONMAN AP',url:'https://www.ironman.com/'},
+    {id:'s50',name:'IRONMAN 70.3 Goseong',date:'2026-06-14',loc:'高城',country:'韓国',dist:'ミドル',cat:'IRONMAN 70.3',url:'https://www.ironman.com/'},
+    {id:'s51',name:'IRONMAN Frankfurt',date:'2026-06-28',loc:'フランクフルト',country:'ドイツ',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
+    {id:'s52',name:'IRONMAN Canada Whistler',date:'2026-07-26',loc:'ウィスラー',country:'カナダ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s53',name:'IRONMAN Lake Placid',date:'2026-07-26',loc:'レイクプラシッド',country:'アメリカ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s54',name:'IRONMAN Kalmar',date:'2026-08-15',loc:'カルマル',country:'スウェーデン',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s55',name:'IRONMAN Vichy',date:'2026-08-30',loc:'ヴィシー',country:'フランス',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s56',name:'IRONMAN Nice',date:'2026-09-06',loc:'ニース',country:'フランス',dist:'ロング',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
+    {id:'s57',name:'IRONMAN Wales',date:'2026-09-13',loc:'テンビー',country:'イギリス',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s58',name:'IRONMAN Italy Emilia-Romagna',date:'2026-09-19',loc:'エミリアロマーニャ',country:'イタリア',dist:'ロング',cat:'IRONMAN EU',url:'https://www.ironman.com/'},
+    {id:'s59',name:'IRONMAN 70.3 World Championship',date:'2026-09-20',loc:'タスマニア',country:'オーストラリア',dist:'ミドル',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
+    {id:'s60',name:'IRONMAN World Championship',date:'2026-10-10',loc:'コナ',country:'アメリカ',dist:'ロング',cat:'IRONMAN WC',url:'https://www.ironman.com/'},
+    {id:'s61',name:'IRONMAN Cozumel',date:'2026-11-22',loc:'コスメル',country:'メキシコ',dist:'ロング',cat:'IRONMAN',url:'https://www.ironman.com/'},
+    {id:'s62',name:'IRONMAN Western Australia',date:'2026-12-06',loc:'バッセルトン',country:'オーストラリア',dist:'ロング',cat:'IRONMAN AP',url:'https://www.ironman.com/'},
+    // Challenge
+    {id:'s70',name:'Challenge Wanaka',date:'2026-02-21',loc:'ワナカ',country:'ニュージーランド',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s71',name:'Challenge Taiwan',date:'2026-04-26',loc:'台東',country:'台湾',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s72',name:'Challenge St. Pölten',date:'2026-05-31',loc:'サンクトペルテン',country:'オーストリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s73',name:'Challenge Gdansk',date:'2026-06-07',loc:'グダニスク',country:'ポーランド',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s74',name:'Challenge Kaiserwinkl-Walchsee',date:'2026-06-14',loc:'ヴァルヒゼー',country:'オーストリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s75',name:'Challenge Roth',date:'2026-07-05',loc:'ロート',country:'ドイツ',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s76',name:'Challenge Geraardsbergen',date:'2026-07-12',loc:'ベルギー',country:'ベルギー',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s77',name:'Challenge Turku',date:'2026-08-01',loc:'トゥルク',country:'フィンランド',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s78',name:'Challenge Vietnam',date:'2026-08-02',loc:'ニャチャン',country:'ベトナム',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s79',name:'Challenge Gunsan-Saemangeum',date:'2026-08-17',loc:'群山',country:'韓国',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s80',name:'Challenge Malaysia',date:'2026-08-23',loc:'フォレストシティ',country:'マレーシア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s81',name:'Challenge Samarkand',date:'2026-08-24',loc:'サマルカンド',country:'ウズベキスタン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s82',name:'Challenge Almere-Amsterdam',date:'2026-09-12',loc:'アルメーレ',country:'オランダ',dist:'ロング',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s83',name:'Challenge Sanremo',date:'2026-09-20',loc:'サンレモ',country:'イタリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s84',name:'Challenge Barcelona',date:'2026-10-04',loc:'バルセロナ',country:'スペイン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s85',name:'Challenge Peguera-Mallorca',date:'2026-10-11',loc:'マヨルカ',country:'スペイン',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s86',name:'Challenge Sardinia',date:'2026-10-18',loc:'サルデーニャ',country:'イタリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    {id:'s87',name:'Challenge Canberra',date:'2026-11-22',loc:'キャンベラ',country:'オーストラリア',dist:'ミドル',cat:'Challenge',url:'https://challengefamily.com/'},
+    // T100
+    {id:'s90',name:'T100 Singapore',date:'2026-02-28',loc:'シンガポール',country:'シンガポール',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s91',name:'T100 Gold Coast',date:'2026-03-21',loc:'ゴールドコースト',country:'オーストラリア',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s92',name:'T100 San Francisco',date:'2026-05-30',loc:'サンフランシスコ',country:'アメリカ',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s93',name:'T100 London',date:'2026-08-02',loc:'ロンドン',country:'イギリス',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s94',name:'T100 Las Vegas',date:'2026-10-25',loc:'ラスベガス',country:'アメリカ',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s95',name:'T100 Saudi Arabia',date:'2026-11-01',loc:'サウジアラビア',country:'サウジアラビア',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s96',name:'T100 Dubai',date:'2026-11-13',loc:'ドバイ',country:'UAE',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    {id:'s97',name:'T100 Finals Qatar',date:'2026-12-11',loc:'ドーハ',country:'カタール',dist:'ミドル',cat:'T100',url:'https://t100triathlon.com/'},
+    // XTERRA / World Triathlon
+    {id:'s100',name:'XTERRA Philippines',date:'2026-02-22',loc:'スービック',country:'フィリピン',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
+    {id:'s101',name:'XTERRA Asia-Pacific Championship',date:'2026-03-28',loc:'オーストラリア',country:'オーストラリア',dist:'オフロード',cat:'XTERRA',url:'https://www.xterraplanet.com/'},
+    {id:'s102',name:'XTERRA Czech',date:'2026-06-20',loc:'チェコ',country:'チェコ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
+    {id:'s103',name:'XTERRA Germany',date:'2026-08-08',loc:'ドイツ',country:'ドイツ',dist:'オフロード',cat:'XTERRA EU',url:'https://www.xterraplanet.com/'},
+    {id:'s104',name:'XTERRA World Championship',date:'2026-10-25',loc:'マウイ',country:'アメリカ',dist:'オフロード',cat:'XTERRA WC',url:'https://www.xterraplanet.com/'},
+    {id:'s105',name:'WTエイジグループ世界選手権ポンテベドラ',date:'2026-09-24',loc:'ポンテベドラ',country:'スペイン',dist:'スタンダード',cat:'WT World',url:'https://triathlon.org/'},
+    {id:'s106',name:'WTマルチスポーツ世界選手権アブダビ',date:'2026-11-13',loc:'アブダビ',country:'UAE',dist:'その他',cat:'WT World',url:'https://triathlon.org/'},
+];
 
-    <script>
-        let races = [];
-        let filteredRaces = [];
-        let selectedRaces = { aRaces: new Set(), otherRaces: new Set() };
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            const cached = localStorage.getItem('races_cache_v2');
-            if (cached) {
-                try {
-                    const data = JSON.parse(cached);
-                    if (Date.now() - new Date(data.lastUpdated).getTime() < 3600000) {
-                        races = data.races;
-                        updateStats(data.japanCount, data.overseasCount);
-                        filterRaces();
-                        document.getElementById('loadingOverlay').style.display = 'none';
-                        document.getElementById('last-updated').textContent = '最終更新: ' + new Date(data.lastUpdated).toLocaleString('ja-JP');
-                        return;
-                    }
-                } catch (e) {}
-            }
-            await fetchRacesFromAPI();
-        });
-        
-        async function fetchRacesFromAPI() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            try {
-                const response = await fetch('/.netlify/functions/fetch-races');
-                if (!response.ok) throw new Error('API error');
-                const data = await response.json();
-                if (data.success && data.races) {
-                    races = data.races;
-                    localStorage.setItem('races_cache_v2', JSON.stringify(data));
-                    updateStats(data.japanCount, data.overseasCount);
-                    filterRaces();
-                    document.getElementById('last-updated').textContent = '最終更新: ' + new Date(data.lastUpdated).toLocaleString('ja-JP');
-                }
-            } catch (error) {
-                races = getStaticRaces();
-                updateStats(
-                    races.filter(r => r.country === '日本').length,
-                    races.filter(r => r.country !== '日本').length
-                );
-                filterRaces();
-            } finally {
-                document.getElementById('loadingOverlay').style.display = 'none';
-            }
-        }
-        
-        function getStaticRaces() {
-            return [
-                { id: '1', name: '全日本トライアスロン宮古島大会', date: '2026-04-19', location: '沖縄県宮古島市', country: '日本', distance: 'ロング', category: 'JTU選手権', url: 'https://tri-miyako.com/' },
-                { id: '2', name: '石垣島トライアスロン', date: '2026-04-26', location: '沖縄県石垣市', country: '日本', distance: 'ロング', category: 'JTU公認', url: 'https://ishigaki-triathlon.jp/' },
-                { id: '3', name: 'ワールドトライアスロンシリーズ横浜', date: '2026-05-16', location: '神奈川県横浜市', country: '日本', distance: 'スタンダード', category: 'WTS', url: 'https://yokohamatriathlon.jp/' },
-                { id: '4', name: '佐渡国際トライアスロン', date: '2026-09-06', location: '新潟県佐渡市', country: '日本', distance: 'ロング', category: 'JTU選手権', url: 'https://www.scsf.jp/' },
-                { id: '5', name: 'IRONMAN Japan みなみ北海道', date: '2026-09-13', location: '北海道函館市', country: '日本', distance: 'ロング', category: 'IRONMAN', url: 'https://www.ironman.com/' },
-                { id: '6', name: 'IRONMAN 70.3 セントレア', date: '2026-06-14', location: '愛知県常滑市', country: '日本', distance: 'ミドル', category: 'IRONMAN 70.3', url: 'https://www.ironman.com/' },
-                { id: '7', name: 'XTERRA Japan', date: '2026-05-16', location: '長野県', country: '日本', distance: 'オフロード', category: 'XTERRA', url: 'https://www.xterrajapan.com/' },
-                { id: '8', name: 'Challenge Taiwan', date: '2026-04-26', location: '台東', country: '台湾', distance: 'ロング', category: 'Challenge', url: 'https://challengefamily.com/' },
-                { id: '9', name: 'IRONMAN World Championship', date: '2026-10-10', location: 'コナ', country: 'アメリカ', distance: 'ロング', category: 'IRONMAN WC', url: 'https://www.ironman.com/' },
-                { id: '10', name: 'Challenge Roth', date: '2026-07-05', location: 'ロート', country: 'ドイツ', distance: 'ロング', category: 'Challenge', url: 'https://challengefamily.com/' },
-            ];
-        }
-        
-        function refreshRaces() {
-            localStorage.removeItem('races_cache_v2');
-            fetchRacesFromAPI();
-        }
-        
-        function updateStats(japan, overseas) {
-            document.getElementById('total-count').textContent = japan + overseas;
-            document.getElementById('japan-count').textContent = japan;
-            document.getElementById('overseas-count').textContent = overseas;
-        }
-        
-        function filterRaces() {
-            const search = document.getElementById('search-input').value.toLowerCase();
-            const region = document.getElementById('region-select').value;
-            const distance = document.getElementById('distance-select').value;
-            const month = document.getElementById('month-select').value;
-            
-            filteredRaces = races.filter(r => {
-                if (search && !r.name.toLowerCase().includes(search) && !r.location.toLowerCase().includes(search)) return false;
-                if (region === 'japan' && r.country !== '日本') return false;
-                if (region === 'overseas' && r.country === '日本') return false;
-                if (distance && r.distance !== distance && !(distance === 'ミドル' && r.distance.includes('70.3'))) return false;
-                if (month && r.date.substring(5, 7) !== month) return false;
-                return true;
-            });
-            
-            document.getElementById('filtered-count').textContent = filteredRaces.length;
-            document.getElementById('search-result').textContent = filteredRaces.length + '件';
-            renderRaces();
-        }
-        
-        function renderRaces() {
-            const container = document.getElementById('races-container');
-            if (filteredRaces.length === 0) {
-                container.innerHTML = '<div class="empty-state">該当する大会がありません</div>';
+let races = [];
+let filtered = [];
+let selected = {a: new Set(), o: new Set()};
+const CACHE_KEY = 'races_cache_v3';
+const CACHE_DURATION = 3600000; // 1時間
+
+async function init() {
+    // キャッシュ確認
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            if (Date.now() - new Date(data.lastUpdated).getTime() < CACHE_DURATION) {
+                races = data.races;
+                updateUI(data);
+                hideLoading();
                 return;
             }
-            
-            container.innerHTML = filteredRaces.map(race => {
-                const isA = selectedRaces.aRaces.has(race.id);
-                const isOther = selectedRaces.otherRaces.has(race.id);
-                const rowClass = isA ? 'race-row selected-a' : isOther ? 'race-row selected-other' : 'race-row';
-                const date = new Date(race.date);
-                const dateStr = `${date.getMonth()+1}/${date.getDate()}`;
-                const yearStr = date.getFullYear();
-                
-                return `
-                    <div class="${rowClass}" data-id="${race.id}">
-                        <div class="race-selection">
-                            <div class="race-radio">
-                                <input type="radio" name="race_${race.id}" id="a_${race.id}" ${isA ? 'checked' : ''} onchange="selectRace('${race.id}', 'a')">
-                                <label for="a_${race.id}">A</label>
-                            </div>
-                            <div class="race-radio">
-                                <input type="radio" name="race_${race.id}" id="o_${race.id}" ${isOther ? 'checked' : ''} onchange="selectRace('${race.id}', 'other')">
-                                <label for="o_${race.id}">他</label>
-                            </div>
-                        </div>
-                        <div class="race-date">${yearStr}/${dateStr}</div>
-                        <a href="${race.url}" target="_blank" class="race-name">${race.name}</a>
-                        <div class="race-location">${race.location}${race.country !== '日本' ? ' ('+race.country+')' : ''}</div>
-                        <div class="race-distance">${race.distance}</div>
-                        <div class="race-category">${race.category || ''}</div>
-                    </div>
-                `;
-            }).join('');
-        }
+        } catch (e) {}
+    }
+    await fetchData();
+}
+
+async function fetchData() {
+    showLoading();
+    try {
+        const response = await fetch('/.netlify/functions/fetch-races', { timeout: 30000 });
+        if (!response.ok) throw new Error('API error');
+        const data = await response.json();
         
-        function selectRace(raceId, type) {
-            // 同じレースの別選択を解除
-            selectedRaces.aRaces.delete(raceId);
-            selectedRaces.otherRaces.delete(raceId);
+        if (data.success && data.races && data.races.length > 0) {
+            races = data.races;
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            updateUI(data);
             
-            // 新しい選択を追加（再クリックで解除）
-            const radio = document.querySelector(`#${type === 'a' ? 'a' : 'o'}_${raceId}`);
-            if (type === 'a') {
-                selectedRaces.aRaces.add(raceId);
+            if (data.scrapingSuccess) {
+                setStatus('success', `✅ JTUから最新データを取得 (${data.count}件)`);
+            } else if (data.fallback) {
+                setStatus('warning', `⚠️ APIエラー - 静的データを使用 (${data.count}件)`);
             } else {
-                selectedRaces.otherRaces.add(raceId);
+                setStatus('warning', `⚠️ スクレイピング一部失敗 - 静的データで補完 (${data.count}件)`);
             }
-            
-            updateSelectionStats();
-            renderRaces();
+        } else {
+            throw new Error('No data');
         }
+    } catch (error) {
+        console.error('Fetch error:', error);
+        // フォールバック: 静的データを使用
+        races = STATIC_RACES.filter(r => r.date >= new Date().toISOString().split('T')[0]);
+        races.sort((a, b) => a.date.localeCompare(b.date));
         
-        function updateSelectionStats() {
-            const total = selectedRaces.aRaces.size + selectedRaces.otherRaces.size;
-            document.getElementById('a-race-count').textContent = selectedRaces.aRaces.size;
-            document.getElementById('other-race-count').textContent = selectedRaces.otherRaces.size;
-            const btn = document.getElementById('goal-setting-button');
-            btn.disabled = total === 0;
-            btn.textContent = total > 0 ? `目標設定ページへ (${total}件) →` : '目標設定ページへ →';
-        }
+        const jp = races.filter(r => r.country === '日本').length;
+        const ov = races.length - jp;
         
-        function goToGoalSetting() {
-            const data = {
-                aRaces: [...selectedRaces.aRaces],
-                otherRaces: [...selectedRaces.otherRaces],
-                raceDetails: {}
-            };
-            [...selectedRaces.aRaces, ...selectedRaces.otherRaces].forEach(id => {
-                const race = races.find(r => r.id === id);
-                if (race) data.raceDetails[id] = race;
-            });
-            localStorage.setItem('selected_races', JSON.stringify(data));
-            window.location.href = 'goal-setting.html';
-        }
-        
-        document.getElementById('search-input').addEventListener('input', filterRaces);
-        document.getElementById('region-select').addEventListener('change', filterRaces);
-        document.getElementById('distance-select').addEventListener('change', filterRaces);
-        document.getElementById('month-select').addEventListener('change', filterRaces);
-    </script>
+        updateUI({
+            count: races.length,
+            japanCount: jp,
+            overseasCount: ov,
+            lastUpdated: new Date().toISOString()
+        });
+        setStatus('error', `⚠️ オフラインモード - 静的データを使用 (${races.length}件)`);
+    }
+    hideLoading();
+}
+
+function refreshData() {
+    localStorage.removeItem(CACHE_KEY);
+    fetchData();
+}
+
+function updateUI(data) {
+    document.getElementById('total-count').textContent = data.count;
+    document.getElementById('japan-count').textContent = data.japanCount;
+    document.getElementById('overseas-count').textContent = data.overseasCount;
+    document.getElementById('last-updated').textContent = new Date(data.lastUpdated).toLocaleString('ja-JP');
+    filter();
+}
+
+function setStatus(type, text) {
+    const bar = document.getElementById('status-bar');
+    bar.className = 'status-bar' + (type !== 'success' ? ' ' + type : '');
+    document.getElementById('status-text').textContent = text;
+}
+
+function showLoading() { document.getElementById('loading').style.display = 'flex'; document.getElementById('refresh-btn').disabled = true; }
+function hideLoading() { document.getElementById('loading').style.display = 'none'; document.getElementById('refresh-btn').disabled = false; }
+
+function filter() {
+    const s = document.getElementById('f-search').value.toLowerCase();
+    const r = document.getElementById('f-region').value;
+    const d = document.getElementById('f-dist').value;
+    const m = document.getElementById('f-month').value;
+    
+    filtered = races.filter(x => {
+        if (s && !x.name.toLowerCase().includes(s) && !(x.loc||'').toLowerCase().includes(s)) return false;
+        if (r === 'japan' && x.country !== '日本') return false;
+        if (r === 'overseas' && x.country === '日本') return false;
+        if (d && x.dist !== d) return false;
+        if (m && x.date.substring(5,7) !== m) return false;
+        return true;
+    });
+    filtered.sort((a,b) => a.date.localeCompare(b.date));
+    document.getElementById('filtered-count').textContent = filtered.length;
+    document.getElementById('result-count').textContent = filtered.length + '件';
+    render();
+}
+
+function render() {
+    const c = document.getElementById('races');
+    if (!filtered.length) { c.innerHTML = '<div class="empty">該当する大会がありません</div>'; return; }
+    c.innerHTML = filtered.map(r => {
+        const isA = selected.a.has(r.id), isO = selected.o.has(r.id);
+        const cls = isA ? 'table-row sel-a' : isO ? 'table-row sel-o' : 'table-row';
+        const dt = new Date(r.date);
+        const ds = `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`;
+        const loc = (r.loc || '') + (r.country && r.country !== '日本' ? ' (' + r.country + ')' : '');
+        return `<div class="${cls}">
+            <div class="sel-radios">
+                <label><input type="radio" name="s${r.id}" ${isA?'checked':''} onchange="sel('${r.id}','a')">A</label>
+                <label><input type="radio" name="s${r.id}" ${isO?'checked':''} onchange="sel('${r.id}','o')">他</label>
+            </div>
+            <div class="race-date">${ds}</div>
+            <a href="${r.url}" target="_blank" class="race-name" title="${r.name}">${r.name}</a>
+            <div class="race-loc" title="${loc}">${loc}</div>
+            <div class="race-dist">${r.dist}</div>
+            <div class="race-cat" title="${r.cat||''}">${r.cat||''}</div>
+        </div>`;
+    }).join('');
+}
+
+function sel(id, type) {
+    selected.a.delete(id); selected.o.delete(id);
+    if (type === 'a') selected.a.add(id);
+    else selected.o.add(id);
+    updateSel();
+    render();
+}
+
+function updateSel() {
+    const t = selected.a.size + selected.o.size;
+    document.getElementById('a-count').textContent = selected.a.size;
+    document.getElementById('o-count').textContent = selected.o.size;
+    const btn = document.getElementById('goal-btn');
+    btn.disabled = t === 0;
+    btn.textContent = t > 0 ? `目標設定へ (${t}件) →` : '目標設定へ →';
+}
+
+function goToGoal() {
+    const data = {a: [...selected.a], o: [...selected.o], details: {}};
+    [...selected.a, ...selected.o].forEach(id => {
+        const r = races.find(x => x.id === id);
+        if (r) data.details[id] = r;
+    });
+    localStorage.setItem('selected_races', JSON.stringify(data));
+    window.location.href = 'goal-setting.html';
+}
+
+document.getElementById('f-search').addEventListener('input', filter);
+document.getElementById('f-region').addEventListener('change', filter);
+document.getElementById('f-dist').addEventListener('change', filter);
+document.getElementById('f-month').addEventListener('change', filter);
+document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

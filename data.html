@@ -115,6 +115,20 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            align-items: start;
+        }
+
+        .main-content .panel {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content .panel .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .connection-footer {
@@ -149,19 +163,19 @@
         .header {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
-            padding: 20px;
+            padding: 14px 20px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 1.5em;
-            margin-bottom: 5px;
-            font-weight: 300;
+            font-size: 1.2em;
+            margin-bottom: 2px;
+            font-weight: 600;
         }
         
         .header p {
             opacity: 0.9;
-            font-size: 0.9em;
+            font-size: 0.8em;
         }
         
         .strava-header {
@@ -173,7 +187,7 @@
         }
         
         .content {
-            padding: 20px;
+            padding: 15px;
             flex: 1;
             overflow-y: auto;
         }
@@ -310,108 +324,116 @@
         }
         
         .activity-item {
-            padding: 14px;
+            padding: 8px 12px;
             border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
         
         .activity-item:hover {
             background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-color: #4facfe;
         }
         
         .activity-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
         }
         
         .activity-type {
             font-weight: 600;
             color: #333;
-            font-size: 0.95em;
+            font-size: 0.85em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .activity-date {
             color: #666;
-            font-size: 0.85em;
+            font-size: 0.75em;
         }
         
         .activity-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
         }
         
         .stat {
             text-align: center;
-            padding: 6px;
-            background: #f8f9fa;
-            border-radius: 6px;
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
         }
         
         .stat-value {
             font-weight: 600;
             color: #4facfe;
-            font-size: 1em;
+            font-size: 0.9em;
         }
         
         .stat-label {
-            color: #666;
-            font-size: 0.75em;
+            color: #888;
+            font-size: 0.7em;
         }
         
         .filter-section {
             background: #f8f9fa;
-            padding: 16px;
+            padding: 10px 12px;
             border-radius: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         
         .filter-group {
-            margin-bottom: 12px;
-        }
-        
-        .filter-group:last-child {
-            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
         .filter-label {
-            display: block;
             font-weight: 600;
             color: #333;
-            margin-bottom: 6px;
-            font-size: 0.85em;
+            font-size: 0.8em;
+            white-space: nowrap;
         }
         
         .filter-select {
-            width: 100%;
-            padding: 10px;
+            padding: 6px 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
             background: white;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            min-width: 100px;
         }
         
         .btn-reset {
-            width: 100%;
-            padding: 8px;
+            padding: 6px 12px;
             background: #6c757d;
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 0.85em;
+            font-size: 0.8em;
             font-weight: 500;
             cursor: pointer;
-            margin-top: 10px;
+            margin-left: auto;
         }
         
         .btn-reset:hover {
@@ -1218,7 +1240,7 @@
             }
             
             container.innerHTML = html;
-            container.style.maxHeight = '600px';
+            container.style.flex = '1';
             container.style.overflowY = 'auto';
         }
         
@@ -1227,14 +1249,14 @@
             const endIndex = Math.min(currentPage * itemsPerPage, filteredActivities.length);
             
             return `
-                <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin: ${position === 'top' ? '0 0 12px 0' : '12px 0 0 0'};">
-                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">≪</button>
-                    <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">＜</button>
-                    <span style="padding: 6px 12px; font-size: 0.9em; color: #666;">
-                        ${startIndex}-${endIndex}件 / 全${filteredActivities.length}件（${currentPage}/${totalPages}ページ）
+                <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px; background: #f8f9fa; border-radius: 6px; margin: ${position === 'top' ? '0 0 8px 0' : '8px 0 0 0'}; font-size: 0.8em;">
+                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">≪</button>
+                    <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">＜</button>
+                    <span style="padding: 4px 8px; color: #666;">
+                        ${startIndex}-${endIndex} / ${filteredActivities.length}件（${currentPage}/${totalPages}）
                     </span>
-                    <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">＞</button>
-                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">≫</button>
+                    <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">＞</button>
+                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">≫</button>
                 </div>
             `;
         }
@@ -1350,35 +1372,35 @@
                 const [year, monthNum] = month.split('-');
                 return `
                     <tr style="background: ${i % 2 === 0 ? '#fafafa' : 'white'}">
-                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${year}年${parseInt(monthNum)}月</td>
-                        <td style="padding: 8px; text-align: center; color: #4facfe; border-bottom: 1px solid #eee;">${counts.スイム}</td>
-                        <td style="padding: 8px; text-align: center; color: #764ba2; border-bottom: 1px solid #eee;">${counts.バイク}</td>
-                        <td style="padding: 8px; text-align: center; color: #28a745; border-bottom: 1px solid #eee;">${counts.ラン}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; font-size: 0.9em;">${year}年${parseInt(monthNum)}月</td>
+                        <td style="padding: 6px; text-align: center; color: #4facfe; border-bottom: 1px solid #eee;">${counts.スイム}</td>
+                        <td style="padding: 6px; text-align: center; color: #764ba2; border-bottom: 1px solid #eee;">${counts.バイク}</td>
+                        <td style="padding: 6px; text-align: center; color: #28a745; border-bottom: 1px solid #eee;">${counts.ラン}</td>
                     </tr>
                 `;
             }).join('');
             
             container.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 1.4em; font-weight: bold; color: #4facfe;">${formatDuration(totalTime)}</div>
-                        <div style="font-size: 0.85em; color: #666;">総時間</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.3em; font-weight: bold; color: #4facfe;">${formatDuration(totalTime)}</div>
+                        <div style="font-size: 0.8em; color: #666;">総時間</div>
                     </div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 1.4em; font-weight: bold; color: #4facfe;">${(totalDistance / 1000).toFixed(0)}km</div>
-                        <div style="font-size: 0.85em; color: #666;">総距離</div>
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.3em; font-weight: bold; color: #4facfe;">${(totalDistance / 1000).toFixed(0)}km</div>
+                        <div style="font-size: 0.8em; color: #666;">総距離</div>
                     </div>
                 </div>
                 
-                <h3 style="font-size: 1em; margin-bottom: 12px; color: #333;">月別トレーニング回数</h3>
-                <div style="overflow-x: auto; max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                <h3 style="font-size: 0.95em; margin-bottom: 10px; color: #333;">月別トレーニング回数</h3>
+                <div style="overflow-x: auto; flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
                         <thead style="position: sticky; top: 0; z-index: 1;">
                             <tr style="background: #f8f9fa;">
-                                <th style="padding: 10px 8px; text-align: left;">月</th>
-                                <th style="padding: 10px 8px; text-align: center; color: #4facfe;">🏊</th>
-                                <th style="padding: 10px 8px; text-align: center; color: #764ba2;">🚴</th>
-                                <th style="padding: 10px 8px; text-align: center; color: #28a745;">🏃</th>
+                                <th style="padding: 8px 6px; text-align: left;">月</th>
+                                <th style="padding: 8px 6px; text-align: center; color: #4facfe;">🏊</th>
+                                <th style="padding: 8px 6px; text-align: center; color: #764ba2;">🚴</th>
+                                <th style="padding: 8px 6px; text-align: center; color: #28a745;">🏃</th>
                             </tr>
                         </thead>
                         <tbody>${tableRows}</tbody>

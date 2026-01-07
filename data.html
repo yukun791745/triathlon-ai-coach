@@ -862,23 +862,18 @@
                     
                     const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
                     let hasMore = true;
-                    let oldestTimestamp = null;
-                    let pageCount = 0;
+                    let page = 1;
                     
-                    while (hasMore && pageCount < 20) { // 最大20ページ（4000件）
-                        pageCount++;
-                        progressBar.style.width = `${Math.min(pageCount * 5, 90)}%`;
+                    while (hasMore && page <= 20) { // 最大20ページ（4000件）
+                        progressBar.style.width = `${Math.min(page * 5, 90)}%`;
                         progressText.textContent = `初回同期中... (${allActivities.length}件)`;
                         
                         const requestBody = {
                             token: accessToken,
                             per_page: 200,
-                            after: oneYearAgo
+                            after: oneYearAgo,
+                            page: page
                         };
-                        
-                        if (oldestTimestamp) {
-                            requestBody.before = oldestTimestamp;
-                        }
                         
                         const response = await fetch('/.netlify/functions/strava-activities', {
                             method: 'POST',
@@ -896,19 +891,14 @@
                         if (data.activities && data.activities.length > 0) {
                             allActivities = allActivities.concat(data.activities);
                             
-                            const lastActivity = data.activities[data.activities.length - 1];
-                            const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
+                            console.log(`📥 ページ${page}: ${data.activities.length}件取得 (合計: ${allActivities.length}件)`);
                             
-                            // 1年以上前のデータに到達したら終了
-                            if (lastActivityTime < oneYearAgo) {
-                                console.log('📅 1年分のデータ取得完了');
+                            // 200件未満なら終了
+                            if (data.activities.length < 200) {
+                                console.log('📅 全データ取得完了');
                                 hasMore = false;
                             } else {
-                                oldestTimestamp = lastActivityTime;
-                            }
-                            
-                            if (data.activities.length < 200) {
-                                hasMore = false;
+                                page++;
                             }
                         } else {
                             hasMore = false;

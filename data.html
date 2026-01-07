@@ -852,28 +852,37 @@
                 const existingActivities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
                 const isInitialSync = existingActivities.length === 0;
                 
-                let allActivities = [...existingActivities];
+                let allActivities = [];
                 let newActivitiesCount = 0;
                 
+                // 1年前のタイムスタンプ
+                const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+                
                 if (isInitialSync) {
-                    // 初回：過去1年分を取得
+                    // 初回：過去1年分を取得（最新から古い順に取得）
                     console.log('📥 初回同期：過去1年分のデータを取得中...');
                     progressText.textContent = '初回同期中...';
                     
-                    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
                     let hasMore = true;
-                    let page = 1;
+                    let beforeTimestamp = null; // 最初は現在から
+                    let pageCount = 0;
                     
-                    while (hasMore && page <= 20) { // 最大20ページ（4000件）
-                        progressBar.style.width = `${Math.min(page * 5, 90)}%`;
+                    while (hasMore && pageCount < 30) { // 最大30ページ（6000件）
+                        pageCount++;
+                        progressBar.style.width = `${Math.min(pageCount * 3, 90)}%`;
                         progressText.textContent = `初回同期中... (${allActivities.length}件)`;
                         
                         const requestBody = {
                             token: accessToken,
-                            per_page: 200,
-                            after: oneYearAgo,
-                            page: page
+                            per_page: 200
                         };
+                        
+                        // 2回目以降はbeforeパラメータを使用
+                        if (beforeTimestamp) {
+                            requestBody.before = beforeTimestamp;
+                        }
+                        
+                        console.log(`📥 ページ${pageCount}: リクエスト`, requestBody);
                         
                         const response = await fetch('/.netlify/functions/strava-activities', {
                             method: 'POST',
@@ -891,22 +900,42 @@
                         if (data.activities && data.activities.length > 0) {
                             allActivities = allActivities.concat(data.activities);
                             
-                            console.log(`📥 ページ${page}: ${data.activities.length}件取得 (合計: ${allActivities.length}件)`);
+                            // 最も古いアクティビティの日付を取得
+                            const lastActivity = data.activities[data.activities.length - 1];
+                            const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
                             
-                            // 200件未満なら終了
-                            if (data.activities.length < 200) {
-                                console.log('📅 全データ取得完了');
+                            console.log(`📥 ページ${pageCount}: ${data.activities.length}件取得 (合計: ${allActivities.length}件), 最古: ${lastActivity.start_date}`);
+                            
+                            // 1年以上前のデータに到達したら終了
+                            if (lastActivityTime <= oneYearAgo) {
+                                console.log('📅 1年分のデータに到達');
                                 hasMore = false;
                             } else {
-                                page++;
+                                beforeTimestamp = lastActivityTime;
+                            }
+                            
+                            // 200件未満なら全データ取得完了
+                            if (data.activities.length < 200) {
+                                console.log('📅 全データ取得完了（200件未満）');
+                                hasMore = false;
                             }
                         } else {
+                            console.log('📅 データなし、終了');
                             hasMore = false;
                         }
+                        
+                        // APIレート制限を避けるため少し待機
+                        await new Promise(resolve => setTimeout(resolve, 200));
                     }
                     
+                    // 1年以上前のデータを除外
+                    allActivities = allActivities.filter(a => {
+                        const actTime = Math.floor(new Date(a.start_date).getTime() / 1000);
+                        return actTime >= oneYearAgo;
+                    });
+                    
                     newActivitiesCount = allActivities.length;
-                    console.log(`✅ 初回同期完了: ${newActivitiesCount}件`);
+                    console.log(`✅ 初回同期完了: ${newActivitiesCount}件（過去1年分）`);
                     
                 } else {
                     // 2回目以降：最新データのみ取得
@@ -915,43 +944,82 @@
                     progressBar.style.width = '30%';
                     
                     // 既存データの最新の日時を取得
-                    const latestActivity = existingActivities.reduce((latest, current) => {
-                        const currentTime = new Date(current.start_date).getTime();
-                        const latestTime = new Date(latest.start_date).getTime();
-                        return currentTime > latestTime ? current : latest;
-                    }, existingActivities[0]);
+                    const sortedExisting = [...existingActivities].sort((a, b) => 
+                        new Date(b.start_date) - new Date(a.start_date)
+                    );
+                    const latestActivity = sortedExisting[0];
                     
-                    const afterTimestamp = Math.floor(new Date(latestActivity.start_date).getTime() / 1000) + 1;
+                    console.log('📅 既存の最新データ:', latestActivity?.start_date);
                     
-                    const response = await fetch('/.netlify/functions/strava-activities', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
+                    // 最新データより後のアクティビティを取得
+                    let hasMore = true;
+                    let beforeTimestamp = null;
+                    let pageCount = 0;
+                    const latestTimestamp = Math.floor(new Date(latestActivity.start_date).getTime() / 1000);
+                    
+                    while (hasMore && pageCount < 10) {
+                        pageCount++;
+                        
+                        const requestBody = {
                             token: accessToken,
-                            per_page: 200,
-                            after: afterTimestamp
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.error || 'データ取得に失敗');
+                            per_page: 200
+                        };
+                        
+                        if (beforeTimestamp) {
+                            requestBody.before = beforeTimestamp;
+                        }
+                        
+                        const response = await fetch('/.netlify/functions/strava-activities', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || 'データ取得に失敗');
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.activities && data.activities.length > 0) {
+                            // 既存データより新しいもののみ追加
+                            const existingIds = new Set(existingActivities.map(a => a.id));
+                            const newActivities = data.activities.filter(a => {
+                                const actTime = Math.floor(new Date(a.start_date).getTime() / 1000);
+                                return actTime > latestTimestamp && !existingIds.has(a.id);
+                            });
+                            
+                            allActivities = allActivities.concat(newActivities);
+                            
+                            // 最も古いアクティビティの日付を取得
+                            const lastActivity = data.activities[data.activities.length - 1];
+                            const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
+                            
+                            // 既存データの日時まで到達したら終了
+                            if (lastActivityTime <= latestTimestamp) {
+                                hasMore = false;
+                            } else {
+                                beforeTimestamp = lastActivityTime;
+                            }
+                            
+                            if (data.activities.length < 200) {
+                                hasMore = false;
+                            }
+                        } else {
+                            hasMore = false;
+                        }
                     }
                     
-                    const data = await response.json();
+                    newActivitiesCount = allActivities.length;
                     
-                    if (data.activities && data.activities.length > 0) {
-                        // 重複チェック
-                        const existingIds = new Set(existingActivities.map(a => a.id));
-                        const newActivities = data.activities.filter(a => !existingIds.has(a.id));
-                        
-                        allActivities = [...newActivities, ...existingActivities];
-                        newActivitiesCount = newActivities.length;
-                        
+                    // 新規データを既存データの前に追加
+                    allActivities = [...allActivities, ...existingActivities];
+                    
+                    if (newActivitiesCount > 0) {
                         console.log(`✅ 差分更新完了: ${newActivitiesCount}件の新規データ`);
                     } else {
                         console.log('✅ 新規データなし');
-                        newActivitiesCount = 0;
                     }
                     
                     progressBar.style.width = '70%';

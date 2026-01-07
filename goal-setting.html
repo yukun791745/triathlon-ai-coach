@@ -5,922 +5,502 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Triathlon AI Coach - 目標設定</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
-            min-height: 100vh;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-
-        .flow-navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 240px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            padding: 24px 0;
-            overflow-y: auto;
-        }
-
-        .flow-nav-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .flow-nav-logo {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: white;
-            text-align: center;
-            padding: 0 20px 30px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .flow-nav-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 0 16px;
-            flex: 1;
-        }
-
-        .flow-nav-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: rgba(255, 255, 255, 0.8);
-            white-space: nowrap;
-        }
-
-        .flow-nav-step .nav-icon {
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-        .flow-nav-step.current {
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .flow-nav-step.available {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .flow-nav-step.available:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .content-wrapper {
-            margin-left: 240px;
-            flex: 1;
-            padding: 32px;
-            width: calc(100% - 240px);
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .title {
-            font-size: 36px;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
-        
-        .subtitle {
-            font-size: 20px;
-            color: #4b5563;
-            margin-bottom: 16px;
-        }
-        
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .breadcrumb-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .breadcrumb-current {
-            color: #2563eb;
-            font-weight: 600;
-        }
-
-        .debug-panel {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
-            font-size: 12px;
-            color: #374151;
-        }
-        
-        .debug-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .step-indicator {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            padding: 16px 24px;
-            margin-bottom: 32px;
-            text-align: center;
-        }
-        
-        .step-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
-        
-        .step-description {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-        .race-selection-panel {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-        
-        .panel-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .races-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .race-selection-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .race-selection-card:hover {
-            border-color: #2563eb;
-            box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.2);
-        }
-        
-        .race-selection-card.selected {
-            border-color: #059669;
-            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
-        }
-        
-        .race-selection-card.a-race {
-            border-left: 4px solid #dc2626;
-        }
-        
-        .race-selection-card.other-race {
-            border-left: 4px solid #2563eb;
-        }
-        
-        .race-type-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        
-        .race-type-badge.a-race {
-            background: #dc2626;
-            color: white;
-        }
-        
-        .race-type-badge.other-race {
-            background: #2563eb;
-            color: white;
-        }
-        
-        .race-selection-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 8px;
-            margin-right: 80px;
-        }
-        
-        .race-selection-info {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-        
-        .selected-indicator {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: #059669;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .goal-form-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 32px;
-        }
-        
-        .goal-form-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e5e7eb;
-            position: relative;
-        }
-        
-        .goal-form-header.a-race {
-            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
-            border-left: 4px solid #dc2626;
-        }
-        
-        .goal-form-header.other-race {
-            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
-            border-left: 4px solid #2563eb;
-        }
-        
-        .goal-form-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
-        
-        .goal-form-subtitle {
-            font-size: 14px;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .goal-form-content {
-            padding: 24px;
-        }
-        
-        .distance-info {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .distance-info-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        
-        .distance-breakdown {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-        }
-        
-        .distance-item {
-            text-align: center;
-            padding: 8px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .distance-discipline {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 2px;
-        }
-        
-        .distance-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .goal-input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-        
-        .goal-section {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .goal-section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .input-group {
-            margin-bottom: 16px;
-        }
-        
-        .input-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-            display: block;
-        }
-        
-        .input-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .time-input {
-            width: 60px;
-            padding: 8px 6px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 14px;
-            text-align: center;
-        }
-        
-        .time-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        
-        .pace-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .pace-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        
-        .input-unit {
-            font-size: 12px;
-            color: #6b7280;
-            min-width: 40px;
-        }
-        
-        .input-separator {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .calculated-display {
-            margin-top: 8px;
-            padding: 8px 12px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #374151;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .calculated-display.updated {
-            background: #dcfce7;
-            color: #166534;
-            animation: highlight 0.5s ease;
-        }
-        
-        @keyframes highlight {
-            0% { background: #fef3c7; }
-            100% { background: #dcfce7; }
-        }
-        
-        .ai-coach-section {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-top: 24px;
-        }
-        
-        .ai-coach-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .ai-coach-comment {
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 16px;
-        }
-        
-        .ai-insights {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-        }
-        
-        .ai-insight {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-        }
-        
-        .ai-insight-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 4px;
-        }
-        
-        .ai-insight-value {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .total-time-section {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border: none;
-            margin-top: 24px;
-        }
-        
-        .total-time-display {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 32px;
-            flex-wrap: wrap;
-        }
-        
-        .action-button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            min-width: 200px;
-        }
-        
-        .action-button.primary {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-        }
-        
-        .action-button.secondary {
-            background: white;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-        
-        .action-button.warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-        
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
-        }
-        
-        .action-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #dbeafe 0%, #fff 50%, #cffafe 100%); min-height: 100vh; display: flex; }
+        
+        .navbar { position: fixed; top: 0; left: 0; bottom: 0; width: 200px; background: linear-gradient(180deg, #667eea, #764ba2); padding: 20px 0; z-index: 1000; }
+        .nav-logo { font-size: 1rem; font-weight: 700; color: white; text-align: center; padding: 0 12px 20px; border-bottom: 2px solid rgba(255,255,255,0.2); margin-bottom: 12px; }
+        .nav-steps { display: flex; flex-direction: column; gap: 4px; padding: 0 10px; }
+        .nav-step { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; color: rgba(255,255,255,0.8); transition: all 0.2s; }
+        .nav-step:hover { background: rgba(255,255,255,0.15); color: white; }
+        .nav-step.current { background: rgba(255,255,255,0.25); color: white; }
+        
+        .content { margin-left: 200px; flex: 1; padding: 16px; overflow-y: auto; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .header { text-align: center; margin-bottom: 16px; }
+        .title { font-size: 22px; font-weight: bold; color: #1f2937; }
+        .subtitle { font-size: 11px; color: #6b7280; margin-top: 4px; }
+        
+        /* レースカード */
+        .race-card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .race-card.type-a { border-left: 4px solid #f59e0b; }
+        .race-card.type-b { border-left: 4px solid #3b82f6; }
+        .race-card.type-c { border-left: 4px solid #a855f7; }
+        
+        .race-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
+        .race-header:hover { opacity: 0.8; }
+        .race-name { font-size: 16px; font-weight: 700; color: #1f2937; }
+        .race-badge { padding: 3px 8px; border-radius: 10px; font-size: 9px; font-weight: 600; }
+        .race-badge.type-a { background: #fef3c7; color: #b45309; }
+        .race-badge.type-b { background: #dbeafe; color: #1d4ed8; }
+        .race-badge.type-c { background: #f3e8ff; color: #7c3aed; }
+        .race-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: #6b7280; margin-bottom: 12px; }
+        .toggle-icon { font-size: 14px; color: #9ca3af; transition: transform 0.2s; }
+        .toggle-icon.open { transform: rotate(180deg); }
+        
+        /* 種目入力 */
+        .disciplines { display: none; }
+        .disciplines.open { display: block; }
+        
+        .discipline-row { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+        .discipline-row:last-child { border-bottom: none; }
+        .discipline-label { font-size: 12px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 4px; }
+        .discipline-label .icon { font-size: 16px; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 2px; }
+        .input-label { font-size: 9px; color: #9ca3af; }
+        .input-field { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; width: 100%; }
+        .input-field:focus { outline: none; border-color: #667eea; }
+        .input-field.calculated { background: #ecfdf5; border-color: #10b981; }
+        
+        /* T1/T2 行 */
+        .transition-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 10px 0; border-top: 1px solid #e5e7eb; margin-top: 8px; }
+        .trans-group { display: flex; align-items: center; gap: 8px; }
+        .trans-label { font-size: 11px; font-weight: 600; color: #6b7280; min-width: 30px; }
+        .trans-input { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; width: 80px; }
+        .trans-input:focus { outline: none; border-color: #667eea; }
+        
+        /* 総合タイム */
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; margin-top: 12px; color: white; }
+        .total-label { font-size: 12px; font-weight: 600; }
+        .total-time { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+        .total-breakdown { font-size: 10px; opacity: 0.9; margin-top: 4px; }
+        
+        /* ボタン */
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .btn { padding: 10px 20px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        
+        .no-race { text-align: center; padding: 60px 20px; background: white; border-radius: 10px; }
+        .no-race-icon { font-size: 48px; margin-bottom: 16px; }
+        .no-race-text { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
         
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .flow-navbar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: auto;
-                width: 100%;
-                height: auto;
-                max-height: 80vh;
-                padding: 12px 0;
-            }
-
-            .flow-nav-logo {
-                font-size: 1rem;
-                padding: 0 16px 16px;
-                margin-bottom: 12px;
-            }
-
-            .flow-nav-step {
-                padding: 10px 16px;
-                font-size: 0.85rem;
-            }
-
-            .flow-nav-step .nav-icon {
-                font-size: 1.2rem;
-            }
-
-            .content-wrapper {
-                margin-left: 0;
-                margin-top: auto;
-                padding: 16px;
-                width: 100%;
-                padding-top: 280px;
-            }
-
-            .goal-input-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .action-button {
-                width: 100%;
-                max-width: 300px;
-            }
-            
-            .goal-form-subtitle {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
-            }
+            .navbar { width: 100%; height: 50px; bottom: auto; position: fixed; }
+            .nav-steps { display: none; }
+            .content { margin-left: 0; margin-top: 50px; padding: 10px; }
+            .discipline-row { grid-template-columns: 60px 1fr 1fr 1fr; gap: 4px; }
         }
     </style>
 </head>
 <body>
-    <nav class="flow-navbar">
-        <div class="flow-nav-container">
-            <div class="flow-nav-logo">AI Triathlon Coach</div>
-            <div class="flow-nav-steps">
-                <a href="home.html" class="flow-nav-step available">
-                    <span class="nav-icon">🏠</span>
-                    <span>ホーム</span>
-                </a>
-                <a href="index.html" class="flow-nav-step available">
-                    <span class="nav-icon">🤖</span>
-                    <span>AIコーチ</span>
-                </a>
-                <a href="news.html" class="flow-nav-step available">
-                    <span class="nav-icon">📰</span>
-                    <span>ニュース</span>
-                </a>
-                <a href="race-selection.html" class="flow-nav-step available">
-                    <span class="nav-icon">🎯</span>
-                    <span>レース選択</span>
-                </a>
-                <a href="goal-setting.html" class="flow-nav-step current">
-                    <span class="nav-icon">🏆</span>
-                    <span>目標設定</span>
-                </a>
-                <a href="training-plan.html" class="flow-nav-step available">
-                    <span class="nav-icon">📋</span>
-                    <span>計画</span>
-                </a>
-                <a href="simulator.html" class="flow-nav-step available">
-                    <span class="nav-icon">🔬</span>
-                    <span>シミュレーター</span>
-                </a>
-                <a href="data.html" class="flow-nav-step available">
-                    <span class="nav-icon">📊</span>
-                    <span>進捗</span>
-                </a>
-            </div>
+    <nav class="navbar">
+        <div class="nav-logo">AI Triathlon Coach</div>
+        <div class="nav-steps">
+            <a href="home.html" class="nav-step">🏠 ホーム</a>
+            <a href="news.html" class="nav-step">📰 ニュース</a>
+            <a href="race-selection.html" class="nav-step">🎯 レース選択</a>
+            <a href="goal-setting.html" class="nav-step current">🏆 目標設定</a>
+            <a href="training-plan.html" class="nav-step">📋 計画</a>
+            <a href="simulator.html" class="nav-step">🔬 シミュレーター</a>
+            <a href="data.html" class="nav-step">📊 進捗</a>
         </div>
     </nav>
-
-    <div class="content-wrapper">
+    
+    <div class="content">
         <div class="container">
-        <div class="header">
-            <h1 class="title">目標設定</h1>
-            <p class="subtitle">参加大会の目標タイムを設定しましょう</p>
-            
-            <div class="breadcrumb">
-                <div class="breadcrumb-item">
-                    <span>大会選択</span>
-                </div>
-                <span>→</span>
-                <div class="breadcrumb-item breadcrumb-current">
-                    <span>目標設定</span>
-                </div>
-                <span>→</span>
-                <div class="breadcrumb-item">
-                    <span>AIコーチ</span>
-                </div>
+            <div class="header">
+                <h1 class="title">🏆 目標設定</h1>
+                <p class="subtitle">ペースまたはタイムを入力すると自動計算されます</p>
             </div>
-        </div>
-
-        <div class="debug-panel" id="debug-panel" style="display: none;">
-            <div class="debug-title">デバッグ情報</div>
-            <div id="debug-content"></div>
-        </div>
-
-        <div class="step-indicator" id="step-indicator">
-            <div class="step-title">ステップ 1: 目標設定する大会を選択</div>
-            <div class="step-description">参加予定の大会から、目標タイムを設定したい大会を1つ選んでください</div>
-        </div>
-
-        <div class="race-selection-panel" id="race-selection-panel">
-            <h2 class="panel-title">
-                参加予定の大会
-                <span style="font-size: 14px; font-weight: 400; color: #6b7280;">- 目標設定したい大会を1つクリックしてください</span>
-            </h2>
             
-            <div class="races-grid" id="races-grid"></div>
+            <div id="races-container"></div>
             
             <div class="action-buttons">
-                <a href="race-selection.html" class="action-button secondary">
-                    参加大会を変更
-                </a>
-                <button class="action-button warning" onclick="toggleDebug()">
-                    デバッグ情報表示
-                </button>
+                <a href="race-selection.html" class="btn btn-secondary">← レース選択に戻る</a>
+                <button class="btn btn-primary" onclick="saveAll()">保存して計画作成へ →</button>
             </div>
-        </div>
-
-        <div id="goal-form-section" style="display: none;"></div>
-        
-        <div class="footer">
-            <p>次は AIコーチがあなたの目標達成をサポートします</p>
-        </div>
         </div>
     </div>
 
-    <script>
-        let showDebug = false;
+<script>
+const STORAGE_KEY = 'selected_races';
+const GOAL_STORAGE_KEY = 'race_goals';
 
-        const raceDatabase = {
-            'miyakojima_2025': {
-                name: '第39回全日本トライアスロン宮古島大会',
-                date: '2025-04-13',
-                location: '沖縄県宮古島市',
-                distance: { swim: 3.0, bike: 155, run: 42.195, type: 'ロング' }
-            },
-            'ishigaki_2025': {
-                name: '石垣島トライアスロン大会',
-                date: '2025-04-20',
-                location: '沖縄県石垣市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            },
-            'shonan_2025': {
-                name: '湘南国際トライアスロン大会',
-                date: '2025-05-18',
-                location: '神奈川県藤沢市',
-                distance: { swim: 1.5, bike: 40, run: 10, type: 'スタンダード' }
-            }
-        };
+const DISTANCE_DEFAULTS = {
+    'スプリント': { swim: 750, bike: 20, run: 5 },
+    'スタンダード': { swim: 1500, bike: 40, run: 10 },
+    'ミドル': { swim: 1900, bike: 90, run: 21.1 },
+    'ロング': { swim: 3800, bike: 180, run: 42.2 },
+    'オフロード': { swim: 1500, bike: 30, run: 10 },
+    'デュアスロン': { swim: 0, bike: 40, run: 10 },
+    'アクアスロン': { swim: 1000, bike: 0, run: 5 },
+    'ウィンター': { swim: 0, bike: 0, run: 8 },
+    'スーパースプリント': { swim: 400, bike: 10, run: 2.5 }
+};
 
-        let selectedRacesData = { aRaces: [], otherRaces: [] };
-        let currentGoalRace = null;
-        let completedGoals = new Set();
-        let goalData = {};
+let races = [];
+let goals = {};
+let openCards = new Set();
 
-        function toggleDebug() {
-            showDebug = !showDebug;
-            const debugPanel = document.getElementById('debug-panel');
-            debugPanel.style.display = showDebug ? 'block' : 'none';
-            if (showDebug) updateDebugInfo();
-        }
+function init() {
+    loadRaces();
+    loadGoals();
+    
+    if (races.length === 0) {
+        showNoRace();
+        return;
+    }
+    
+    // 最初のレースは開いた状態
+    if (races.length > 0) openCards.add(races[0].id);
+    
+    renderAllRaces();
+}
 
-        function updateDebugInfo() {
-            const debugContent = document.getElementById('debug-content');
-            const urlParams = new URLSearchParams(window.location.search);
-            debugContent.innerHTML = `
-                <strong>URL情報:</strong><br>
-                - Full URL: ${window.location.href}<br>
-                - Query String: ${window.location.search}<br>
-                <br>
-                <strong>URLパラメータ:</strong><br>
-                ${Array.from(urlParams.entries()).map(([key, value]) => `- ${key}: ${value}`).join('<br>') || '(なし)'}<br>
-                <br>
-                <strong>選択データ:</strong><br>
-                - aRaces: [${selectedRacesData.aRaces.join(', ')}]<br>
-                - otherRaces: [${selectedRacesData.otherRaces.join(', ')}]<br>
-            `;
-        }
-
-        function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const racesParam = urlParams.get('races');
-            
-            if (racesParam) {
-                try {
-                    selectedRacesData = JSON.parse(decodeURIComponent(racesParam));
-                } catch (error) {
-                    selectedRacesData = { aRaces: ['miyakojima_2025'], otherRaces: ['shonan_2025'] };
+function loadRaces() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        
+        const data = JSON.parse(saved);
+        const details = data.details || {};
+        
+        ['a', 'b', 'c'].forEach(type => {
+            const ids = data[type] || [];
+            ids.forEach(id => {
+                if (details[id]) {
+                    races.push({ ...details[id], selType: type });
                 }
-            } else {
-                selectedRacesData = { aRaces: ['miyakojima_2025'], otherRaces: ['shonan_2025'] };
-            }
-            
-            const totalSelected = selectedRacesData.aRaces.length + selectedRacesData.otherRaces.length;
-            
-            if (totalSelected === 0) {
-                showNoSelectionPanel();
-            } else {
-                showRaceSelectionPanel();
-            }
-        }
+            });
+        });
+        
+        races.sort((a, b) => a.date.localeCompare(b.date));
+    } catch (e) {
+        console.error('Load error:', e);
+    }
+}
 
-        function showNoSelectionPanel() {
-            document.getElementById('race-selection-panel').innerHTML = `
-                <div style="text-align: center; padding: 48px 24px;">
-                    <h2 style="font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 16px;">参加大会が選択されていません</h2>
-                    <p style="font-size: 16px; color: #6b7280; margin-bottom: 32px; line-height: 1.6;">
-                        目標設定を行うには、まず参加予定の大会を選択してください。
-                    </p>
-                    <div class="action-buttons">
-                        <a href="race-selection.html" class="action-button primary">
-                            大会選択ページに戻る
-                        </a>
+function loadGoals() {
+    try {
+        const saved = localStorage.getItem(GOAL_STORAGE_KEY);
+        if (saved) goals = JSON.parse(saved);
+    } catch (e) {
+        goals = {};
+    }
+}
+
+function saveGoals() {
+    localStorage.setItem(GOAL_STORAGE_KEY, JSON.stringify(goals));
+    updateRaceSelectionTargetTimes();
+}
+
+function updateRaceSelectionTargetTimes() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        
+        const data = JSON.parse(saved);
+        if (!data.targetTimes) data.targetTimes = {};
+        
+        races.forEach(race => {
+            const g = goals[race.id];
+            if (g) {
+                const total = (g.swimTime || 0) + (g.t1 || 0) + (g.bikeTime || 0) + (g.t2 || 0) + (g.runTime || 0);
+                if (total > 0) {
+                    data.targetTimes[race.id] = formatTime(total);
+                }
+            }
+        });
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        console.error('Update error:', e);
+    }
+}
+
+function showNoRace() {
+    document.getElementById('races-container').innerHTML = `
+        <div class="no-race">
+            <div class="no-race-icon">🏁</div>
+            <div class="no-race-text">目標設定するレースがありません<br>まずレース選択ページでレースを選んでください</div>
+            <a href="race-selection.html" class="btn btn-primary">レース選択へ →</a>
+        </div>
+    `;
+}
+
+function renderAllRaces() {
+    const container = document.getElementById('races-container');
+    container.innerHTML = races.map(race => renderRaceCard(race)).join('');
+}
+
+function renderRaceCard(race) {
+    const typeLabels = { a: '🏆 Aレース', b: '🎯 Bレース', c: '🤔 検討中' };
+    const dt = new Date(race.date);
+    const dateStr = `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`;
+    const dow = ['日','月','火','水','木','金','土'][dt.getDay()];
+    const isOpen = openCards.has(race.id);
+    
+    const defaults = DISTANCE_DEFAULTS[race.dist] || DISTANCE_DEFAULTS['スタンダード'];
+    const g = goals[race.id] || {
+        swimDist: defaults.swim,
+        bikeDist: defaults.bike,
+        runDist: defaults.run,
+        t1: 180,
+        t2: 120
+    };
+    
+    const totalTime = (g.swimTime || 0) + (g.t1 || 0) + (g.bikeTime || 0) + (g.t2 || 0) + (g.runTime || 0);
+    
+    return `
+    <div class="race-card type-${race.selType}" data-id="${race.id}">
+        <div class="race-header" onclick="toggleCard('${race.id}')">
+            <div>
+                <div class="race-name">${race.name}</div>
+                <div class="race-meta">
+                    <span>📅 ${dateStr}(${dow})</span>
+                    <span>📍 ${race.loc || ''}</span>
+                    <span>🏊 ${race.dist}</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span class="race-badge type-${race.selType}">${typeLabels[race.selType]}</span>
+                <span class="toggle-icon ${isOpen ? 'open' : ''}">▼</span>
+            </div>
+        </div>
+        
+        <div class="disciplines ${isOpen ? 'open' : ''}" id="disc-${race.id}">
+            <!-- スイム -->
+            <div class="discipline-row">
+                <div class="discipline-label"><span class="icon">🏊</span>スイム</div>
+                <div class="input-group">
+                    <span class="input-label">距離 (m)</span>
+                    <input type="number" class="input-field" id="${race.id}-swim-dist" value="${g.swimDist || defaults.swim}" onchange="calc('${race.id}','swim','dist')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">ペース (分:秒/100m)</span>
+                    <input type="text" class="input-field" id="${race.id}-swim-pace" value="${g.swimPace ? formatPace(g.swimPace) : ''}" placeholder="2:00" onchange="calc('${race.id}','swim','pace')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">タイム</span>
+                    <input type="text" class="input-field" id="${race.id}-swim-time" value="${g.swimTime ? formatTime(g.swimTime) : ''}" placeholder="0:30:00" onchange="calc('${race.id}','swim','time')">
+                </div>
+            </div>
+            
+            <!-- バイク -->
+            <div class="discipline-row">
+                <div class="discipline-label"><span class="icon">🚴</span>バイク</div>
+                <div class="input-group">
+                    <span class="input-label">距離 (km)</span>
+                    <input type="number" class="input-field" id="${race.id}-bike-dist" value="${g.bikeDist || defaults.bike}" step="0.1" onchange="calc('${race.id}','bike','dist')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">速度 (km/h)</span>
+                    <input type="number" class="input-field" id="${race.id}-bike-pace" value="${g.bikePace ? g.bikePace.toFixed(1) : ''}" placeholder="30.0" step="0.1" onchange="calc('${race.id}','bike','pace')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">タイム</span>
+                    <input type="text" class="input-field" id="${race.id}-bike-time" value="${g.bikeTime ? formatTime(g.bikeTime) : ''}" placeholder="1:20:00" onchange="calc('${race.id}','bike','time')">
+                </div>
+            </div>
+            
+            <!-- ラン -->
+            <div class="discipline-row">
+                <div class="discipline-label"><span class="icon">🏃</span>ラン</div>
+                <div class="input-group">
+                    <span class="input-label">距離 (km)</span>
+                    <input type="number" class="input-field" id="${race.id}-run-dist" value="${g.runDist || defaults.run}" step="0.1" onchange="calc('${race.id}','run','dist')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">ペース (分:秒/km)</span>
+                    <input type="text" class="input-field" id="${race.id}-run-pace" value="${g.runPace ? formatPace(g.runPace) : ''}" placeholder="5:30" onchange="calc('${race.id}','run','pace')">
+                </div>
+                <div class="input-group">
+                    <span class="input-label">タイム</span>
+                    <input type="text" class="input-field" id="${race.id}-run-time" value="${g.runTime ? formatTime(g.runTime) : ''}" placeholder="0:55:00" onchange="calc('${race.id}','run','time')">
+                </div>
+            </div>
+            
+            <!-- T1 / T2 -->
+            <div class="transition-row">
+                <div class="trans-group">
+                    <span class="trans-label">🔄 T1</span>
+                    <input type="text" class="trans-input" id="${race.id}-t1" value="${formatPace(g.t1 || 180)}" placeholder="3:00" onchange="calcTotal('${race.id}')">
+                    <span style="font-size:9px;color:#9ca3af;">分:秒</span>
+                </div>
+                <div class="trans-group">
+                    <span class="trans-label">🔄 T2</span>
+                    <input type="text" class="trans-input" id="${race.id}-t2" value="${formatPace(g.t2 || 120)}" placeholder="2:00" onchange="calcTotal('${race.id}')">
+                    <span style="font-size:9px;color:#9ca3af;">分:秒</span>
+                </div>
+            </div>
+            
+            <!-- 総合タイム -->
+            <div class="total-row">
+                <div>
+                    <div class="total-label">目標フィニッシュタイム</div>
+                    <div class="total-breakdown" id="${race.id}-breakdown">
+                        🏊 -- + T1 -- + 🚴 -- + T2 -- + 🏃 --
                     </div>
                 </div>
-            `;
-        }
+                <div class="total-time" id="${race.id}-total">${totalTime > 0 ? formatTime(totalTime) : '--:--:--'}</div>
+            </div>
+        </div>
+    </div>
+    `;
+}
 
-        function showRaceSelectionPanel() {
-            updateStepIndicator('ステップ 1: 目標設定する大会を選択', '参加予定の大会から、目標タイムを設定したい大会を1つ選んでください');
-            renderRaceSelectionGrid();
-        }
+function toggleCard(id) {
+    if (openCards.has(id)) {
+        openCards.delete(id);
+    } else {
+        openCards.add(id);
+    }
+    
+    const disc = document.getElementById('disc-' + id);
+    const icon = document.querySelector(`[data-id="${id}"] .toggle-icon`);
+    
+    if (disc) disc.classList.toggle('open', openCards.has(id));
+    if (icon) icon.classList.toggle('open', openCards.has(id));
+}
 
-        function updateStepIndicator(title, description) {
-            document.querySelector('.step-title').textContent = title;
-            document.querySelector('.step-description').textContent = description;
-        }
+// === フォーマット関数 ===
+function formatTime(seconds) {
+    if (!seconds || seconds <= 0) return '';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.round(seconds % 60);
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${m}:${String(s).padStart(2,'0')}`;
+}
 
-        function renderRaceSelectionGrid() {
-            const racesGrid = document.getElementById('races-grid');
-            let html = '';
-            
-            selectedRacesData.aRaces.forEach(raceId => {
-                const race = raceDatabase[raceId];
-                if (race) {
-                    html += createRaceSelectionCard(raceId, race, 'a-race');
-                } else {
-                    html += createErrorCard(raceId, 'a-race');
-                }
-            });
-            
-            selectedRacesData.otherRaces.forEach(raceId => {
-                const race = raceDatabase[raceId];
-                if (race) {
-                    html += createRaceSelectionCard(raceId, race, 'other-race');
-                } else {
-                    html += createErrorCard(raceId, 'other-race');
-                }
-            });
-            
-            if (html === '') {
-                html = '<div style="text-align: center; padding: 40px; color: #666;">選択された大会データが見つかりません。</div>';
+function formatPace(seconds) {
+    if (!seconds || seconds <= 0) return '';
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function parseTime(str) {
+    if (!str) return 0;
+    const parts = str.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return 0;
+}
+
+// === 計算関数 ===
+function calc(raceId, sport, changed) {
+    const distEl = document.getElementById(`${raceId}-${sport}-dist`);
+    const paceEl = document.getElementById(`${raceId}-${sport}-pace`);
+    const timeEl = document.getElementById(`${raceId}-${sport}-time`);
+    
+    const dist = parseFloat(distEl.value) || 0;
+    
+    if (sport === 'swim') {
+        // スイム: ペース = 秒/100m
+        if (changed === 'pace' && paceEl.value) {
+            const pace = parseTime(paceEl.value);
+            const total = (dist / 100) * pace;
+            timeEl.value = formatTime(total);
+            timeEl.classList.add('calculated');
+            paceEl.classList.remove('calculated');
+        } else if (changed === 'time' && timeEl.value) {
+            const total = parseTime(timeEl.value);
+            const pace = total / (dist / 100);
+            paceEl.value = formatPace(pace);
+            paceEl.classList.add('calculated');
+            timeEl.classList.remove('calculated');
+        } else if (changed === 'dist' && paceEl.value) {
+            const pace = parseTime(paceEl.value);
+            const total = (dist / 100) * pace;
+            timeEl.value = formatTime(total);
+        }
+    } else if (sport === 'bike') {
+        // バイク: 速度 = km/h
+        if (changed === 'pace' && paceEl.value) {
+            const speed = parseFloat(paceEl.value);
+            if (speed > 0) {
+                const total = (dist / speed) * 3600;
+                timeEl.value = formatTime(total);
+                timeEl.classList.add('calculated');
+                paceEl.classList.remove('calculated');
             }
-            
-            racesGrid.innerHTML = html;
+        } else if (changed === 'time' && timeEl.value) {
+            const total = parseTime(timeEl.value);
+            if (total > 0) {
+                const speed = dist / (total / 3600);
+                paceEl.value = speed.toFixed(1);
+                paceEl.classList.add('calculated');
+                timeEl.classList.remove('calculated');
+            }
+        } else if (changed === 'dist' && paceEl.value) {
+            const speed = parseFloat(paceEl.value);
+            if (speed > 0) {
+                const total = (dist / speed) * 3600;
+                timeEl.value = formatTime(total);
+            }
         }
-
-        function createErrorCard(raceId, type) {
-            const typeLabel = type === 'a-race' ? 'Aレース' : 'その他';
-            return `
-                <div class="race-selection-card ${type}" style="border-color: #ef4444; background: #fef2f2;">
-                    <div class="race-type-badge ${type}">${typeLabel}</div>
-                    <div class="race-selection-title">データエラー</div>
-                    <div class="race-selection-info">Race ID: ${raceId}</div>
-                    <div class="race-selection-info" style="color: #dc2626;">大会データが見つかりません</div>
-                </div>
-            `;
+    } else if (sport === 'run') {
+        // ラン: ペース = 秒/km
+        if (changed === 'pace' && paceEl.value) {
+            const pace = parseTime(paceEl.value);
+            const total = dist * pace;
+            timeEl.value = formatTime(total);
+            timeEl.classList.add('calculated');
+            paceEl.classList.remove('calculated');
+        } else if (changed === 'time' && timeEl.value) {
+            const total = parseTime(timeEl.value);
+            if (dist > 0) {
+                const pace = total / dist;
+                paceEl.value = formatPace(pace);
+                paceEl.classList.add('calculated');
+                timeEl.classList.remove('calculated');
+            }
+        } else if (changed === 'dist' && paceEl.value) {
+            const pace = parseTime(paceEl.value);
+            const total = dist * pace;
+            timeEl.value = formatTime(total);
         }
+    }
+    
+    calcTotal(raceId);
+}
 
-        function createRaceSelectionCard(raceId, race, type) {
-            const typeLabel = type === 'a-race' ? 'Aレース' : 'その他';
-            const isCompleted = completedGoals.has(raceId);
-            const formattedDate = new Date(race.date).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' });
-            let cardClass = `race-selection-card ${type}`;
-            let statusIndicator = isCompleted ? '<div class="selected-indicator">✓</div>' : '';
-            let statusText = isCompleted ? '<div class="race-selection-info" style="color: #059669; font-weight: 600;">目標設定済み（クリックで編集）</div>' : '';
-            
-            return `
-                <div class="${cardClass}" onclick="selectRaceForGoal('${raceId}')" data-race-id="${raceId}">
-                    <div class="race-type-badge ${type}">${typeLabel}</div>
-                    ${statusIndicator}
-                    <div class="race-selection-title">${race.name}</div>
-                    <div class="race-selection-info">${formattedDate}</div>
-                    <div class="race-selection-info">${race.location}</div>
-                    <div class="race-selection-info">${race.distance.type}ディスタンス</div>
-                    ${statusText}
-                </div>
-            `;
-        }
+function calcTotal(raceId) {
+    const swimTime = parseTime(document.getElementById(`${raceId}-swim-time`)?.value);
+    const bikeTime = parseTime(document.getElementById(`${raceId}-bike-time`)?.value);
+    const runTime = parseTime(document.getElementById(`${raceId}-run-time`)?.value);
+    const t1 = parseTime(document.getElementById(`${raceId}-t1`)?.value);
+    const t2 = parseTime(document.getElementById(`${raceId}-t2`)?.value);
+    
+    const total = swimTime + t1 + bikeTime + t2 + runTime;
+    
+    document.getElementById(`${raceId}-total`).textContent = total > 0 ? formatTime(total) : '--:--:--';
+    document.getElementById(`${raceId}-breakdown`).textContent = 
+        `🏊 ${swimTime > 0 ? formatTime(swimTime) : '--'} + T1 ${t1 > 0 ? formatPace(t1) : '--'} + 🚴 ${bikeTime > 0 ? formatTime(bikeTime) : '--'} + T2 ${t2 > 0 ? formatPace(t2) : '--'} + 🏃 ${runTime > 0 ? formatTime(runTime) : '--'}`;
+    
+    // 保存
+    saveGoal(raceId);
+}
 
-        function selectRaceForGoal(raceId) {
-            currentGoalRace = raceId;
-            alert(`${raceDatabase[raceId].name} の目標設定を開始します`);
-        }
+function saveGoal(raceId) {
+    goals[raceId] = {
+        swimDist: parseFloat(document.getElementById(`${raceId}-swim-dist`)?.value) || 0,
+        swimPace: parseTime(document.getElementById(`${raceId}-swim-pace`)?.value),
+        swimTime: parseTime(document.getElementById(`${raceId}-swim-time`)?.value),
+        bikeDist: parseFloat(document.getElementById(`${raceId}-bike-dist`)?.value) || 0,
+        bikePace: parseFloat(document.getElementById(`${raceId}-bike-pace`)?.value) || 0,
+        bikeTime: parseTime(document.getElementById(`${raceId}-bike-time`)?.value),
+        runDist: parseFloat(document.getElementById(`${raceId}-run-dist`)?.value) || 0,
+        runPace: parseTime(document.getElementById(`${raceId}-run-pace`)?.value),
+        runTime: parseTime(document.getElementById(`${raceId}-run-time`)?.value),
+        t1: parseTime(document.getElementById(`${raceId}-t1`)?.value),
+        t2: parseTime(document.getElementById(`${raceId}-t2`)?.value)
+    };
+    saveGoals();
+}
 
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+function saveAll() {
+    races.forEach(race => saveGoal(race.id));
+    alert('目標を保存しました！');
+    location.href = 'training-plan.html';
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

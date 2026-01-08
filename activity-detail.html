@@ -1385,6 +1385,7 @@
                     data.push(speed);
                     if (vel >= minVelocity) rawPaceValues.push(speed);
                 } else if (sportCategory === 'swim') {
+                    // スイム: 秒/100mで計算し、表示時に分:秒に変換
                     const pace = vel > 0 ? 100 / vel : null; // sec/100m
                     data.push(pace);
                     if (vel >= minVelocity && pace) rawPaceValues.push(pace);
@@ -1399,7 +1400,6 @@
             // Y軸の範囲を計算（外れ値を除外）
             const yAxisRange = calculateYAxisRange(rawPaceValues, sportCategory);
             
-            const yLabel = sportCategory === 'bike' ? 'km/h' : sportCategory === 'swim' ? 'sec/100m' : 'min/km';
             const xLabel = distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間';
             
             charts.pace = new Chart(ctx, {
@@ -1441,7 +1441,7 @@
                             }
                         },
                         y: { 
-                            title: { display: true, text: yLabel },
+                            title: { display: true, text: sportCategory === 'bike' ? 'km/h' : 'ペース' },
                             reverse: sportCategory !== 'bike',
                             min: yAxisRange.min,
                             max: yAxisRange.max,
@@ -1449,7 +1449,13 @@
                                 callback: function(value) {
                                     if (sportCategory === 'bike') {
                                         return value.toFixed(0);
+                                    } else if (sportCategory === 'swim') {
+                                        // スイム: 秒を分:秒に変換
+                                        const min = Math.floor(value / 60);
+                                        const sec = Math.round(value % 60);
+                                        return `${min}:${String(sec).padStart(2, '0')}`;
                                     } else {
+                                        // ラン: min/km（valueは分単位の小数）
                                         const min = Math.floor(value);
                                         const sec = Math.round((value - min) * 60);
                                         return `${min}:${String(sec).padStart(2, '0')}`;
@@ -1470,10 +1476,15 @@
                                     if (value === null) return '停止中';
                                     if (sportCategory === 'bike') {
                                         return `速度: ${value.toFixed(1)} km/h`;
+                                    } else if (sportCategory === 'swim') {
+                                        // スイム: 秒を分:秒に変換
+                                        const min = Math.floor(value / 60);
+                                        const sec = Math.round(value % 60);
+                                        return `ペース: ${min}:${String(sec).padStart(2, '0')}/100m`;
                                     } else {
                                         const min = Math.floor(value);
                                         const sec = Math.round((value - min) * 60);
-                                        return `ペース: ${min}:${String(sec).padStart(2, '0')} ${sportCategory === 'swim' ? '/100m' : '/km'}`;
+                                        return `ペース: ${min}:${String(sec).padStart(2, '0')}/km`;
                                     }
                                 }
                             }
@@ -1616,10 +1627,28 @@
             
             const labels = [];
             const chartData = [];
+            const validValues = []; // Y軸範囲計算用
+            
+            // ピッチ/ケイデンスの有効範囲を定義
+            const isRunPitch = chartKey === 'cadence' && sportCategory === 'run';
+            const isBikeCadence = chartKey === 'cadence' && sportCategory === 'bike';
+            const isPower = chartKey === 'power';
+            
+            // 有効値の範囲
+            let minValid = 0, maxValid = Infinity;
+            if (isRunPitch) {
+                minValid = 120; // 最低120spm
+                maxValid = 240; // 最高240spm
+            } else if (isBikeCadence) {
+                minValid = 30;  // 最低30rpm
+                maxValid = 150; // 最高150rpm
+            } else if (isPower) {
+                minValid = 0;
+                maxValid = 2000;
+            }
             
             for (let i = 0; i < data.length; i += step) {
                 if (distanceData) {
-                    // スイムはm単位、それ以外はkm単位
                     if (sportCategory === 'swim') {
                         labels.push(Math.round(distanceData[i]));
                     } else {
@@ -1628,7 +1657,27 @@
                 } else {
                     labels.push(formatDurationShort(timeData[i]));
                 }
-                chartData.push(data[i]);
+                
+                const value = data[i];
+                chartData.push(value);
+                
+                // Y軸範囲計算用に有効値を収集
+                if (value >= minValid && value <= maxValid) {
+                    validValues.push(value);
+                }
+            }
+            
+            // Y軸範囲をパーセンタイルベースで計算
+            let yMin, yMax;
+            if (validValues.length > 0) {
+                const sorted = [...validValues].sort((a, b) => a - b);
+                const p5 = sorted[Math.floor(sorted.length * 0.05)];
+                const p95 = sorted[Math.floor(sorted.length * 0.95)];
+                const range = p95 - p5;
+                const padding = range * 0.1;
+                
+                yMin = Math.max(minValid, Math.floor(p5 - padding));
+                yMax = Math.min(maxValid, Math.ceil(p95 + padding));
             }
             
             charts[chartKey] = new Chart(ctx, {
@@ -1667,7 +1716,11 @@
                                 }
                             }
                         },
-                        y: { title: { display: true, text: unit } }
+                        y: { 
+                            title: { display: true, text: unit },
+                            min: yMin,
+                            max: yMax
+                        }
                     },
                     interaction: {
                         intersect: false,

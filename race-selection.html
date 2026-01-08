@@ -8,16 +8,84 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #dbeafe 0%, #fff 50%, #cffafe 100%); min-height: 100vh; display: flex; }
         
-        /* ナビゲーション */
-        .navbar { position: fixed; top: 0; left: 0; bottom: 0; width: 200px; background: linear-gradient(180deg, #667eea, #764ba2); padding: 20px 0; z-index: 1000; }
-        .nav-logo { font-size: 1rem; font-weight: 700; color: white; text-align: center; padding: 0 12px 20px; border-bottom: 2px solid rgba(255,255,255,0.2); margin-bottom: 12px; }
-        .nav-steps { display: flex; flex-direction: column; gap: 4px; padding: 0 10px; }
-        .nav-step { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; color: rgba(255,255,255,0.8); transition: all 0.2s; }
-        .nav-step:hover { background: rgba(255,255,255,0.15); color: white; }
-        .nav-step.current { background: rgba(255,255,255,0.25); color: white; }
+        /* 左サイドバーナビゲーション */
+        .flow-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .flow-nav-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .flow-nav-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            padding: 0 20px 30px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .flow-nav-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px;
+            flex: 1;
+        }
+
+        .flow-nav-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+        }
+
+        .flow-nav-step .nav-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .flow-nav-step.current {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .flow-nav-step.available {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .flow-nav-step.available:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
         
         /* メインコンテンツ */
-        .main-layout { margin-left: 200px; flex: 1; display: flex; height: 100vh; }
+        .main-layout { margin-left: 240px; flex: 1; display: flex; height: 100vh; }
         .list-panel { flex: 3; padding: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .selected-panel { flex: 1; min-width: 280px; max-width: 320px; background: white; border-left: 1px solid #e5e7eb; padding: 12px; overflow-y: auto; }
         
@@ -139,25 +207,80 @@
             .table-header > :nth-child(6), .table-row > :nth-child(6) { display: none; }
         }
         @media (max-width: 768px) {
-            .navbar { width: 100%; height: 45px; bottom: auto; padding: 8px; position: fixed; }
-            .nav-logo { padding: 0 10px; margin: 0; border: none; }
-            .nav-steps { display: none; }
-            .main-layout { margin-left: 0; margin-top: 45px; flex-direction: column; height: calc(100vh - 45px); }
+            .flow-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+                width: 100%;
+                height: auto;
+                max-height: 80vh;
+                padding: 12px 0;
+            }
+
+            .flow-nav-logo {
+                font-size: 1rem;
+                padding: 0 16px 16px;
+                margin-bottom: 12px;
+            }
+
+            .flow-nav-step {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .flow-nav-step .nav-icon {
+                font-size: 1.2rem;
+            }
+
+            .main-layout { margin-left: 0; margin-top: 280px; flex-direction: column; height: calc(100vh - 280px); }
             .selected-panel { max-width: none; min-width: auto; border-left: none; border-top: 1px solid #e5e7eb; max-height: 200px; }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-logo">AI Triathlon Coach</div>
-        <div class="nav-steps">
-            <a href="home.html" class="nav-step">🏠 ホーム</a>
-            <a href="news.html" class="nav-step">📰 ニュース</a>
-            <a href="race-selection.html" class="nav-step current">🎯 レース選択</a>
-            <a href="goal-setting.html" class="nav-step">🏆 目標設定</a>
-            <a href="training-plan.html" class="nav-step">📋 計画</a>
-            <a href="simulator.html" class="nav-step">🔬 シミュレーター</a>
-            <a href="data.html" class="nav-step">📊 進捗</a>
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="home.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
+                <a href="index.html" class="flow-nav-step available">
+                    <span class="nav-icon">🤖</span>
+                    <span>AIコーチ</span>
+                </a>
+                <a href="news.html" class="flow-nav-step available">
+                    <span class="nav-icon">📰</span>
+                    <span>ニュース</span>
+                </a>
+                <a href="race-selection.html" class="flow-nav-step current">
+                    <span class="nav-icon">🎯</span>
+                    <span>レース選択</span>
+                </a>
+                <a href="goal-setting.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏆</span>
+                    <span>目標設定</span>
+                </a>
+                <a href="training-plan.html" class="flow-nav-step available">
+                    <span class="nav-icon">📋</span>
+                    <span>計画</span>
+                </a>
+                <a href="simulator.html" class="flow-nav-step available">
+                    <span class="nav-icon">🔬</span>
+                    <span>シミュレーター</span>
+                </a>
+                <a href="data.html" class="flow-nav-step available">
+                    <span class="nav-icon">📊</span>
+                    <span>進捗</span>
+                </a>
+                <a href="settings.html" class="flow-nav-step available">
+                    <span class="nav-icon">⚙️</span>
+                    <span>設定</span>
+                </a>
+            </div>
         </div>
     </nav>
     

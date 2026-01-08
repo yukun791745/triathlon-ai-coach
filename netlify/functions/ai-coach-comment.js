@@ -161,15 +161,40 @@ function buildSystemPrompt(isQuestion) {
 
 ### 3. 地形との相互作用（標高データがある場合）
 - 登りでのペース低下率、下りでの回復率
-- 獲得標高と総合ペースの関係
+- GAP（勾配調整ペース）と実際のペースの差
 - 「登り区間でペースが○%落ちていますが、これは標準的/要改善」
 
-### 4. 過去との比較（類似アクティビティがある場合）
+### 4. スイム技術分析（スイムの場合）
+- ストロークレートとDPS（Distance Per Stroke）の関係
+- DPSが低い → ストローク効率に改善余地
+- ストロークレートが高すぎる → 力みや水感の問題
+- 「DPS ○mは効率的な泳ぎを示しています」
+- DPS 1.0m以下：初級者レベル、キャッチとプル改善が必要
+- DPS 1.0-1.3m：中級者レベル、効率改善の余地あり
+- DPS 1.3-1.6m：上級者レベル、効率的な泳ぎ
+- DPS 1.6m以上：エリートレベル
+
+### 5. ランニングメカニクス（ランの場合）
+- ピッチとストライド長のバランス
+- 理想的なピッチ（180spm前後）との比較
+- ストライドが長すぎ/短すぎの意味
+- 「ストライド長○mとピッチ○spmの組み合わせは○○を示唆」
+- ピッチ180spm以上：効率的なケイデンス
+- ストライド長：速度÷ピッチで計算、1.0-1.4mが一般的
+
+### 6. バイクパワー分析（バイクの場合）
+- NP（Normalized Power）と平均パワーの差
+- VI（Variability Index）= NP/平均パワー
+- VIが高い（1.05以上）→ ペースの乱れ、インターバル的
+- VIが低い（1.02以下）→ 安定したペーシング
+- IF（Intensity Factor）= NP/FTP で強度を評価
+
+### 7. 過去との比較（類似アクティビティがある場合）
 - 同じ距離・同じ強度でのタイム比較
 - 同じペースでの心拍数比較（フィットネス指標）
 - 「前回の類似トレーニングと比較して○○」
 
-### 5. トレーニング文脈
+### 8. トレーニング文脈
 - CTL/ATL/TSBの状態でこのパフォーマンスの意味
 - 「疲労が溜まっている中でこの走りは○○」
 - 今週の負荷の文脈での位置づけ
@@ -200,6 +225,7 @@ function buildSystemPrompt(isQuestion) {
 function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion) {
     const sportType = activity.sport_type || activity.type;
     const sportName = getSportName(sportType);
+    const sportCategory = getSportCategory(sportType);
     const distance = activity.distance ? (activity.distance / 1000).toFixed(2) : 0;
     const durationMin = Math.round((activity.moving_time || activity.elapsed_time || 0) / 60);
     
@@ -225,27 +251,49 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
         message += '\n';
     }
 
-    // パワー（バイク）
-    if (activity.average_watts) {
-        message += `- 平均パワー: ${Math.round(activity.average_watts)} W`;
-        if (activity.weighted_average_watts) {
-            message += ` / NP: ${Math.round(activity.weighted_average_watts)} W`;
+    // バイク: パワーメトリクス
+    if (sportCategory === 'bike') {
+        if (activity.average_watts) {
+            message += `- 平均パワー: ${Math.round(activity.average_watts)} W\n`;
         }
-        message += '\n';
+        if (activity.weighted_average_watts) {
+            message += `- NP (Normalized Power): ${Math.round(activity.weighted_average_watts)} W\n`;
+        }
+        if (activity.average_watts && activity.weighted_average_watts) {
+            const vi = (activity.weighted_average_watts / activity.average_watts).toFixed(2);
+            message += `- VI (Variability Index): ${vi}\n`;
+        }
+        if (activity.average_cadence) {
+            message += `- 平均ケイデンス: ${Math.round(activity.average_cadence)} rpm\n`;
+        }
+    }
+
+    // ラン: ピッチとストライド
+    if (sportCategory === 'run') {
+        if (activity.average_cadence) {
+            const pitch = Math.round(activity.average_cadence * 2);
+            message += `- 平均ピッチ: ${pitch} spm\n`;
+            
+            // ストライド長を計算
+            if (activity.average_speed) {
+                const speedMPerMin = activity.average_speed * 60;
+                const stride = (speedMPerMin / pitch).toFixed(2);
+                message += `- 平均ストライド長: ${stride} m\n`;
+            }
+        }
+    }
+
+    // スイム: ストロークメトリクス
+    if (sportCategory === 'swim') {
+        if (activity.average_cadence) {
+            message += `- 平均ストロークレート: ${Math.round(activity.average_cadence)} spm\n`;
+        }
+        // DPSはラップデータから計算される場合がある
     }
 
     // 標高
     if (activity.total_elevation_gain && activity.total_elevation_gain > 20) {
         message += `- 獲得標高: ${Math.round(activity.total_elevation_gain)} m\n`;
-    }
-
-    // ケイデンス/ピッチ
-    if (activity.average_cadence) {
-        if (sportType.includes('Run')) {
-            message += `- 平均ピッチ: ${Math.round(activity.average_cadence * 2)} spm\n`;
-        } else if (sportType.includes('Ride')) {
-            message += `- 平均ケイデンス: ${Math.round(activity.average_cadence)} rpm\n`;
-        }
     }
 
     // ストリーム分析データ（詳細な統計情報）
@@ -291,6 +339,21 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
                 message += `- 勾配調整ペース (GAP): ${ea.gradeAdjustedPace}\n`;
             }
         }
+
+        // スイム用のストローク分析
+        if (streamAnalysis.swimAnalysis) {
+            const sa = streamAnalysis.swimAnalysis;
+            message += `### スイム技術分析\n`;
+            if (sa.avgStrokeRate) {
+                message += `- 平均ストロークレート: ${sa.avgStrokeRate} spm\n`;
+            }
+            if (sa.avgDPS) {
+                message += `- 平均DPS (Distance Per Stroke): ${sa.avgDPS} m\n`;
+            }
+            if (sa.strokeCount) {
+                message += `- 総ストローク数: ${sa.strokeCount}\n`;
+            }
+        }
     }
 
     // 過去の類似アクティビティとの比較
@@ -327,11 +390,58 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
     // Lapデータがある場合
     if (activity.laps && activity.laps.length > 1) {
         message += `\n## Lap詳細\n`;
-        activity.laps.forEach((lap, i) => {
-            const lapPace = formatPace(lap.average_speed, sportType);
-            const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
-            message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm\n`;
-        });
+        
+        if (sportCategory === 'swim') {
+            // スイムのラップ（RESTを除いた泳ぎラップのみ）
+            const swimLaps = activity.laps.filter(lap => {
+                const movingTime = lap.moving_time || 0;
+                return movingTime >= 10 && lap.distance > 0;
+            });
+            
+            swimLaps.slice(0, 10).forEach((lap, i) => {
+                const lapPace = formatPace(lap.average_speed, sportType);
+                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
+                const strokeRate = lap.average_cadence ? Math.round(lap.average_cadence) : '-';
+                
+                // ストローク数とDPSを計算
+                let strokes = lap.total_strokes;
+                if (!strokes && lap.average_cadence && lap.moving_time) {
+                    strokes = Math.round(lap.average_cadence * lap.moving_time / 60);
+                }
+                const dps = strokes && lap.distance > 0 ? (lap.distance / strokes).toFixed(2) : '-';
+                
+                message += `Lap ${i + 1}: ${Math.round(lap.distance)}m, ${lapPace}, HR ${lapHr}bpm, Rate ${strokeRate}spm, DPS ${dps}m\n`;
+            });
+        } else if (sportCategory === 'run') {
+            // ランのラップ
+            activity.laps.slice(0, 10).forEach((lap, i) => {
+                const lapPace = formatPace(lap.average_speed, sportType);
+                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
+                
+                // ピッチとストライド
+                let pitchStr = '-';
+                let strideStr = '-';
+                if (lap.average_cadence) {
+                    const pitch = Math.round(lap.average_cadence * 2);
+                    pitchStr = pitch + 'spm';
+                    if (lap.average_speed && lap.moving_time) {
+                        const speedMPerMin = lap.average_speed * 60;
+                        const stride = (speedMPerMin / pitch).toFixed(2);
+                        strideStr = stride + 'm';
+                    }
+                }
+                
+                message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm, Pitch ${pitchStr}, Stride ${strideStr}\n`;
+            });
+        } else {
+            // バイク等
+            activity.laps.slice(0, 10).forEach((lap, i) => {
+                const lapPace = formatPace(lap.average_speed, sportType);
+                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
+                const lapPower = lap.average_watts ? Math.round(lap.average_watts) + 'W' : '-';
+                message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm, Power ${lapPower}\n`;
+            });
+        }
     }
 
     // 質問がある場合
@@ -358,6 +468,17 @@ function getSportName(sportType) {
         'Workout': 'ワークアウト'
     };
     return names[sportType] || sportType;
+}
+
+function getSportCategory(sportType) {
+    const swim = ['Swim'];
+    const bike = ['Ride', 'VirtualRide', 'EBikeRide'];
+    const run = ['Run', 'TrailRun', 'VirtualRun'];
+    
+    if (swim.includes(sportType)) return 'swim';
+    if (bike.includes(sportType)) return 'bike';
+    if (run.includes(sportType)) return 'run';
+    return 'other';
 }
 
 function formatPace(avgSpeed, sportType) {

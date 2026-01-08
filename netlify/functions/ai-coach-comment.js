@@ -1,5 +1,5 @@
 // netlify/functions/ai-coach-comment.js
-// OpenAI APIを使用してAIコーチの洞察に富んだコメントを生成
+// 劇的改善版: 事前分析による注目ポイント抽出 + 焦点を絞ったプロンプト
 
 exports.handler = async (event) => {
     const headers = {
@@ -49,11 +49,14 @@ exports.handler = async (event) => {
             };
         }
 
-        // システムプロンプト
-        const systemPrompt = buildSystemPrompt(!!userQuestion);
+        // ★★★ 改善の核心: データから「注目ポイント」を事前抽出 ★★★
+        const insights = extractKeyInsights(activity, streamAnalysis, similarActivities, trainingStatus);
         
-        // ユーザーメッセージの構築
-        const userMessage = buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion);
+        // システムプロンプト（改善版 - 抽出された洞察に基づいて動的に調整）
+        const systemPrompt = buildSystemPrompt(!!userQuestion, insights);
+        
+        // ユーザーメッセージの構築（改善版 - 注目ポイントを最初に提示）
+        const userMessage = buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, insights);
 
         // メッセージ配列の構築
         const messages = [
@@ -69,19 +72,38 @@ exports.handler = async (event) => {
         
         messages.push({ role: 'user', content: userMessage });
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // ★ 改善: gpt-4o を使用（より深い分析能力）
+        let response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${OPENAI_API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: 'gpt-4o',  // 改善: gpt-4o-mini → gpt-4o
                 messages: messages,
-                max_tokens: 2000,
-                temperature: 0.8
+                max_tokens: 1200,  // 改善: 少し減らして簡潔に
+                temperature: 0.7   // 改善: 0.8 → 0.7（より一貫性のある出力）
             })
         });
+
+        // フォールバック: gpt-4oが失敗した場合はgpt-4o-miniで再試行
+        if (!response.ok) {
+            console.log('gpt-4o failed, falling back to gpt-4o-mini');
+            response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: messages,
+                    max_tokens: 1200,
+                    temperature: 0.7
+                })
+            });
+        }
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -121,363 +143,547 @@ exports.handler = async (event) => {
     }
 };
 
-function buildSystemPrompt(isQuestion) {
-    if (isQuestion) {
-        return `あなたは経験豊富なトライアスロンコーチです。選手からの質問に対して、提供されたデータに基づいて具体的かつ洞察に富んだ回答をします。
-
-回答の原則：
-- 質問に直接、具体的に答える
-- データに基づいた根拠を示す
-- 実践的で明日から使えるアドバイス
-- 必要なら追加の質問で深掘りする
-- 300-500字程度`;
+// ============================================
+// ★★★ 改善の核心: 事前にデータから「注目ポイント」を抽出 ★★★
+// AIに丸投げせず、重要な発見を事前に特定する
+// ============================================
+function extractKeyInsights(activity, streamAnalysis, similarActivities, trainingStatus) {
+    const insights = {
+        highlights: [],      // 良い点（称えるべき）
+        concerns: [],        // 気になる点（改善提案）
+        comparisons: [],     // 過去との比較
+        context: [],         // 文脈的な洞察
+        primaryFocus: null   // 最も重要な1つの洞察
+    };
+    
+    const sportCategory = getSportCategory(activity.sport_type || activity.type);
+    const tss = activity.tss || 0;
+    
+    // ===== 1. ペーシング分析 =====
+    if (streamAnalysis?.paceAnalysis) {
+        const pa = streamAnalysis.paceAnalysis;
+        const splitDiff = parseFloat(pa.splitDiff);
+        
+        if (!isNaN(splitDiff)) {
+            if (splitDiff > 5) {
+                insights.highlights.push({
+                    type: 'negative_split',
+                    message: `後半${Math.abs(splitDiff).toFixed(1)}%ペースアップ（ネガティブスプリット）`,
+                    detail: 'レース本番で活きる理想的なペース配分。余力を残して後半に上げられる自信と体力管理ができている証拠。',
+                    importance: 'high'
+                });
+            } else if (splitDiff < -8) {
+                insights.concerns.push({
+                    type: 'positive_split',
+                    message: `後半${Math.abs(splitDiff).toFixed(1)}%ペースダウン`,
+                    possibleCauses: ['序盤のオーバーペース', 'エネルギー切れ', '暑熱', 'コース地形'],
+                    suggestion: '次回は最初の1-2kmを意識的に抑えてスタートしてみてください',
+                    importance: 'medium'
+                });
+            }
+        }
+        
+        // ペース変動係数
+        const cv = parseFloat(pa.variability);
+        if (!isNaN(cv)) {
+            if (cv < 5) {
+                insights.highlights.push({
+                    type: 'pace_stability',
+                    message: `ペース変動${cv}%と非常に安定`,
+                    detail: '一定ペースを刻む能力が高い。レースでの省エネ走行につながる。',
+                    importance: 'medium'
+                });
+            } else if (cv > 15 && !activity.name?.includes('インターバル')) {
+                insights.concerns.push({
+                    type: 'pace_variability',
+                    message: `ペース変動${cv}%とばらつき大`,
+                    possibleCauses: ['地形', '信号待ち', 'ペース感覚'],
+                    suggestion: 'GPS時計のラップアラートを活用してペース管理を',
+                    importance: 'low'
+                });
+            }
+        }
     }
-
-    return `あなたは経験豊富なトライアスロンコーチであり、運動生理学とパフォーマンスデータ分析の専門家です。
-
-## あなたの役割
-選手のトレーニングデータを深く分析し、**データの表面ではなく、データが示す意味と洞察**を提供すること。
-
-## 絶対に避けること
-- 「今日は○kmを○分で走りました」のような単なるファクトの復唱
-- 「TSS○は中強度です」のような定義の説明
-- 項目ごとに1行ずつの箇条書き
-- 誰にでも言える一般的なアドバイス
-
-## 必ず行うこと
-データから**ストーリー**を読み取り、選手に**気づき**を与える
-
-## 分析の切り口（最も関連性の高い2-3個を選んで深掘り）
-
-### 1. ペーシング分析
-- 前半と後半のペース差は何を意味するか？
-- ペースの変動係数（CV）が高い/低いことの意味
-- 「このペース変動パターンは、○○を示唆しています」
-
-### 2. 心拍-パフォーマンス関係
-- 同じペースでの心拍上昇（心拍ドリフト）→ 脱水？暑熱？グリコーゲン枯渇？
-- 心拍に対してペースが遅い/速い → 調子の良し悪し
-- 「心拍148bpmでこのペースは、あなたの通常より○○」
-
-### 3. 地形との相互作用（標高データがある場合）
-- 登りでのペース低下率、下りでの回復率
-- GAP（勾配調整ペース）と実際のペースの差
-- 「登り区間でペースが○%落ちていますが、これは標準的/要改善」
-
-### 4. スイム技術分析（スイムの場合）
-- ストロークレートとDPS（Distance Per Stroke）の関係
-- DPSが低い → ストローク効率に改善余地
-- ストロークレートが高すぎる → 力みや水感の問題
-- 「DPS ○mは効率的な泳ぎを示しています」
-- DPS 1.0m以下：初級者レベル、キャッチとプル改善が必要
-- DPS 1.0-1.3m：中級者レベル、効率改善の余地あり
-- DPS 1.3-1.6m：上級者レベル、効率的な泳ぎ
-- DPS 1.6m以上：エリートレベル
-
-### 5. ランニングメカニクス（ランの場合）
-- ピッチとストライド長のバランス
-- 理想的なピッチ（180spm前後）との比較
-- ストライドが長すぎ/短すぎの意味
-- 「ストライド長○mとピッチ○spmの組み合わせは○○を示唆」
-- ピッチ180spm以上：効率的なケイデンス
-- ストライド長：速度÷ピッチで計算、1.0-1.4mが一般的
-
-### 6. バイクパワー分析（バイクの場合）
-- NP（Normalized Power）と平均パワーの差
-- VI（Variability Index）= NP/平均パワー
-- VIが高い（1.05以上）→ ペースの乱れ、インターバル的
-- VIが低い（1.02以下）→ 安定したペーシング
-- IF（Intensity Factor）= NP/FTP で強度を評価
-
-### 7. 過去との比較（類似アクティビティがある場合）
-- 同じ距離・同じ強度でのタイム比較
-- 同じペースでの心拍数比較（フィットネス指標）
-- 「前回の類似トレーニングと比較して○○」
-
-### 8. トレーニング文脈
-- CTL/ATL/TSBの状態でこのパフォーマンスの意味
-- 「疲労が溜まっている中でこの走りは○○」
-- 今週の負荷の文脈での位置づけ
-
-## 出力構成
-
-**冒頭**（2-3文）
-最も重要な洞察を1つ。「今日のランで最も注目すべきは○○です」
-
-**分析本文**（3-4段落）
-選んだ切り口での深い分析。なぜそうなったか、何を意味するか。
-
-**アクション**（2-3文）
-具体的に次に何をすべきか。「次回の○○では△△を意識してみてください」
-
-**質問**（任意、1つ）
-より良いアドバイスのために選手に確認したいこと。
-
-## トーン
-- データに裏付けられた自信のある分析
-- でも押し付けがましくなく、選手の判断を尊重
-- 専門用語は使うが、意味がわかるように
-
-## 文字数
-600-900字`;
+    
+    // ===== 2. 心拍ドリフト分析 =====
+    if (streamAnalysis?.heartRateAnalysis) {
+        const hra = streamAnalysis.heartRateAnalysis;
+        const drift = parseFloat(hra.drift);
+        
+        if (!isNaN(drift)) {
+            if (drift > 10) {
+                insights.concerns.push({
+                    type: 'cardiac_drift',
+                    message: `心拍ドリフト${drift.toFixed(1)}%（やや高め）`,
+                    possibleCauses: ['脱水', '暑熱', '有酸素ベース不足'],
+                    suggestion: '水分補給のタイミングを見直すか、ベースビルディング期間を設けることを検討',
+                    importance: drift > 15 ? 'high' : 'medium'
+                });
+            } else if (drift < 3 && activity.moving_time > 2400) {
+                insights.highlights.push({
+                    type: 'cardiac_efficiency',
+                    message: `40分以上で心拍ドリフトわずか${drift.toFixed(1)}%`,
+                    detail: '優れた有酸素ベースを持っている証拠。効率的な心臓血管系が構築されている。',
+                    importance: 'high'
+                });
+            }
+        }
+        
+        // ゾーン分布から強度を判断
+        if (hra.zones) {
+            const z4z5 = (hra.zones.z4 || 0) + (hra.zones.z5 || 0);
+            const z1z2 = (hra.zones.z1 || 0) + (hra.zones.z2 || 0);
+            
+            if (z4z5 > 40) {
+                insights.context.push({
+                    type: 'high_intensity',
+                    message: `高強度ゾーン（Z4-5）が${z4z5}%`,
+                    implication: 'ハードセッション。24-48時間の回復が必要。'
+                });
+            } else if (z1z2 > 80) {
+                insights.context.push({
+                    type: 'recovery_run',
+                    message: `低強度ゾーン（Z1-2）が${z1z2}%`,
+                    implication: '回復走/ベースビルディングとして適切な強度。'
+                });
+            }
+        }
+    }
+    
+    // ===== 3. 種目別の技術分析 =====
+    
+    // スイム: DPS分析
+    if (sportCategory === 'swim' && activity.laps && activity.laps.length > 0) {
+        let totalDPS = 0;
+        let validLaps = 0;
+        
+        activity.laps.forEach(lap => {
+            if (lap.distance > 0 && lap.moving_time >= 10) {
+                let strokes = lap.total_strokes;
+                if (!strokes && lap.average_cadence && lap.moving_time) {
+                    strokes = Math.round(lap.average_cadence * lap.moving_time / 60);
+                }
+                if (strokes && strokes > 0) {
+                    const dps = lap.distance / strokes;
+                    if (dps > 0.5 && dps < 3.0) {
+                        totalDPS += dps;
+                        validLaps++;
+                    }
+                }
+            }
+        });
+        
+        if (validLaps > 0) {
+            const avgDPS = totalDPS / validLaps;
+            
+            if (avgDPS >= 1.5) {
+                insights.highlights.push({
+                    type: 'swim_efficiency',
+                    message: `DPS ${avgDPS.toFixed(2)}m（効率的なストローク）`,
+                    detail: '上級者レベルの水のキャッチと推進力。',
+                    importance: 'high'
+                });
+            } else if (avgDPS < 1.1) {
+                insights.concerns.push({
+                    type: 'swim_efficiency',
+                    message: `DPS ${avgDPS.toFixed(2)}m（改善の余地あり）`,
+                    possibleCauses: ['キャッチの甘さ', 'ストローク長', '水中姿勢'],
+                    suggestion: 'キャッチアップドリルやフィンガーパドルでストローク効率を改善',
+                    importance: 'medium'
+                });
+            }
+        }
+    }
+    
+    // ラン: ピッチ分析
+    if (sportCategory === 'run' && activity.average_cadence) {
+        const pitch = activity.average_cadence * 2;
+        
+        if (pitch >= 180) {
+            insights.highlights.push({
+                type: 'run_cadence',
+                message: `ピッチ${Math.round(pitch)}spm（理想的な回転数）`,
+                detail: '効率的なランニングフォームの指標。接地時間が短く、脚への負担が少ない。',
+                importance: 'medium'
+            });
+        } else if (pitch < 165 && activity.average_speed > 2.5) {
+            insights.concerns.push({
+                type: 'run_cadence',
+                message: `ピッチ${Math.round(pitch)}spm（やや低め）`,
+                possibleCauses: ['オーバーストライド', '接地時間の長さ'],
+                suggestion: 'メトロノームアプリで170-180spmを意識した練習を',
+                importance: 'low'
+            });
+        }
+    }
+    
+    // バイク: VI分析
+    if (sportCategory === 'bike' && activity.average_watts && activity.weighted_average_watts) {
+        const vi = activity.weighted_average_watts / activity.average_watts;
+        
+        if (vi <= 1.03) {
+            insights.highlights.push({
+                type: 'bike_pacing',
+                message: `VI ${vi.toFixed(2)}（非常に安定したペーシング）`,
+                detail: 'TTやトライアスロンに理想的なペース配分。エネルギー効率が高い。',
+                importance: 'high'
+            });
+        } else if (vi > 1.10) {
+            insights.context.push({
+                type: 'bike_variability',
+                message: `VI ${vi.toFixed(2)}（変動の大きいライド）`,
+                implication: 'インターバル/丘陵コース/グループライドの可能性。'
+            });
+        }
+    }
+    
+    // ===== 4. 過去との比較 =====
+    if (similarActivities && similarActivities.length > 0) {
+        const recent = similarActivities[0];
+        
+        // ペース比較
+        if (activity.average_speed && recent.average_speed) {
+            const paceChange = ((activity.average_speed / recent.average_speed) - 1) * 100;
+            
+            if (paceChange > 3) {
+                insights.comparisons.push({
+                    type: 'pace_improvement',
+                    message: `前回の類似セッションより${paceChange.toFixed(1)}%速い`,
+                    importance: 'high'
+                });
+            } else if (paceChange < -5) {
+                insights.comparisons.push({
+                    type: 'pace_slower',
+                    message: `前回より${Math.abs(paceChange).toFixed(1)}%遅い`,
+                    possibleReasons: ['疲労', '気象条件', '意図的なイージー走', 'コンディション'],
+                    importance: 'medium'
+                });
+            }
+        }
+        
+        // 心拍効率の比較（同ペースでの心拍差）
+        if (activity.average_heartrate && recent.average_heartrate && 
+            activity.average_speed && recent.average_speed) {
+            const paceRatio = activity.average_speed / recent.average_speed;
+            if (paceRatio > 0.95 && paceRatio < 1.05) {
+                const hrDiff = activity.average_heartrate - recent.average_heartrate;
+                
+                if (hrDiff < -5) {
+                    insights.highlights.push({
+                        type: 'fitness_gain',
+                        message: `同ペースで心拍${Math.abs(Math.round(hrDiff))}bpm低下`,
+                        detail: 'フィットネス向上の明確な証拠！同じ負荷をより楽にこなせるようになっている。',
+                        importance: 'high'
+                    });
+                } else if (hrDiff > 8) {
+                    insights.concerns.push({
+                        type: 'fitness_signal',
+                        message: `同ペースで心拍${Math.round(hrDiff)}bpm上昇`,
+                        possibleCauses: ['疲労蓄積', '睡眠不足', '体調', '気温上昇'],
+                        suggestion: '体調をチェックし、必要なら回復を優先',
+                        importance: 'medium'
+                    });
+                }
+            }
+        }
+    }
+    
+    // ===== 5. トレーニング文脈 =====
+    if (trainingStatus) {
+        const tsb = trainingStatus.tsb;
+        
+        if (tsb < -25 && tss > 80) {
+            insights.concerns.push({
+                type: 'overreach_risk',
+                message: `TSB ${tsb}の疲労状態でTSS ${tss}のセッション`,
+                possibleCauses: ['オーバーリーチング'],
+                suggestion: '明日は完全休養を強く推奨。体調と睡眠に注意。',
+                importance: 'high'
+            });
+        } else if (tsb > 10 && tss > 100) {
+            insights.highlights.push({
+                type: 'quality_timing',
+                message: `フレッシュな状態（TSB +${tsb}）での高負荷セッション`,
+                detail: '理想的なタイミングでの質の高いトレーニング。適応効果が期待できる。',
+                importance: 'high'
+            });
+        }
+        
+        if (trainingStatus.ctlTrend > 3) {
+            insights.context.push({
+                type: 'fitness_building',
+                message: `CTL週間+${trainingStatus.ctlTrend}でフィットネス構築中`,
+                implication: 'トレーニングが順調に積み上がっている。'
+            });
+        }
+    }
+    
+    // ===== 6. 最も重要な洞察を特定 =====
+    const allInsights = [
+        ...insights.highlights.map(h => ({ ...h, category: 'highlight' })),
+        ...insights.concerns.map(c => ({ ...c, category: 'concern' })),
+        ...insights.comparisons.map(c => ({ ...c, category: 'comparison' }))
+    ];
+    
+    // importanceがhighのものを優先
+    const highImportance = allInsights.filter(i => i.importance === 'high');
+    if (highImportance.length > 0) {
+        insights.primaryFocus = highImportance[0];
+    } else if (allInsights.length > 0) {
+        insights.primaryFocus = allInsights[0];
+    }
+    
+    return insights;
 }
 
-function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion) {
+// ============================================
+// 改善版システムプロンプト（焦点を絞り、動的に調整）
+// ============================================
+function buildSystemPrompt(isQuestion, insights) {
+    if (isQuestion) {
+        return `あなたは経験20年のトライアスロンコーチ。選手の質問に、データを根拠に具体的に回答する。
+
+ルール：
+- 質問に直接答える（前置き不要）
+- データの数値を引用して根拠を示す
+- 「〜してみてください」等の実践的アドバイスで締める
+- 300-400字`;
+    }
+
+    // メインの分析コメント用
+    const hasHighlights = insights.highlights.length > 0;
+    const hasConcerns = insights.concerns.length > 0;
+    const hasComparisons = insights.comparisons.length > 0;
+    
+    // 焦点を動的に調整
+    let focusInstruction = '';
+    if (hasHighlights && !hasConcerns) {
+        focusInstruction = '今回のセッションには称えるべき点があります。具体的に何が良かったのか、なぜそれが重要なのかを伝えてください。';
+    } else if (hasConcerns && !hasHighlights) {
+        focusInstruction = '改善点が見られます。批判ではなく「次はこうしてみよう」という建設的な形で伝えてください。';
+    } else if (hasHighlights && hasConcerns) {
+        focusInstruction = '良い点と改善点の両方があります。まず良い点を認めてから、改善点を建設的に提案してください。';
+    } else if (hasComparisons) {
+        focusInstruction = '過去との比較に注目してください。成長している点、または調子の変化について言及してください。';
+    }
+
+    return `あなたは経験20年のトライアスロンコーチ。選手のトレーニングデータを見て、**数字の復唱ではなく、データが示す意味**を伝える。
+
+## 絶対NG
+- 「今日は○km走りました」のような事実の復唱
+- 「TSS○は中強度です」のような定義説明
+- 箇条書きの羅列
+- 誰にでも言える一般論
+
+## 必須
+- 最も重要な1つの洞察から始める
+- データの数値を根拠として引用
+- 「なぜそうなったか」「何を意味するか」を解説
+- 次のトレーニングへの具体的アクション1つ
+
+${focusInstruction}
+
+## 出力形式
+**冒頭1文**：最も注目すべき点を端的に。
+
+**本文（2-3段落）**：
+- 注目ポイントの詳細解説（データ引用しながら）
+- 選手の成長や課題を文脈で説明
+
+**次のアクション（1-2文）**：
+「次回は○○を意識してみてください」等の具体的提案
+
+## トーン
+- 親しみやすく、でも専門性を感じさせる
+- 褒める時は具体的に、指摘する時は建設的に
+
+## 文字数
+400-600字（日本語）`;
+}
+
+// ============================================
+// 改善版ユーザーメッセージ構築
+// ============================================
+function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, insights) {
     const sportType = activity.sport_type || activity.type;
     const sportName = getSportName(sportType);
     const sportCategory = getSportCategory(sportType);
     const distance = activity.distance ? (activity.distance / 1000).toFixed(2) : 0;
     const durationMin = Math.round((activity.moving_time || activity.elapsed_time || 0) / 60);
     
-    let message = `## アクティビティ基本情報
-- 種目: ${sportName}
-- 日時: ${new Date(activity.start_date).toLocaleString('ja-JP')}
-- 距離: ${distance} km
-- 時間: ${durationMin}分
-- TSS: ${activity.tss || '不明'}
-`;
-
-    // ペース/速度
-    if (activity.average_speed) {
-        message += `- 平均: ${formatPace(activity.average_speed, sportType)}\n`;
+    // ★★★ 注目ポイントを最初に提示（AIが何に焦点を当てるべきか明確に）★★★
+    let message = `## 🎯 このセッションの注目ポイント（事前分析済み）\n\n`;
+    
+    if (insights.primaryFocus) {
+        message += `### 最重要ポイント\n`;
+        message += `**${insights.primaryFocus.message}**\n`;
+        if (insights.primaryFocus.detail) {
+            message += `→ ${insights.primaryFocus.detail}\n`;
+        }
+        message += '\n';
     }
-
-    // 心拍
+    
+    if (insights.highlights.length > 0) {
+        message += `### 良い点\n`;
+        insights.highlights.forEach(h => {
+            message += `- ${h.message}`;
+            if (h.detail) message += `（${h.detail}）`;
+            message += '\n';
+        });
+        message += '\n';
+    }
+    
+    if (insights.concerns.length > 0) {
+        message += `### 改善の余地\n`;
+        insights.concerns.forEach(c => {
+            message += `- ${c.message}`;
+            if (c.suggestion) message += ` → ${c.suggestion}`;
+            message += '\n';
+        });
+        message += '\n';
+    }
+    
+    if (insights.comparisons.length > 0) {
+        message += `### 過去との比較\n`;
+        insights.comparisons.forEach(c => {
+            message += `- ${c.message}\n`;
+        });
+        message += '\n';
+    }
+    
+    if (insights.context.length > 0) {
+        message += `### 文脈\n`;
+        insights.context.forEach(c => {
+            message += `- ${c.message}`;
+            if (c.implication) message += ` → ${c.implication}`;
+            message += '\n';
+        });
+        message += '\n';
+    }
+    
+    // セッション基本データ
+    message += `---\n## 📊 セッションデータ\n`;
+    message += `- 種目: ${sportName} / 日時: ${new Date(activity.start_date).toLocaleString('ja-JP')}\n`;
+    message += `- 距離: ${distance}km / 時間: ${durationMin}分`;
+    if (activity.tss) message += ` / TSS: ${activity.tss}`;
+    message += '\n';
+    
+    if (activity.average_speed) {
+        message += `- ペース: ${formatPace(activity.average_speed, sportType)}`;
+    }
     if (activity.average_heartrate) {
-        message += `- 平均心拍: ${Math.round(activity.average_heartrate)} bpm`;
-        if (activity.max_heartrate) {
-            message += ` / 最大: ${Math.round(activity.max_heartrate)} bpm`;
+        message += ` / 心拍: 平均${Math.round(activity.average_heartrate)}bpm`;
+        if (activity.max_heartrate) message += `・最大${Math.round(activity.max_heartrate)}bpm`;
+    }
+    message += '\n';
+
+    // 種目別メトリクス
+    if (sportCategory === 'bike' && activity.average_watts) {
+        message += `- パワー: ${Math.round(activity.average_watts)}W`;
+        if (activity.weighted_average_watts) {
+            message += ` / NP: ${Math.round(activity.weighted_average_watts)}W`;
+            const vi = (activity.weighted_average_watts / activity.average_watts).toFixed(2);
+            message += ` / VI: ${vi}`;
+        }
+        message += '\n';
+    }
+    
+    if (sportCategory === 'run' && activity.average_cadence) {
+        const pitch = Math.round(activity.average_cadence * 2);
+        message += `- ピッチ: ${pitch}spm`;
+        if (activity.average_speed) {
+            const stride = (activity.average_speed * 60 / pitch).toFixed(2);
+            message += ` / ストライド: ${stride}m`;
         }
         message += '\n';
     }
 
-    // バイク: パワーメトリクス
-    if (sportCategory === 'bike') {
-        if (activity.average_watts) {
-            message += `- 平均パワー: ${Math.round(activity.average_watts)} W\n`;
-        }
-        if (activity.weighted_average_watts) {
-            message += `- NP (Normalized Power): ${Math.round(activity.weighted_average_watts)} W\n`;
-        }
-        if (activity.average_watts && activity.weighted_average_watts) {
-            const vi = (activity.weighted_average_watts / activity.average_watts).toFixed(2);
-            message += `- VI (Variability Index): ${vi}\n`;
-        }
-        if (activity.average_cadence) {
-            message += `- 平均ケイデンス: ${Math.round(activity.average_cadence)} rpm\n`;
+    if (activity.total_elevation_gain > 20) {
+        message += `- 獲得標高: ${Math.round(activity.total_elevation_gain)}m\n`;
+    }
+    
+    // ペーシング詳細
+    if (streamAnalysis?.paceAnalysis) {
+        const pa = streamAnalysis.paceAnalysis;
+        message += `\n### ペーシング\n`;
+        message += `前半 ${pa.firstHalfPace} → 後半 ${pa.secondHalfPace}（${pa.splitType}、差${pa.splitDiff}）\n`;
+        if (pa.variability) message += `変動係数: ${pa.variability}%\n`;
+    }
+    
+    // 心拍詳細
+    if (streamAnalysis?.heartRateAnalysis) {
+        const hra = streamAnalysis.heartRateAnalysis;
+        message += `\n### 心拍\n`;
+        if (hra.drift) message += `ドリフト: ${hra.drift > 0 ? '+' : ''}${hra.drift}%\n`;
+        if (hra.zones) {
+            message += `Zone分布: Z1=${hra.zones.z1}% Z2=${hra.zones.z2}% Z3=${hra.zones.z3}% Z4=${hra.zones.z4}% Z5=${hra.zones.z5}%\n`;
         }
     }
-
-    // ラン: ピッチとストライド
-    if (sportCategory === 'run') {
-        if (activity.average_cadence) {
-            const pitch = Math.round(activity.average_cadence * 2);
-            message += `- 平均ピッチ: ${pitch} spm\n`;
-            
-            // ストライド長を計算
-            if (activity.average_speed) {
-                const speedMPerMin = activity.average_speed * 60;
-                const stride = (speedMPerMin / pitch).toFixed(2);
-                message += `- 平均ストライド長: ${stride} m\n`;
-            }
-        }
-    }
-
-    // スイム: ストロークメトリクス
-    if (sportCategory === 'swim') {
-        if (activity.average_cadence) {
-            message += `- 平均ストロークレート: ${Math.round(activity.average_cadence)} spm\n`;
-        }
-        // DPSはラップデータから計算される場合がある
-    }
-
-    // 標高
-    if (activity.total_elevation_gain && activity.total_elevation_gain > 20) {
-        message += `- 獲得標高: ${Math.round(activity.total_elevation_gain)} m\n`;
-    }
-
-    // ストリーム分析データ（詳細な統計情報）
-    if (streamAnalysis) {
-        message += `\n## パフォーマンス分析データ\n`;
-        
-        if (streamAnalysis.paceAnalysis) {
-            const pa = streamAnalysis.paceAnalysis;
-            message += `### ペーシング\n`;
-            message += `- 前半ペース: ${pa.firstHalfPace}\n`;
-            message += `- 後半ペース: ${pa.secondHalfPace}\n`;
-            message += `- スプリット: ${pa.splitType}（差: ${pa.splitDiff}）\n`;
-            if (pa.variability) {
-                message += `- ペース変動係数: ${pa.variability}%\n`;
-            }
-            if (pa.slowestSection && pa.fastestSection) {
-                message += `- 最速区間: ${pa.fastestSection}\n`;
-                message += `- 最遅区間: ${pa.slowestSection}\n`;
-            }
-        }
-        
-        if (streamAnalysis.heartRateAnalysis) {
-            const hra = streamAnalysis.heartRateAnalysis;
-            message += `### 心拍分析\n`;
-            if (hra.drift !== undefined) {
-                message += `- 心拍ドリフト: ${hra.drift > 0 ? '+' : ''}${hra.drift}%（前半→後半）\n`;
-            }
-            if (hra.zones) {
-                message += `- Zone分布: Z1=${hra.zones.z1}%, Z2=${hra.zones.z2}%, Z3=${hra.zones.z3}%, Z4=${hra.zones.z4}%, Z5=${hra.zones.z5}%\n`;
-            }
-            if (hra.efficiency) {
-                message += `- 心拍効率: ${hra.efficiency}（ペースあたりの心拍コスト）\n`;
-            }
-        }
-        
-        if (streamAnalysis.elevationAnalysis) {
-            const ea = streamAnalysis.elevationAnalysis;
-            message += `### 地形分析\n`;
-            if (ea.climbingPaceLoss) {
-                message += `- 登りでのペース低下: ${ea.climbingPaceLoss}%\n`;
-            }
-            if (ea.gradeAdjustedPace) {
-                message += `- 勾配調整ペース (GAP): ${ea.gradeAdjustedPace}\n`;
-            }
-        }
-
-        // スイム用のストローク分析
-        if (streamAnalysis.swimAnalysis) {
-            const sa = streamAnalysis.swimAnalysis;
-            message += `### スイム技術分析\n`;
-            if (sa.avgStrokeRate) {
-                message += `- 平均ストロークレート: ${sa.avgStrokeRate} spm\n`;
-            }
-            if (sa.avgDPS) {
-                message += `- 平均DPS (Distance Per Stroke): ${sa.avgDPS} m\n`;
-            }
-            if (sa.strokeCount) {
-                message += `- 総ストローク数: ${sa.strokeCount}\n`;
-            }
-        }
-    }
-
-    // 過去の類似アクティビティとの比較
-    if (similarActivities && similarActivities.length > 0) {
-        message += `\n## 過去の類似トレーニングとの比較\n`;
-        similarActivities.slice(0, 3).forEach((sim, i) => {
-            const simDate = new Date(sim.start_date).toLocaleDateString('ja-JP');
-            const simPace = formatPace(sim.average_speed, sportType);
-            const simHr = sim.average_heartrate ? Math.round(sim.average_heartrate) : '-';
-            message += `${i + 1}. ${simDate}: ${(sim.distance/1000).toFixed(1)}km, ${simPace}, HR ${simHr}bpm\n`;
-        });
-        
-        // 比較分析
-        const latest = similarActivities[0];
-        if (latest && activity.average_speed && latest.average_speed) {
-            const paceChange = ((activity.average_speed / latest.average_speed) - 1) * 100;
-            message += `→ 直近の類似トレーニングと比較: ペース${paceChange > 0 ? '+' : ''}${paceChange.toFixed(1)}%\n`;
-        }
-    }
-
+    
     // トレーニングステータス
     if (trainingStatus) {
-        message += `\n## 現在のトレーニングステータス\n`;
-        message += `- CTL (フィットネス): ${trainingStatus.ctl}\n`;
-        message += `- ATL (疲労): ${trainingStatus.atl}\n`;
-        message += `- TSB (フォーム): ${trainingStatus.tsb}\n`;
-        
-        if (trainingStatus.ctlTrend !== undefined) {
-            const trend = trainingStatus.ctlTrend > 0 ? '上昇中' : trainingStatus.ctlTrend < 0 ? '低下中' : '横ばい';
-            message += `- 7日間のCTL変化: ${trainingStatus.ctlTrend > 0 ? '+' : ''}${trainingStatus.ctlTrend}（${trend}）\n`;
+        message += `\n### コンディション\n`;
+        message += `CTL: ${trainingStatus.ctl} / ATL: ${trainingStatus.atl} / TSB: ${trainingStatus.tsb}`;
+        if (trainingStatus.ctlTrend) {
+            message += ` / 週間CTL変化: ${trainingStatus.ctlTrend > 0 ? '+' : ''}${trainingStatus.ctlTrend}`;
         }
+        message += '\n';
+    }
+    
+    // 類似セッション比較
+    if (similarActivities && similarActivities.length > 0) {
+        message += `\n### 類似トレーニング比較\n`;
+        similarActivities.slice(0, 2).forEach((sim, i) => {
+            const simDate = new Date(sim.start_date).toLocaleDateString('ja-JP');
+            const simPace = formatPace(sim.average_speed, sportType);
+            const simHr = sim.average_heartrate ? Math.round(sim.average_heartrate) + 'bpm' : '-';
+            message += `${i + 1}. ${simDate}: ${(sim.distance/1000).toFixed(1)}km, ${simPace}, HR ${simHr}\n`;
+        });
     }
 
-    // Lapデータがある場合
-    if (activity.laps && activity.laps.length > 1) {
-        message += `\n## Lap詳細\n`;
-        
-        if (sportCategory === 'swim') {
-            // スイムのラップ（RESTを除いた泳ぎラップのみ）
-            const swimLaps = activity.laps.filter(lap => {
-                const movingTime = lap.moving_time || 0;
-                return movingTime >= 10 && lap.distance > 0;
-            });
-            
-            swimLaps.slice(0, 10).forEach((lap, i) => {
+    // スイム用Lapサマリー
+    if (sportCategory === 'swim' && activity.laps && activity.laps.length > 1) {
+        const swimLaps = activity.laps.filter(lap => lap.moving_time >= 10 && lap.distance > 0);
+        if (swimLaps.length > 0) {
+            message += `\n### Lap詳細（上位5本）\n`;
+            swimLaps.slice(0, 5).forEach((lap, i) => {
                 const lapPace = formatPace(lap.average_speed, sportType);
-                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
-                const strokeRate = lap.average_cadence ? Math.round(lap.average_cadence) : '-';
-                
-                // ストローク数とDPSを計算
                 let strokes = lap.total_strokes;
                 if (!strokes && lap.average_cadence && lap.moving_time) {
                     strokes = Math.round(lap.average_cadence * lap.moving_time / 60);
                 }
                 const dps = strokes && lap.distance > 0 ? (lap.distance / strokes).toFixed(2) : '-';
-                
-                message += `Lap ${i + 1}: ${Math.round(lap.distance)}m, ${lapPace}, HR ${lapHr}bpm, Rate ${strokeRate}spm, DPS ${dps}m\n`;
-            });
-        } else if (sportCategory === 'run') {
-            // ランのラップ
-            activity.laps.slice(0, 10).forEach((lap, i) => {
-                const lapPace = formatPace(lap.average_speed, sportType);
-                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
-                
-                // ピッチとストライド
-                let pitchStr = '-';
-                let strideStr = '-';
-                if (lap.average_cadence) {
-                    const pitch = Math.round(lap.average_cadence * 2);
-                    pitchStr = pitch + 'spm';
-                    if (lap.average_speed && lap.moving_time) {
-                        const speedMPerMin = lap.average_speed * 60;
-                        const stride = (speedMPerMin / pitch).toFixed(2);
-                        strideStr = stride + 'm';
-                    }
-                }
-                
-                message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm, Pitch ${pitchStr}, Stride ${strideStr}\n`;
-            });
-        } else {
-            // バイク等
-            activity.laps.slice(0, 10).forEach((lap, i) => {
-                const lapPace = formatPace(lap.average_speed, sportType);
-                const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
-                const lapPower = lap.average_watts ? Math.round(lap.average_watts) + 'W' : '-';
-                message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm, Power ${lapPower}\n`;
+                message += `Lap${i+1}: ${Math.round(lap.distance)}m ${lapPace}, DPS ${dps}m\n`;
             });
         }
     }
-
-    // 質問がある場合
+    
+    // 質問または指示
     if (userQuestion) {
-        message += `\n---\n## 選手からの質問\n${userQuestion}\n\nこの質問に対して、上記データを踏まえて具体的に回答してください。`;
+        message += `\n---\n## ❓ 選手からの質問\n${userQuestion}\n\nこの質問に、上記データを根拠に具体的に回答してください。`;
     } else {
-        message += `\n---\n上記データを分析し、最も重要な洞察とアクションを提供してください。`;
+        message += `\n---\n**指示**: 「注目ポイント」を中心に、このセッションの意味と次のアクションを伝えてください。事前分析の内容をそのまま使うのではなく、あなたの言葉で選手に語りかけてください。`;
     }
 
     return message;
 }
 
+// ============================================
+// ユーティリティ関数
+// ============================================
 function getSportName(sportType) {
     const names = {
-        'Run': 'ランニング',
-        'TrailRun': 'トレイルラン',
-        'VirtualRun': 'トレッドミル',
-        'Ride': 'バイク',
-        'VirtualRide': 'インドアバイク',
-        'EBikeRide': 'E-Bike',
-        'Swim': 'スイム',
-        'WeightTraining': 'ウェイト',
-        'Yoga': 'ヨガ',
-        'Workout': 'ワークアウト'
+        'Run': 'ランニング', 'TrailRun': 'トレイルラン', 'VirtualRun': 'トレッドミル',
+        'Ride': 'バイク', 'VirtualRide': 'インドアバイク', 'EBikeRide': 'E-Bike',
+        'Swim': 'スイム', 'WeightTraining': 'ウェイト', 'Yoga': 'ヨガ', 'Workout': 'ワークアウト'
     };
     return names[sportType] || sportType;
 }
 
 function getSportCategory(sportType) {
-    const swim = ['Swim'];
-    const bike = ['Ride', 'VirtualRide', 'EBikeRide'];
-    const run = ['Run', 'TrailRun', 'VirtualRun'];
-    
-    if (swim.includes(sportType)) return 'swim';
-    if (bike.includes(sportType)) return 'bike';
-    if (run.includes(sportType)) return 'run';
+    if (['Swim'].includes(sportType)) return 'swim';
+    if (['Ride', 'VirtualRide', 'EBikeRide'].includes(sportType)) return 'bike';
+    if (['Run', 'TrailRun', 'VirtualRun'].includes(sportType)) return 'run';
     return 'other';
 }
 
@@ -489,8 +695,8 @@ function formatPace(avgSpeed, sportType) {
         const min = Math.floor(pace / 60);
         const sec = Math.round(pace % 60);
         return `${min}:${String(sec).padStart(2, '0')}/100m`;
-    } else if (sportType.includes('Ride')) {
-        return `${(avgSpeed * 3.6).toFixed(1)} km/h`;
+    } else if (sportType && sportType.includes('Ride')) {
+        return `${(avgSpeed * 3.6).toFixed(1)}km/h`;
     } else {
         const pace = 1000 / avgSpeed;
         const min = Math.floor(pace / 60);

@@ -1209,11 +1209,15 @@
             const distanceData = streamData.distance?.data;
             const timeData = streamData.time?.data || velData.map((_, i) => i);
             
+            // 速度の閾値を設定（停止や歩行を除外）
+            const minVelocity = getMinVelocityThreshold(sportCategory);
+            
             const maxPoints = 500;
             const step = Math.max(1, Math.floor(velData.length / maxPoints));
             
             const labels = [];
             const data = [];
+            const rawPaceValues = []; // Y軸範囲計算用
             
             for (let i = 0; i < velData.length; i += step) {
                 if (distanceData) {
@@ -1222,14 +1226,26 @@
                     labels.push(formatDurationShort(timeData[i]));
                 }
                 
+                const vel = velData[i];
+                
                 if (sportCategory === 'bike') {
-                    data.push(velData[i] * 3.6); // km/h
+                    const speed = vel * 3.6; // km/h
+                    data.push(speed);
+                    if (vel >= minVelocity) rawPaceValues.push(speed);
                 } else if (sportCategory === 'swim') {
-                    data.push(velData[i] > 0 ? 100 / velData[i] : 0); // sec/100m
+                    const pace = vel > 0 ? 100 / vel : null; // sec/100m
+                    data.push(pace);
+                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
                 } else {
-                    data.push(velData[i] > 0 ? 1000 / velData[i] / 60 : 0); // min/km
+                    // ラン: min/km
+                    const pace = vel > 0 ? 1000 / vel / 60 : null;
+                    data.push(pace);
+                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
                 }
             }
+            
+            // Y軸の範囲を計算（外れ値を除外）
+            const yAxisRange = calculateYAxisRange(rawPaceValues, sportCategory);
             
             const yLabel = sportCategory === 'bike' ? 'km/h' : sportCategory === 'swim' ? 'sec/100m' : 'min/km';
             
@@ -1244,7 +1260,8 @@
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
                         tension: 0.3,
-                        pointRadius: 0
+                        pointRadius: 0,
+                        spanGaps: true // null値をスキップして線を繋ぐ
                     }]
                 },
                 options: {
@@ -1255,11 +1272,105 @@
                         x: { title: { display: true, text: distanceData ? '距離 (km)' : '時間' } },
                         y: { 
                             title: { display: true, text: yLabel },
-                            reverse: sportCategory !== 'bike' // ペースは逆順
+                            reverse: sportCategory !== 'bike', // ペースは逆順（速いほど上）
+                            min: yAxisRange.min,
+                            max: yAxisRange.max,
+                            ticks: {
+                                callback: function(value) {
+                                    if (sportCategory === 'bike') {
+                                        return value.toFixed(0);
+                                    } else {
+                                        // ペースをmm:ss形式で表示
+                                        const min = Math.floor(value);
+                                        const sec = Math.round((value - min) * 60);
+                                        return `${min}:${String(sec).padStart(2, '0')}`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    if (value === null) return '停止中';
+                                    if (sportCategory === 'bike') {
+                                        return `速度: ${value.toFixed(1)} km/h`;
+                                    } else {
+                                        const min = Math.floor(value);
+                                        const sec = Math.round((value - min) * 60);
+                                        return `ペース: ${min}:${String(sec).padStart(2, '0')} ${sportCategory === 'swim' ? '/100m' : '/km'}`;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             });
+        }
+        
+        // 種目別の最小速度閾値（これ以下は停止/歩行とみなす）
+        function getMinVelocityThreshold(sportCategory) {
+            switch (sportCategory) {
+                case 'bike':
+                    return 3.0; // 10.8 km/h 以下は除外
+                case 'run':
+                    return 1.5; // 5.4 km/h (約11:00/km) 以下は除外
+                case 'swim':
+                    return 0.3; // 3:20/100m より遅いものは除外
+                default:
+                    return 1.0;
+            }
+        }
+        
+        // Y軸の範囲をパーセンタイルベースで計算
+        function calculateYAxisRange(values, sportCategory) {
+            if (values.length === 0) {
+                return { min: undefined, max: undefined };
+            }
+            
+            // ソートしてパーセンタイルを計算
+            const sorted = [...values].sort((a, b) => a - b);
+            const p5 = sorted[Math.floor(sorted.length * 0.05)];
+            const p95 = sorted[Math.floor(sorted.length * 0.95)];
+            const median = sorted[Math.floor(sorted.length * 0.5)];
+            
+            // 範囲を計算（パーセンタイルを基準に少し余裕を持たせる）
+            const range = p95 - p5;
+            const padding = range * 0.15; // 15%の余白
+            
+            if (sportCategory === 'bike') {
+                // 速度の場合：速いほど上なので通常のmin/max
+                return {
+                    min: Math.max(0, Math.floor(p5 - padding)),
+                    max: Math.ceil(p95 + padding)
+                };
+            } else {
+                // ペースの場合：遅いほど数値が大きい（グラフは反転するのでminが速い、maxが遅い）
+                // より細かいペース変動が見えるように範囲を狭める
+                const minPace = Math.max(0, p5 - padding * 0.5); // 速い側（数値小さい）
+                const maxPace = p95 + padding * 0.5; // 遅い側（数値大きい）
+                
+                // ランの場合、表示範囲を適切に制限（例：3:00〜8:00/km程度に収める）
+                if (sportCategory === 'run') {
+                    return {
+                        min: Math.max(2.5, minPace), // 最速でも2:30/km
+                        max: Math.min(10, maxPace)   // 最遅でも10:00/km
+                    };
+                } else if (sportCategory === 'swim') {
+                    return {
+                        min: Math.max(60, minPace),  // 最速でも1:00/100m
+                        max: Math.min(180, maxPace)  // 最遅でも3:00/100m
+                    };
+                }
+                
+                return { min: minPace, max: maxPace };
+            }
         }
         
         function renderSportSpecificCharts() {
@@ -1478,25 +1589,78 @@
         
         function generateFallbackComment() {
             const sportType = currentActivity.sport_type || currentActivity.type;
+            const sportCategory = getSportCategory(sportType);
             const distance = currentActivity.distance ? (currentActivity.distance / 1000).toFixed(1) : '0';
             const tss = currentActivity.tss || 0;
+            const avgHr = currentActivity.average_heartrate;
+            const duration = (currentActivity.moving_time || 0) / 60;
             
-            let comment = `お疲れさまでした！${distance}kmの${getSportLabel(sportType)}トレーニングを完了しましたね。`;
+            let comment = `🏃 **セッション総評**\n`;
+            comment += `${distance}kmの${getSportLabel(sportType)}トレーニング、お疲れさまでした！`;
             
-            if (tss > 150) {
-                comment += `\n\nTSS ${tss}はかなりハードなセッションです。今日・明日はしっかり回復に充てることをお勧めします。`;
-            } else if (tss > 80) {
-                comment += `\n\nTSS ${tss}は適度な負荷のトレーニングでした。明日は軽めのリカバリーセッションが良いでしょう。`;
-            } else {
-                comment += `\n\nTSS ${tss}は低強度のセッションでした。回復しながらフィットネスを維持できる良いトレーニングです。`;
+            // 時間に基づくコメント
+            if (duration > 120) {
+                comment += `${Math.round(duration)}分という長時間のセッションをやり遂げたことは素晴らしいです。`;
+            } else if (duration > 60) {
+                comment += `1時間以上のしっかりとしたトレーニングでしたね。`;
             }
             
+            // TSS基づく強度評価
+            comment += `\n\n💪 **強度と効果**\n`;
+            if (tss > 150) {
+                comment += `TSS ${tss}は高強度セッションです。心肺機能と乳酸閾値の向上に大きく貢献するトレーニングでした。`;
+            } else if (tss > 80) {
+                comment += `TSS ${tss}は適度な負荷で、有酸素ベースの構築に効果的なセッションでした。`;
+            } else {
+                comment += `TSS ${tss}は低〜中強度で、回復を促しながらフィットネスを維持する良いセッションでした。`;
+            }
+            
+            // 心拍数に基づくコメント
+            if (avgHr) {
+                const hr = Math.round(avgHr);
+                comment += `\n\n💓 **心拍分析**\n`;
+                if (hr < 140) {
+                    comment += `平均心拍${hr}bpmは有酸素ゾーン（Zone 1-2）でのトレーニングです。ミトコンドリアの増加と脂肪燃焼効率の向上が期待できます。`;
+                } else if (hr < 160) {
+                    comment += `平均心拍${hr}bpmは中強度ゾーン（Zone 3）付近です。持久力の基盤構築と乳酸処理能力の向上に効果的です。`;
+                } else {
+                    comment += `平均心拍${hr}bpmは高強度ゾーン（Zone 4-5）です。VO2maxの向上と高強度への耐性構築に貢献します。`;
+                }
+            }
+            
+            // 種目別コメント
+            comment += `\n\n🎯 **種目別ポイント**\n`;
+            if (sportCategory === 'swim') {
+                comment += `スイムは全身の筋群を使用し、関節への負担が少ない状態で心肺機能を向上させる優れたトレーニングです。`;
+            } else if (sportCategory === 'bike') {
+                comment += `バイクトレーニングは下肢の筋持久力と心血管系の強化に優れています。ペダリング効率を意識することで、さらに効果が高まります。`;
+            } else if (sportCategory === 'run') {
+                comment += `ランニングは骨密度の向上と下肢筋力の強化に効果的です。着地衝撃による適応は、骨格系の強化にもつながります。`;
+            }
+            
+            // 回復アドバイス
+            comment += `\n\n🔄 **リカバリーと次のステップ**\n`;
+            if (tss > 150) {
+                comment += `このセッション後は24-48時間の回復を推奨します。明日は完全休養か、軽いリカバリースイム/ウォーキングにとどめましょう。`;
+            } else if (tss > 80) {
+                comment += `明日は軽めのリカバリーセッションが良いでしょう。Zone 1-2での30-45分程度の軽い運動で血流を促進しましょう。`;
+            } else {
+                comment += `明日も通常通りトレーニングを継続できます。質の高いセッションに挑戦するのも良いタイミングです。`;
+            }
+            
+            // トレーニングステータスに基づくコメント
             if (trainingStatus) {
-                comment += `\n\n現在のForm（TSB）は${trainingStatus.tsb}です。`;
+                comment += `\n\n📈 **コンディション状況**\n`;
+                comment += `現在のFitness（CTL）は${trainingStatus.ctl}、Form（TSB）は${trainingStatus.tsb}です。`;
+                
                 if (trainingStatus.tsb < -20) {
-                    comment += '疲労が蓄積しています。休息日を入れることを検討してください。';
+                    comment += `疲労が蓄積しています。1-2日の休息を入れて、オーバートレーニングを防ぎましょう。`;
+                } else if (trainingStatus.tsb < -10) {
+                    comment += `適度な負荷状態です。このままトレーニングを継続しつつ、回復にも気を配りましょう。`;
                 } else if (trainingStatus.tsb > 15) {
-                    comment += 'フレッシュな状態です。質の高いトレーニングに挑戦できるタイミングです。';
+                    comment += `フレッシュな状態です！質の高いキーワークアウトに挑戦する絶好のタイミングです。`;
+                } else {
+                    comment += `バランスの取れた状態です。計画通りのトレーニングを継続しましょう。`;
                 }
             }
             

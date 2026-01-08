@@ -267,6 +267,72 @@
             height: 180px;
         }
         
+        .chart-container.wide {
+            height: 300px;
+            width: 100%;
+        }
+        
+        /* タブボタン */
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .chart-tab-content {
+            width: 100%;
+        }
+        
+        .sport-metrics-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .sport-metric-item {
+            background: #f3f4f6;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .sport-metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .sport-metric-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        
         /* Zone分布 */
         .zone-summary {
             display: grid;
@@ -700,57 +766,40 @@
                     </div>
                 </div>
                 
-                <!-- 心拍数・ペース時系列グラフ -->
-                <div class="detail-grid">
+                <!-- 時系列グラフ（タブ切り替え） -->
+                <div class="detail-grid full-width">
                     <div class="panel">
                         <div class="panel-header">
-                            <h2 class="panel-title">💓 心拍数推移</h2>
+                            <h2 class="panel-title">📈 時系列データ</h2>
+                            <div class="tab-buttons" id="chartTabs">
+                                <button class="tab-btn active" data-tab="hr">💓 心拍数</button>
+                                <button class="tab-btn" data-tab="pace">⏱️ ペース</button>
+                                <button class="tab-btn" data-tab="cadence" id="cadenceTab" style="display: none;">🔄 ケイデンス</button>
+                                <button class="tab-btn" data-tab="power" id="powerTab" style="display: none;">⚡ パワー</button>
+                            </div>
                         </div>
                         <div class="panel-content">
-                            <div class="chart-container">
-                                <canvas id="hrChart"></canvas>
+                            <div class="chart-tab-content" id="hrTabContent">
+                                <div class="chart-container wide">
+                                    <canvas id="hrChart"></canvas>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2 class="panel-title" id="paceChartTitle">⏱️ ペース推移</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div class="chart-container">
-                                <canvas id="paceChart"></canvas>
+                            <div class="chart-tab-content" id="paceTabContent" style="display: none;">
+                                <div class="chart-container wide">
+                                    <canvas id="paceChart"></canvas>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 種目別メトリクス（バイク:パワー/ケイデンス、ラン:ピッチ/ストライド） -->
-                <div class="detail-grid" id="sportSpecificSection" style="display: none;">
-                    <div class="panel" id="powerPanel" style="display: none;">
-                        <div class="panel-header">
-                            <h2 class="panel-title">⚡ パワー推移</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div class="sport-specific-row" id="powerMetrics">
-                                <!-- 動的に生成 -->
+                            <div class="chart-tab-content" id="cadenceTabContent" style="display: none;">
+                                <div class="sport-metrics-row" id="cadenceMetrics"></div>
+                                <div class="chart-container wide">
+                                    <canvas id="cadenceChart"></canvas>
+                                </div>
                             </div>
-                            <div class="chart-container" style="margin-top: 16px;">
-                                <canvas id="powerChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="panel" id="cadencePanel" style="display: none;">
-                        <div class="panel-header">
-                            <h2 class="panel-title" id="cadenceTitle">🔄 ケイデンス推移</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div class="sport-specific-row" id="cadenceMetrics">
-                                <!-- 動的に生成 -->
-                            </div>
-                            <div class="chart-container" style="margin-top: 16px;">
-                                <canvas id="cadenceChart"></canvas>
+                            <div class="chart-tab-content" id="powerTabContent" style="display: none;">
+                                <div class="sport-metrics-row" id="powerMetrics"></div>
+                                <div class="chart-container wide">
+                                    <canvas id="powerChart"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1023,10 +1072,64 @@
         function renderCharts() {
             renderMap();
             renderZoneChart();
+            setupChartTabs();
             renderHeartRateChart();
             renderPaceChart();
             renderSportSpecificCharts();
             renderLapTable();
+        }
+        
+        function setupChartTabs() {
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
+            
+            // バイクの場合はペースタブを「速度」に変更
+            const paceTabBtn = document.querySelector('.tab-btn[data-tab="pace"]');
+            if (sportCategory === 'bike' && paceTabBtn) {
+                paceTabBtn.textContent = '🚴 速度';
+            }
+            
+            // 種目別タブの表示制御
+            if (sportCategory === 'bike') {
+                document.getElementById('cadenceTab').style.display = 'inline-block';
+                document.getElementById('cadenceTab').textContent = '🔄 ケイデンス';
+                if (currentActivity.average_watts || (streamData && streamData.watts)) {
+                    document.getElementById('powerTab').style.display = 'inline-block';
+                }
+            } else if (sportCategory === 'run') {
+                if (currentActivity.average_cadence || (streamData && streamData.cadence)) {
+                    document.getElementById('cadenceTab').style.display = 'inline-block';
+                    document.getElementById('cadenceTab').textContent = '👟 ピッチ';
+                }
+            }
+            
+            // タブクリックイベント
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tabId = e.target.dataset.tab;
+                    switchChartTab(tabId);
+                });
+            });
+        }
+        
+        function switchChartTab(tabId) {
+            // タブボタンのアクティブ状態を更新
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // タブコンテンツの表示を切り替え
+            document.querySelectorAll('.chart-tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`${tabId}TabContent`).style.display = 'block';
+            
+            // グラフのリサイズをトリガー（表示後に描画を更新）
+            if (charts[tabId]) {
+                charts[tabId].resize();
+            }
         }
         
         function renderMap() {
@@ -1040,19 +1143,40 @@
             const coords = streamData.latlng.data;
             
             map = L.map('routeMap');
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            
+            // CartoDB Positron - 薄いグレー系でルートが見やすい
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                maxZoom: 19,
+                subdomains: 'abcd'
             }).addTo(map);
             
-            const polyline = L.polyline(coords, { color: '#667eea', weight: 4, opacity: 0.8 }).addTo(map);
-            map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+            // ルートラインのスタイル
+            const polyline = L.polyline(coords, { 
+                color: '#667eea', 
+                weight: 5, 
+                opacity: 0.9,
+                lineJoin: 'round'
+            }).addTo(map);
+            
+            map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
             
             // スタート・ゴールマーカー
-            const startIcon = L.divIcon({ className: 'start-marker', html: '🟢', iconSize: [24, 24] });
-            const endIcon = L.divIcon({ className: 'end-marker', html: '🏁', iconSize: [24, 24] });
+            const startIcon = L.divIcon({ 
+                className: 'custom-marker', 
+                html: '<div style="background: #22c55e; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            const endIcon = L.divIcon({ 
+                className: 'custom-marker', 
+                html: '<div style="background: #ef4444; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
             
-            L.marker(coords[0], { icon: startIcon }).addTo(map);
-            L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map);
+            L.marker(coords[0], { icon: startIcon }).addTo(map).bindPopup('スタート');
+            L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map).bindPopup('ゴール');
         }
         
         function renderZoneChart() {
@@ -1144,6 +1268,7 @@
                 return;
             }
             
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
             const hrData = streamData.heartrate.data;
             const timeData = streamData.time?.data || hrData.map((_, i) => i);
             const distanceData = streamData.distance?.data;
@@ -1157,7 +1282,12 @@
             
             for (let i = 0; i < hrData.length; i += step) {
                 if (distanceData) {
-                    labels.push((distanceData[i] / 1000).toFixed(1));
+                    // スイムはm単位、それ以外はkm単位
+                    if (sportCategory === 'swim') {
+                        labels.push(Math.round(distanceData[i]));
+                    } else {
+                        labels.push((distanceData[i] / 1000).toFixed(1));
+                    }
                 } else {
                     labels.push(formatDurationShort(timeData[i]));
                 }
@@ -1172,9 +1302,9 @@
                         label: '心拍数',
                         data: data,
                         borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        fill: true,
-                        tension: 0.3,
+                        borderWidth: 1.5,
+                        fill: false,
+                        tension: 0.2,
                         pointRadius: 0
                     }]
                 },
@@ -1183,8 +1313,29 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { title: { display: true, text: distanceData ? '距離 (km)' : '時間' } },
+                        x: { 
+                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
+                            ticks: {
+                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    // スイムは200mおきに表示
+                                    if (sportCategory === 'swim' && distanceData) {
+                                        const dist = parseFloat(label);
+                                        if (dist % 200 === 0 || index === 0) {
+                                            return label;
+                                        }
+                                        return '';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
                         y: { title: { display: true, text: 'bpm' } }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
                 }
             });
@@ -1195,10 +1346,6 @@
             if (charts.pace) charts.pace.destroy();
             
             const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            if (sportCategory === 'bike') {
-                document.getElementById('paceChartTitle').textContent = '🚴 速度推移';
-            }
             
             if (!streamData || !streamData.velocity_smooth || !streamData.velocity_smooth.data) {
                 ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">ペース/速度データがありません</div>';
@@ -1221,7 +1368,12 @@
             
             for (let i = 0; i < velData.length; i += step) {
                 if (distanceData) {
-                    labels.push((distanceData[i] / 1000).toFixed(1));
+                    // スイムはm単位、それ以外はkm単位
+                    if (sportCategory === 'swim') {
+                        labels.push(Math.round(distanceData[i]));
+                    } else {
+                        labels.push((distanceData[i] / 1000).toFixed(1));
+                    }
                 } else {
                     labels.push(formatDurationShort(timeData[i]));
                 }
@@ -1248,6 +1400,7 @@
             const yAxisRange = calculateYAxisRange(rawPaceValues, sportCategory);
             
             const yLabel = sportCategory === 'bike' ? 'km/h' : sportCategory === 'swim' ? 'sec/100m' : 'min/km';
+            const xLabel = distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間';
             
             charts.pace = new Chart(ctx, {
                 type: 'line',
@@ -1257,11 +1410,11 @@
                         label: sportCategory === 'bike' ? '速度' : 'ペース',
                         data: data,
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3,
+                        borderWidth: 1.5,
+                        fill: false,
+                        tension: 0.2,
                         pointRadius: 0,
-                        spanGaps: true // null値をスキップして線を繋ぐ
+                        spanGaps: true
                     }]
                 },
                 options: {
@@ -1269,10 +1422,27 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { title: { display: true, text: distanceData ? '距離 (km)' : '時間' } },
+                        x: { 
+                            title: { display: true, text: xLabel },
+                            ticks: {
+                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    // スイムは200mおきに表示
+                                    if (sportCategory === 'swim' && distanceData) {
+                                        const dist = parseFloat(label);
+                                        if (dist % 200 === 0 || index === 0) {
+                                            return label;
+                                        }
+                                        return '';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
                         y: { 
                             title: { display: true, text: yLabel },
-                            reverse: sportCategory !== 'bike', // ペースは逆順（速いほど上）
+                            reverse: sportCategory !== 'bike',
                             min: yAxisRange.min,
                             max: yAxisRange.max,
                             ticks: {
@@ -1280,7 +1450,6 @@
                                     if (sportCategory === 'bike') {
                                         return value.toFixed(0);
                                     } else {
-                                        // ペースをmm:ss形式で表示
                                         const min = Math.floor(value);
                                         const sec = Math.round((value - min) * 60);
                                         return `${min}:${String(sec).padStart(2, '0')}`;
@@ -1384,57 +1553,45 @@
         }
         
         function renderBikeCharts() {
-            document.getElementById('sportSpecificSection').style.display = 'grid';
-            
             // パワーチャート
             if (streamData && streamData.watts && streamData.watts.data) {
-                document.getElementById('powerPanel').style.display = 'block';
-                
                 // パワーメトリクス
                 const avgPower = currentActivity.average_watts || 0;
                 const np = currentActivity.weighted_average_watts || 0;
                 document.getElementById('powerMetrics').innerHTML = `
-                    <div class="sport-metric-card">
+                    <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(avgPower)}</div>
                         <div class="sport-metric-label">平均パワー (W)</div>
                     </div>
-                    <div class="sport-metric-card">
+                    <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(np)}</div>
                         <div class="sport-metric-label">NP (W)</div>
                     </div>
                 `;
                 
-                renderTimeSeriesChart('powerChart', streamData.watts.data, 'パワー', '#8b5cf6', 'W');
+                renderTimeSeriesChart('powerChart', streamData.watts.data, 'パワー', '#8b5cf6', 'W', 'power');
             }
             
             // ケイデンスチャート
             if (streamData && streamData.cadence && streamData.cadence.data) {
-                document.getElementById('cadencePanel').style.display = 'block';
-                document.getElementById('cadenceTitle').textContent = '🔄 ケイデンス推移';
-                
                 const avgCadence = currentActivity.average_cadence || 0;
                 document.getElementById('cadenceMetrics').innerHTML = `
-                    <div class="sport-metric-card">
+                    <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(avgCadence)}</div>
                         <div class="sport-metric-label">平均ケイデンス (rpm)</div>
                     </div>
                 `;
                 
-                renderTimeSeriesChart('cadenceChart', streamData.cadence.data, 'ケイデンス', '#22c55e', 'rpm');
+                renderTimeSeriesChart('cadenceChart', streamData.cadence.data, 'ケイデンス', '#22c55e', 'rpm', 'cadence');
             }
         }
         
         function renderRunCharts() {
-            document.getElementById('sportSpecificSection').style.display = 'grid';
-            
             // ピッチ/ケイデンスチャート
             if (streamData && streamData.cadence && streamData.cadence.data) {
-                document.getElementById('cadencePanel').style.display = 'block';
-                document.getElementById('cadenceTitle').textContent = '👟 ピッチ推移';
-                
                 const avgCadence = currentActivity.average_cadence || 0;
                 document.getElementById('cadenceMetrics').innerHTML = `
-                    <div class="sport-metric-card">
+                    <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(avgCadence * 2)}</div>
                         <div class="sport-metric-label">平均ピッチ (spm)</div>
                     </div>
@@ -1442,14 +1599,15 @@
                 
                 // ランの場合はケイデンスを2倍（左右合計）
                 const pitchData = streamData.cadence.data.map(c => c * 2);
-                renderTimeSeriesChart('cadenceChart', pitchData, 'ピッチ', '#22c55e', 'spm');
+                renderTimeSeriesChart('cadenceChart', pitchData, 'ピッチ', '#22c55e', 'spm', 'cadence');
             }
         }
         
-        function renderTimeSeriesChart(canvasId, data, label, color, unit) {
+        function renderTimeSeriesChart(canvasId, data, label, color, unit, chartKey) {
             const ctx = document.getElementById(canvasId).getContext('2d');
-            if (charts[canvasId]) charts[canvasId].destroy();
+            if (charts[chartKey]) charts[chartKey].destroy();
             
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
             const distanceData = streamData?.distance?.data;
             const timeData = streamData?.time?.data || data.map((_, i) => i);
             
@@ -1461,14 +1619,19 @@
             
             for (let i = 0; i < data.length; i += step) {
                 if (distanceData) {
-                    labels.push((distanceData[i] / 1000).toFixed(1));
+                    // スイムはm単位、それ以外はkm単位
+                    if (sportCategory === 'swim') {
+                        labels.push(Math.round(distanceData[i]));
+                    } else {
+                        labels.push((distanceData[i] / 1000).toFixed(1));
+                    }
                 } else {
                     labels.push(formatDurationShort(timeData[i]));
                 }
                 chartData.push(data[i]);
             }
             
-            charts[canvasId] = new Chart(ctx, {
+            charts[chartKey] = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -1476,9 +1639,9 @@
                         label: label,
                         data: chartData,
                         borderColor: color,
-                        backgroundColor: color + '20',
-                        fill: true,
-                        tension: 0.3,
+                        borderWidth: 1.5,
+                        fill: false,
+                        tension: 0.2,
                         pointRadius: 0
                     }]
                 },
@@ -1487,8 +1650,28 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { title: { display: true, text: distanceData ? '距離 (km)' : '時間' } },
+                        x: { 
+                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
+                            ticks: {
+                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    if (sportCategory === 'swim' && distanceData) {
+                                        const dist = parseFloat(label);
+                                        if (dist % 200 === 0 || index === 0) {
+                                            return label;
+                                        }
+                                        return '';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
                         y: { title: { display: true, text: unit } }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
                 }
             });

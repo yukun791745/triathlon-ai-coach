@@ -1233,14 +1233,28 @@
                 html += createMetricCard(Math.round(currentActivity.average_heartrate), 'bpm', '平均心拍');
             }
             
+            // バイク: パワーメトリック（心拍とTSSの間）
+            if (sportCategory === 'bike') {
+                if (currentActivity.average_watts) {
+                    html += createMetricCard(Math.round(currentActivity.average_watts), 'W', '平均パワー');
+                }
+                if (currentActivity.weighted_average_watts) {
+                    html += createMetricCard(Math.round(currentActivity.weighted_average_watts), 'W', 'NP');
+                }
+                if (currentActivity.average_watts && currentActivity.weighted_average_watts) {
+                    const vi = (currentActivity.weighted_average_watts / currentActivity.average_watts).toFixed(2);
+                    html += createMetricCard(vi, '', 'VI');
+                }
+            }
+            
+            // 獲得標高（TSSの前）
+            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
+                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
+            }
+            
             // TSS
             if (currentActivity.tss) {
                 html += createMetricCard(currentActivity.tss, '', 'TSS');
-            }
-            
-            // 標高
-            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
-                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
             }
             
             document.getElementById('summaryMetrics').innerHTML = html;
@@ -1344,14 +1358,14 @@
             html += createMetricCard(avgStrokeRate, 'spm', 'Stroke Rate');
             html += createMetricCard(avgDPS, 'm', 'DPS');
             
+            // 獲得標高（TSSの前）
+            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
+                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
+            }
+            
             // TSS
             if (currentActivity.tss) {
                 html += createMetricCard(currentActivity.tss, '', 'TSS');
-            }
-            
-            // 標高
-            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
-                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
             }
             
             document.getElementById('summaryMetrics').innerHTML = html;
@@ -2174,6 +2188,7 @@
                 // パワーメトリクス
                 const avgPower = currentActivity.average_watts || 0;
                 const np = currentActivity.weighted_average_watts || 0;
+                const vi = avgPower > 0 ? (np / avgPower).toFixed(2) : '-';
                 document.getElementById('powerMetrics').innerHTML = `
                     <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(avgPower)}</div>
@@ -2182,6 +2197,10 @@
                     <div class="sport-metric-item">
                         <div class="sport-metric-value">${Math.round(np)}</div>
                         <div class="sport-metric-label">NP (W)</div>
+                    </div>
+                    <div class="sport-metric-item">
+                        <div class="sport-metric-value">${vi}</div>
+                        <div class="sport-metric-label">VI</div>
                     </div>
                 `;
                 

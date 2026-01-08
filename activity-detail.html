@@ -1720,7 +1720,217 @@
             document.getElementById('lapTable').innerHTML = html;
         }
         
+        // ===== ストリームデータ分析 =====
+        function analyzeStreamData() {
+            if (!streamData) return null;
+            
+            const analysis = {};
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
+            
+            // ペース分析
+            if (streamData.velocity_smooth && streamData.velocity_smooth.data && streamData.distance?.data) {
+                const velData = streamData.velocity_smooth.data;
+                const distData = streamData.distance.data;
+                const totalDist = distData[distData.length - 1];
+                const halfDist = totalDist / 2;
+                
+                // 前半・後半のペースを計算
+                let firstHalfVels = [];
+                let secondHalfVels = [];
+                
+                for (let i = 0; i < velData.length; i++) {
+                    if (velData[i] > 0.5) { // 停止を除外
+                        if (distData[i] <= halfDist) {
+                            firstHalfVels.push(velData[i]);
+                        } else {
+                            secondHalfVels.push(velData[i]);
+                        }
+                    }
+                }
+                
+                const avgFirstHalf = firstHalfVels.length > 0 ? firstHalfVels.reduce((a, b) => a + b, 0) / firstHalfVels.length : 0;
+                const avgSecondHalf = secondHalfVels.length > 0 ? secondHalfVels.reduce((a, b) => a + b, 0) / secondHalfVels.length : 0;
+                
+                // ペース変動係数
+                const validVels = velData.filter(v => v > 0.5);
+                const meanVel = validVels.reduce((a, b) => a + b, 0) / validVels.length;
+                const variance = validVels.reduce((sum, v) => sum + Math.pow(v - meanVel, 2), 0) / validVels.length;
+                const stdDev = Math.sqrt(variance);
+                const cv = (stdDev / meanVel) * 100;
+                
+                // スプリットタイプ
+                const splitDiff = ((avgSecondHalf / avgFirstHalf) - 1) * 100;
+                let splitType = '均等';
+                if (splitDiff > 3) splitType = 'ネガティブ（後半ペースアップ）';
+                else if (splitDiff < -3) splitType = 'ポジティブ（後半ペースダウン）';
+                
+                analysis.paceAnalysis = {
+                    firstHalfPace: formatPaceFromSpeed(avgFirstHalf, sportCategory),
+                    secondHalfPace: formatPaceFromSpeed(avgSecondHalf, sportCategory),
+                    splitType: splitType,
+                    splitDiff: `${splitDiff > 0 ? '+' : ''}${splitDiff.toFixed(1)}%`,
+                    variability: cv.toFixed(1)
+                };
+                
+                // 最速・最遅区間（1km単位で分析）
+                if (sportCategory !== 'swim') {
+                    const kmSections = [];
+                    let currentKm = 1000;
+                    let sectionVels = [];
+                    
+                    for (let i = 0; i < distData.length; i++) {
+                        if (distData[i] <= currentKm) {
+                            if (velData[i] > 0.5) sectionVels.push(velData[i]);
+                        } else {
+                            if (sectionVels.length > 0) {
+                                const avgVel = sectionVels.reduce((a, b) => a + b, 0) / sectionVels.length;
+                                kmSections.push({ km: Math.floor(currentKm / 1000), pace: avgVel });
+                            }
+                            currentKm += 1000;
+                            sectionVels = [velData[i]];
+                        }
+                    }
+                    
+                    if (kmSections.length > 0) {
+                        const fastest = kmSections.reduce((max, s) => s.pace > max.pace ? s : max);
+                        const slowest = kmSections.reduce((min, s) => s.pace < min.pace ? s : min);
+                        analysis.paceAnalysis.fastestSection = `${fastest.km}km目 (${formatPaceFromSpeed(fastest.pace, sportCategory)})`;
+                        analysis.paceAnalysis.slowestSection = `${slowest.km}km目 (${formatPaceFromSpeed(slowest.pace, sportCategory)})`;
+                    }
+                }
+            }
+            
+            // 心拍分析
+            if (streamData.heartrate && streamData.heartrate.data) {
+                const hrData = streamData.heartrate.data;
+                const validHr = hrData.filter(h => h > 0);
+                
+                if (validHr.length > 0) {
+                    const thresholds = getUserThresholds();
+                    const maxHr = thresholds.maxHr || 190;
+                    
+                    // 前半・後半の心拍比較（ドリフト）
+                    const midPoint = Math.floor(validHr.length / 2);
+                    const firstHalfHr = validHr.slice(0, midPoint);
+                    const secondHalfHr = validHr.slice(midPoint);
+                    
+                    const avgFirstHr = firstHalfHr.reduce((a, b) => a + b, 0) / firstHalfHr.length;
+                    const avgSecondHr = secondHalfHr.reduce((a, b) => a + b, 0) / secondHalfHr.length;
+                    const drift = ((avgSecondHr / avgFirstHr) - 1) * 100;
+                    
+                    // Zone分布
+                    const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+                    validHr.forEach(hr => {
+                        const percent = (hr / maxHr) * 100;
+                        if (percent < 60) zones.z1++;
+                        else if (percent < 70) zones.z2++;
+                        else if (percent < 80) zones.z3++;
+                        else if (percent < 90) zones.z4++;
+                        else zones.z5++;
+                    });
+                    
+                    const total = validHr.length;
+                    Object.keys(zones).forEach(z => {
+                        zones[z] = Math.round((zones[z] / total) * 100);
+                    });
+                    
+                    // 心拍効率（ペースがある場合）
+                    let efficiency = null;
+                    if (currentActivity.average_speed && currentActivity.average_heartrate) {
+                        // 心拍1bpmあたりのペース（数値が小さいほど効率的）
+                        const pacePerKm = 1000 / currentActivity.average_speed / 60;
+                        efficiency = (currentActivity.average_heartrate / pacePerKm).toFixed(1);
+                    }
+                    
+                    analysis.heartRateAnalysis = {
+                        drift: drift.toFixed(1),
+                        zones: zones,
+                        efficiency: efficiency
+                    };
+                }
+            }
+            
+            // 標高分析
+            if (streamData.altitude && streamData.altitude.data && streamData.velocity_smooth?.data) {
+                const altData = streamData.altitude.data;
+                const velData = streamData.velocity_smooth.data;
+                const gradeData = streamData.grade_smooth?.data;
+                
+                if (gradeData) {
+                    // 登り・平地・下りでのペース比較
+                    const climbVels = [];
+                    const flatVels = [];
+                    const descentVels = [];
+                    
+                    for (let i = 0; i < gradeData.length; i++) {
+                        if (velData[i] > 0.5) {
+                            if (gradeData[i] > 2) climbVels.push(velData[i]);
+                            else if (gradeData[i] < -2) descentVels.push(velData[i]);
+                            else flatVels.push(velData[i]);
+                        }
+                    }
+                    
+                    if (climbVels.length > 0 && flatVels.length > 0) {
+                        const avgClimb = climbVels.reduce((a, b) => a + b, 0) / climbVels.length;
+                        const avgFlat = flatVels.reduce((a, b) => a + b, 0) / flatVels.length;
+                        const climbLoss = ((avgFlat / avgClimb) - 1) * 100;
+                        
+                        analysis.elevationAnalysis = {
+                            climbingPaceLoss: climbLoss.toFixed(0)
+                        };
+                    }
+                }
+            }
+            
+            return Object.keys(analysis).length > 0 ? analysis : null;
+        }
+        
+        function formatPaceFromSpeed(speed, sportCategory) {
+            if (!speed || speed <= 0) return '-';
+            if (sportCategory === 'bike') {
+                return `${(speed * 3.6).toFixed(1)} km/h`;
+            } else if (sportCategory === 'swim') {
+                const pace = 100 / speed;
+                const min = Math.floor(pace / 60);
+                const sec = Math.round(pace % 60);
+                return `${min}:${String(sec).padStart(2, '0')}/100m`;
+            } else {
+                const pace = 1000 / speed / 60;
+                const min = Math.floor(pace);
+                const sec = Math.round((pace - min) * 60);
+                return `${min}:${String(sec).padStart(2, '0')}/km`;
+            }
+        }
+        
+        // ===== 類似アクティビティ検索 =====
+        function findSimilarActivities() {
+            const cachedActivities = localStorage.getItem('strava_activities');
+            if (!cachedActivities) return [];
+            
+            const activities = JSON.parse(cachedActivities);
+            const currentSport = currentActivity.sport_type || currentActivity.type;
+            const currentDist = currentActivity.distance || 0;
+            const currentId = currentActivity.id;
+            
+            // 同じ種目、距離が±30%以内のアクティビティを検索
+            const similar = activities.filter(a => {
+                if (a.id === currentId) return false;
+                const sport = a.sport_type || a.type;
+                if (sport !== currentSport) return false;
+                
+                const dist = a.distance || 0;
+                const ratio = dist / currentDist;
+                return ratio >= 0.7 && ratio <= 1.3;
+            });
+            
+            // 日付で降順ソート、最新3件を返す
+            similar.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+            return similar.slice(0, 5);
+        }
+        
         // ===== AIコメント =====
+        let conversationHistory = [];
+        
         async function fetchAIComment(userQuestion = null) {
             const loadingEl = document.getElementById('aiCommentLoading');
             const commentEl = document.getElementById('aiComment');
@@ -1731,13 +1941,22 @@
             }
             
             try {
+                // ストリーム分析データを計算
+                const streamAnalysis = analyzeStreamData();
+                
+                // 類似アクティビティを検索
+                const similarActivities = findSimilarActivities();
+                
                 const response = await fetch('/.netlify/functions/ai-coach-comment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         activity: currentActivity,
                         trainingStatus: trainingStatus,
-                        userQuestion: userQuestion
+                        streamAnalysis: streamAnalysis,
+                        similarActivities: similarActivities,
+                        userQuestion: userQuestion,
+                        conversationHistory: userQuestion ? conversationHistory : []
                     })
                 });
                 
@@ -1748,11 +1967,15 @@
                 const data = await response.json();
                 
                 if (userQuestion) {
+                    // 会話履歴を更新
+                    conversationHistory.push({ role: 'user', content: userQuestion });
+                    conversationHistory.push({ role: 'assistant', content: data.comment });
+                    
                     // 質問への回答を履歴に追加
                     addChatMessage('coach', data.comment);
                 } else {
                     // 初期コメント
-                    commentEl.textContent = data.comment;
+                    commentEl.innerHTML = formatAIComment(data.comment);
                     loadingEl.style.display = 'none';
                     commentEl.style.display = 'block';
                 }
@@ -1761,13 +1984,21 @@
                 console.error('AI comment error:', error);
                 
                 if (!userQuestion) {
-                    commentEl.textContent = generateFallbackComment();
+                    commentEl.innerHTML = formatAIComment(generateFallbackComment());
                     loadingEl.style.display = 'none';
                     commentEl.style.display = 'block';
                 } else {
                     addChatMessage('coach', '申し訳ありません、回答の生成に失敗しました。しばらくしてからお試しください。');
                 }
             }
+        }
+        
+        // AIコメントのMarkdownを整形
+        function formatAIComment(text) {
+            // 改行を維持しつつ、**太字**を<strong>に変換
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
         }
         
         function generateFallbackComment() {
@@ -1876,10 +2107,13 @@
             const historyEl = document.getElementById('chatHistory');
             const label = type === 'user' ? '👤 あなた' : '🤖 AIコーチ';
             
+            // コーチの回答はMarkdownフォーマットを適用
+            const formattedContent = type === 'coach' ? formatAIComment(content) : content;
+            
             const messageHtml = `
                 <div class="chat-message ${type}">
                     <div class="chat-message-label">${label}</div>
-                    <div class="chat-message-content">${content}</div>
+                    <div class="chat-message-content">${formattedContent}</div>
                 </div>
             `;
             

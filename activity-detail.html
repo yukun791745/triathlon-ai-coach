@@ -911,28 +911,21 @@
                         <div class="panel-header">
                             <h2 class="panel-title">📈 時系列データ</h2>
                             <div class="tab-buttons" id="chartTabs">
-                                <button class="tab-btn active" data-tab="hr">💓 心拍数</button>
-                                <button class="tab-btn" data-tab="pace">⏱️ ペース</button>
-                                <button class="tab-btn" data-tab="rawVelocity" id="rawVelocityTab" style="display: none;">🔍 生データ</button>
+                                <button class="tab-btn" data-tab="hr">💓 心拍数</button>
+                                <button class="tab-btn active" data-tab="pace">⏱️ ペース</button>
                                 <button class="tab-btn" data-tab="cadence" id="cadenceTab" style="display: none;">🔄 ケイデンス</button>
                                 <button class="tab-btn" data-tab="power" id="powerTab" style="display: none;">⚡ パワー</button>
                             </div>
                         </div>
                         <div class="panel-content">
-                            <div class="chart-tab-content" id="hrTabContent">
+                            <div class="chart-tab-content" id="hrTabContent" style="display: none;">
                                 <div class="chart-container wide">
                                     <canvas id="hrChart"></canvas>
                                 </div>
                             </div>
-                            <div class="chart-tab-content" id="paceTabContent" style="display: none;">
+                            <div class="chart-tab-content" id="paceTabContent">
                                 <div class="chart-container wide">
                                     <canvas id="paceChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="chart-tab-content" id="rawVelocityTabContent" style="display: none;">
-                                <div class="sport-metrics-row" id="rawVelocityMetrics"></div>
-                                <div class="chart-container wide">
-                                    <canvas id="rawVelocityChart"></canvas>
                                 </div>
                             </div>
                             <div class="chart-tab-content" id="cadenceTabContent" style="display: none;">
@@ -1266,16 +1259,8 @@
             setupChartTabs();
             renderHeartRateChart();
             renderPaceChart();
-            renderRawVelocityChartIfSwim();
             renderSportSpecificCharts();
             renderLapTable();
-        }
-        
-        function renderRawVelocityChartIfSwim() {
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            if (sportCategory === 'swim' && streamData && streamData.velocity_smooth) {
-                renderRawVelocityChart();
-            }
         }
         
         function setupChartTabs() {
@@ -1298,11 +1283,6 @@
                 if (currentActivity.average_cadence || (streamData && streamData.cadence)) {
                     document.getElementById('cadenceTab').style.display = 'inline-block';
                     document.getElementById('cadenceTab').textContent = '👟 ピッチ';
-                }
-            } else if (sportCategory === 'swim') {
-                // スイムの場合は生データタブを表示（デバッグ用）
-                if (streamData && streamData.velocity_smooth) {
-                    document.getElementById('rawVelocityTab').style.display = 'inline-block';
                 }
             }
             
@@ -1715,163 +1695,6 @@
             });
         }
         
-        // スイム生データ（velocity_smooth）を可視化
-        function renderRawVelocityChart() {
-            const ctx = document.getElementById('rawVelocityChart').getContext('2d');
-            if (charts.rawVelocity) charts.rawVelocity.destroy();
-            
-            if (!streamData || !streamData.velocity_smooth || !streamData.velocity_smooth.data) {
-                ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">速度データがありません</div>';
-                return;
-            }
-            
-            const velData = streamData.velocity_smooth.data;
-            const distanceData = streamData.distance?.data;
-            const timeData = streamData.time?.data || velData.map((_, i) => i);
-            const movingData = streamData.moving?.data;
-            
-            // 統計情報を計算
-            const validVelocities = velData.filter(v => v > 0);
-            const zeroCount = velData.filter(v => v === 0).length;
-            const minVel = validVelocities.length > 0 ? Math.min(...validVelocities) : 0;
-            const maxVel = validVelocities.length > 0 ? Math.max(...validVelocities) : 0;
-            const avgVel = validVelocities.length > 0 ? validVelocities.reduce((a,b)=>a+b,0)/validVelocities.length : 0;
-            
-            // メトリクス表示
-            document.getElementById('rawVelocityMetrics').innerHTML = `
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${velData.length}</div>
-                    <div class="sport-metric-label">総サンプル数</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${zeroCount}</div>
-                    <div class="sport-metric-label">速度0のサンプル</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${minVel.toFixed(3)}</div>
-                    <div class="sport-metric-label">最小速度 (m/s)</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${maxVel.toFixed(3)}</div>
-                    <div class="sport-metric-label">最大速度 (m/s)</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${avgVel.toFixed(3)}</div>
-                    <div class="sport-metric-label">平均速度 (m/s)</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${formatPaceDebug(100/maxVel)}</div>
-                    <div class="sport-metric-label">最速ペース</div>
-                </div>
-                <div class="sport-metric-item">
-                    <div class="sport-metric-value">${minVel > 0 ? formatPaceDebug(100/minVel) : '-'}</div>
-                    <div class="sport-metric-label">最遅ペース</div>
-                </div>
-            `;
-            
-            // サンプリング（全データが多すぎる場合）
-            const maxPoints = 2000;
-            const step = Math.max(1, Math.floor(velData.length / maxPoints));
-            
-            const labels = [];
-            const velocities = [];
-            const movingStatus = [];
-            
-            for (let i = 0; i < velData.length; i += step) {
-                // X軸: 距離があれば距離、なければインデックス
-                if (distanceData) {
-                    labels.push(Math.round(distanceData[i]));
-                } else {
-                    labels.push(i);
-                }
-                velocities.push(velData[i]);
-                if (movingData) {
-                    movingStatus.push(movingData[i] ? null : velData[i]); // 停止中のポイントを別色で
-                }
-            }
-            
-            const datasets = [{
-                label: 'velocity_smooth (m/s)',
-                data: velocities,
-                borderColor: '#3b82f6',
-                borderWidth: 1,
-                fill: false,
-                tension: 0,
-                pointRadius: 0
-            }];
-            
-            // moving=falseのポイントを赤で表示
-            if (movingData) {
-                datasets.push({
-                    label: '停止中 (moving=false)',
-                    data: movingStatus.map((v, i) => movingData[i * step] === false ? velocities[i] : null),
-                    borderColor: '#ef4444',
-                    backgroundColor: '#ef4444',
-                    borderWidth: 0,
-                    pointRadius: 3,
-                    showLine: false
-                });
-            }
-            
-            charts.rawVelocity = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: movingData ? true : false },
-                        title: {
-                            display: true,
-                            text: 'velocity_smooth 生データ（Strava APIから取得したまま）'
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: distanceData ? '距離 (m)' : 'サンプルIndex' },
-                            ticks: {
-                                maxTicksLimit: 15,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    if (distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0) return label + 'm';
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { 
-                            title: { display: true, text: '速度 (m/s)' },
-                            min: 0
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                afterLabel: function(context) {
-                                    const vel = context.raw;
-                                    if (vel > 0) {
-                                        const pace = 100 / vel;
-                                        return `= ${formatPaceDebug(pace)}`;
-                                    }
-                                    return '停止中';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
         // スイムラップ棒グラフ（HTML/CSSで描画、X軸=距離、棒幅は距離に比例）
         function renderSwimLapBarChart() {
             if (!currentActivity.laps || currentActivity.laps.length === 0) {
@@ -1954,9 +1777,18 @@
                 xTicks.push(totalDistance);
             }
             
-            // Y軸の目盛り（10秒刻み）
+            // Y軸の目盛り（範囲に応じて間隔を調整、3〜6個程度になるように）
+            const yRange = yMax - yMin;
+            let yStep;
+            if (yRange <= 20) yStep = 5;        // 20秒以内なら5秒刻み
+            else if (yRange <= 40) yStep = 10;  // 40秒以内なら10秒刻み
+            else if (yRange <= 90) yStep = 15;  // 90秒以内なら15秒刻み
+            else if (yRange <= 120) yStep = 20; // 2分以内なら20秒刻み
+            else yStep = 30;                    // それ以上は30秒刻み
+            
             const yTicks = [];
-            for (let p = yMin; p <= yMax; p += 10) {
+            const yStart = Math.ceil(yMin / yStep) * yStep;
+            for (let p = yStart; p <= yMax; p += yStep) {
                 yTicks.push(p);
             }
             

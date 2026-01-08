@@ -594,10 +594,32 @@
                 padding: 12px 0;
             }
 
+            .flow-nav-logo {
+                padding: 0 20px 15px;
+                margin-bottom: 10px;
+                font-size: 1.1rem;
+            }
+
+            .flow-nav-steps {
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 5px;
+                padding: 0 10px;
+            }
+
+            .flow-nav-step {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .flow-nav-step span:not(.nav-icon) {
+                display: none;
+            }
+
             .content-wrapper {
                 margin-left: 0;
                 padding: 16px;
-                padding-top: 200px;
+                padding-top: 140px;
                 width: 100%;
             }
 
@@ -657,6 +679,10 @@
                 <a href="data.html" class="flow-nav-step current">
                     <span class="nav-icon">📊</span>
                     <span>進捗</span>
+                </a>
+                <a href="settings.html" class="flow-nav-step available">
+                    <span class="nav-icon">⚙️</span>
+                    <span>設定</span>
                 </a>
             </div>
         </div>

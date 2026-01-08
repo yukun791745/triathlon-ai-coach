@@ -1734,6 +1734,12 @@
                                (paceSeconds && paceSeconds < 60);
                 
                 if (!isRest && paceSeconds && distance > 0) {
+                    // ストローク数を計算（total_strokesがなければcadenceと時間から計算）
+                    let strokes = lap.total_strokes;
+                    if (!strokes && lap.average_cadence && movingTime) {
+                        strokes = Math.round(lap.average_cadence * movingTime / 60);
+                    }
+                    
                     swimLaps.push({
                         lapNumber: index + 1,
                         distance: distance,
@@ -1742,7 +1748,7 @@
                         paceSeconds: paceSeconds,
                         movingTime: movingTime,
                         heartrate: lap.average_heartrate,
-                        strokes: lap.total_strokes,
+                        strokes: strokes,
                         cadence: lap.average_cadence
                     });
                     cumulativeDistance += distance;
@@ -2303,10 +2309,18 @@
                     distance = `${(lap.distance / 1000).toFixed(2)} km`;
                 }
                 
+                // スイム用のストローク数計算
+                // total_strokesがあればそれを使い、なければaverage_cadenceと時間から計算
+                let strokes = lap.total_strokes;
+                if (!strokes && lap.average_cadence && lap.moving_time) {
+                    // Strokes = Rate(spm) × Time(秒) / 60
+                    strokes = Math.round(lap.average_cadence * lap.moving_time / 60);
+                }
+                
                 // スイム用のDPS計算（Distance Per Stroke）
                 let dps = '-';
-                if (sportCategory === 'swim' && lap.total_strokes && lap.total_strokes > 0 && lap.distance > 0) {
-                    dps = (lap.distance / lap.total_strokes).toFixed(2) + 'm';
+                if (sportCategory === 'swim' && strokes && strokes > 0 && lap.distance > 0) {
+                    dps = (lap.distance / strokes).toFixed(2) + 'm';
                 }
                 
                 // スイム用のストロークレート表示
@@ -2323,7 +2337,7 @@
                         <td>${pace}</td>
                         <td>${lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}</td>
                         ${sportCategory === 'bike' ? `<td>${lap.average_watts ? Math.round(lap.average_watts) : '-'} W</td>` : ''}
-                        ${sportCategory === 'swim' ? `<td>${lap.total_strokes || '-'}</td><td>${strokeRate}</td><td>${dps}</td>` : ''}
+                        ${sportCategory === 'swim' ? `<td>${strokes || '-'}</td><td>${strokeRate}</td><td>${dps}</td>` : ''}
                     </tr>
                 `;
             });

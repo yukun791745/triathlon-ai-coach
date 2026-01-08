@@ -1866,8 +1866,12 @@
             html += `時間: ${lap.movingTime}秒<br>`;
             html += `距離: ${lap.distance}m`;
             if (lap.heartrate) html += `<br>心拍: ${Math.round(lap.heartrate)} bpm`;
-            if (lap.strokes) html += `<br>ストローク: ${lap.strokes}`;
-            if (lap.cadence) html += `<br>ケイデンス: ${lap.cadence} spm`;
+            if (lap.strokes) html += `<br>Strokes: ${lap.strokes}`;
+            if (lap.cadence) html += `<br>Rate: ${lap.cadence} spm`;
+            if (lap.strokes && lap.distance > 0) {
+                const dps = (lap.distance / lap.strokes).toFixed(2);
+                html += `<br>DPS: ${dps}m`;
+            }
             
             swimTooltip.innerHTML = html;
             swimTooltip.style.display = 'block';
@@ -2259,7 +2263,7 @@
                         <th>${sportCategory === 'bike' ? '速度' : 'ペース'}</th>
                         <th>心拍</th>
                         ${sportCategory === 'bike' ? '<th>パワー</th>' : ''}
-                        ${sportCategory === 'swim' ? '<th>ストローク</th><th>ケイデンス</th>' : ''}
+                        ${sportCategory === 'swim' ? '<th>Strokes</th><th>Rate</th><th>DPS</th>' : ''}
                     </tr>
                 </thead>
                 <tbody>
@@ -2299,6 +2303,18 @@
                     distance = `${(lap.distance / 1000).toFixed(2)} km`;
                 }
                 
+                // スイム用のDPS計算（Distance Per Stroke）
+                let dps = '-';
+                if (sportCategory === 'swim' && lap.total_strokes && lap.total_strokes > 0 && lap.distance > 0) {
+                    dps = (lap.distance / lap.total_strokes).toFixed(2) + 'm';
+                }
+                
+                // スイム用のストロークレート表示
+                let strokeRate = '-';
+                if (sportCategory === 'swim' && lap.average_cadence) {
+                    strokeRate = Math.round(lap.average_cadence) + ' spm';
+                }
+                
                 html += `
                     <tr>
                         <td>${index + 1}</td>
@@ -2307,7 +2323,7 @@
                         <td>${pace}</td>
                         <td>${lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}</td>
                         ${sportCategory === 'bike' ? `<td>${lap.average_watts ? Math.round(lap.average_watts) : '-'} W</td>` : ''}
-                        ${sportCategory === 'swim' ? `<td>${lap.total_strokes || '-'}</td><td>${lap.average_cadence ? Math.round(lap.average_cadence) : '-'}</td>` : ''}
+                        ${sportCategory === 'swim' ? `<td>${lap.total_strokes || '-'}</td><td>${strokeRate}</td><td>${dps}</td>` : ''}
                     </tr>
                 `;
             });

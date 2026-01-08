@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - AI Triathlon Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
+            min-height: 100vh;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* ナビゲーション */
+        .flow-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .flow-nav-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .flow-nav-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            padding: 0 20px 30px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .flow-nav-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px;
+            flex: 1;
+        }
+
+        .flow-nav-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+        }
+
+        .flow-nav-step .nav-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .flow-nav-step.current {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .flow-nav-step.available:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        /* メインコンテンツ */
+        .content-wrapper {
+            margin-left: 240px;
+            flex: 1;
+            padding: 32px;
+            width: calc(100% - 240px);
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        /* セクションカード */
+        .settings-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .section-subtitle {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        /* フォームグリッド */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-grid.three-cols {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+            font-size: 0.8rem;
+        }
+
+        .form-label .hint {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-weight: normal;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: #1f2937;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input:disabled {
+            background: #f9fafb;
+            color: #9ca3af;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* 時間入力（分:秒） */
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-input-group input {
+            width: 70px;
+            text-align: center;
+        }
+
+        .time-separator {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #6b7280;
+        }
+
+        .time-unit {
+            font-size: 0.85rem;
+            color: #6b7280;
+            min-width: 50px;
+        }
+
+        /* セレクトボックス */
+        .form-select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: #1f2937;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* パスワード入力 */
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .password-input-wrapper input {
+            padding-right: 50px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #6b7280;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        /* 単位付き入力 */
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-with-unit input {
+            padding-right: 60px;
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* ヘルプテキスト */
+        .form-help {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* 計算値表示 */
+        .calculated-value {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calculated-value-icon {
+            font-size: 1.2rem;
+        }
+
+        .calculated-value-text {
+            font-size: 0.9rem;
+            color: #0369a1;
+        }
+
+        .calculated-value-number {
+            font-weight: 700;
+            color: #0284c7;
+        }
+
+        /* 保存ボタン */
+        .save-section {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 0;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* 保存成功メッセージ */
+        .save-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .save-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .save-toast-icon {
+            font-size: 1.5rem;
+        }
+
+        /* 完了度インジケーター */
+        .completion-indicator {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .completion-indicator.complete {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-color: #22c55e;
+        }
+
+        .completion-bar-container {
+            flex: 1;
+        }
+
+        .completion-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .completion-indicator.complete .completion-label {
+            color: #166534;
+        }
+
+        .completion-bar {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .completion-bar-fill {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .completion-indicator.complete .completion-bar-fill {
+            background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .flow-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+                width: 100%;
+                height: auto;
+                padding: 12px 0;
+            }
+
+            .content-wrapper {
+                margin-left: 0;
+                padding: 16px;
+                padding-top: 200px;
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid.three-cols {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 1.5em;
+            }
+
+            .save-section {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="home.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
+                <a href="index.html" class="flow-nav-step available">
+                    <span class="nav-icon">🤖</span>
+                    <span>AIコーチ</span>
+                </a>
+                <a href="news.html" class="flow-nav-step available">
+                    <span class="nav-icon">📰</span>
+                    <span>ニュース</span>
+                </a>
+                <a href="race-selection.html" class="flow-nav-step available">
+                    <span class="nav-icon">🎯</span>
+                    <span>レース選択</span>
+                </a>
+                <a href="goal-setting.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏆</span>
+                    <span>目標設定</span>
+                </a>
+                <a href="training-plan.html" class="flow-nav-step available">
+                    <span class="nav-icon">📋</span>
+                    <span>計画</span>
+                </a>
+                <a href="simulator.html" class="flow-nav-step available">
+                    <span class="nav-icon">🔬</span>
+                    <span>シミュレーター</span>
+                </a>
+                <a href="data.html" class="flow-nav-step available">
+                    <span class="nav-icon">📊</span>
+                    <span>進捗</span>
+                </a>
+                <a href="settings.html" class="flow-nav-step current">
+                    <span class="nav-icon">⚙️</span>
+                    <span>設定</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <div class="main-container">
+            <div class="page-header">
+                <h1>⚙️ 設定</h1>
+                <p>アカウント情報とトレーニング閾値を設定して、より正確な分析を行いましょう</p>
+            </div>
+
+            <!-- 完了度インジケーター -->
+            <div class="completion-indicator" id="completionIndicator">
+                <div class="completion-bar-container">
+                    <div class="completion-label">
+                        <span>プロフィール完了度</span>
+                        <span id="completionPercent">0%</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div class="completion-bar-fill" id="completionBarFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- アカウント情報 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">👤</span>
+                    <h2 class="section-title">アカウント情報</h2>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                アカウント名
+                                <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-input" id="accountName" placeholder="例: TRI_Taro">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                メールアドレス
+                                <span class="required">*</span>
+                            </label>
+                            <input type="email" class="form-input" id="email" placeholder="例: taro@example.com">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                パスワード
+                                <span class="hint">（変更する場合のみ入力）</span>
+                            </label>
+                            <div class="password-input-wrapper">
+                                <input type="password" class="form-input" id="password" placeholder="••••••••">
+                                <button type="button" class="password-toggle" onclick="togglePassword()">
+                                    <span id="passwordToggleIcon">👁️</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 身体情報 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">📏</span>
+                    <h2 class="section-title">身体情報</h2>
+                    <span class="section-subtitle">正確なカロリー計算やゾーン設定に使用</span>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">身長</label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="height" placeholder="170" min="100" max="250">
+                                <span class="input-unit">cm</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">体重</label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="weight" placeholder="65" min="30" max="200" step="0.1">
+                                <span class="input-unit">kg</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">年齢</label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="age" placeholder="35" min="10" max="100" onchange="calculateMaxHR()">
+                                <span class="input-unit">歳</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">性別</label>
+                            <select class="form-select" id="gender">
+                                <option value="">選択してください</option>
+                                <option value="male">男性</option>
+                                <option value="female">女性</option>
+                                <option value="other">その他</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 心拍数設定 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">❤️</span>
+                    <h2 class="section-title">心拍数設定</h2>
+                    <span class="section-subtitle">心拍ゾーン計算・hrTSS計算に使用</span>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                最大心拍数
+                                <span class="hint">（実測値推奨）</span>
+                            </label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="maxHr" placeholder="185" min="120" max="220">
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <p class="form-help">実測値がない場合は年齢から推定されます</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">安静時心拍数</label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="restingHr" placeholder="55" min="30" max="100">
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <p class="form-help">朝起床時の安静状態で計測</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 推定最大心拍数表示 -->
+                    <div class="calculated-value" id="estimatedMaxHr" style="margin-top: 16px; display: none;">
+                        <span class="calculated-value-icon">💡</span>
+                        <span class="calculated-value-text">
+                            年齢からの推定最大心拍数: <span class="calculated-value-number" id="estimatedMaxHrValue">--</span> bpm
+                            <span style="font-size: 0.8rem; color: #6b7280;">（220 - 年齢）</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- スイム閾値 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">🏊</span>
+                    <h2 class="section-title">スイム閾値（CSS）</h2>
+                    <span class="section-subtitle">sTSS計算に使用</span>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                CSS（Critical Swim Speed）
+                                <span class="hint">/100m</span>
+                            </label>
+                            <div class="time-input-group">
+                                <input type="number" class="form-input" id="cssMin" placeholder="1" min="0" max="10">
+                                <span class="time-separator">:</span>
+                                <input type="number" class="form-input" id="cssSec" placeholder="40" min="0" max="59">
+                                <span class="time-unit">/100m</span>
+                            </div>
+                            <p class="form-help">400mと200mのタイムから算出、または閾値強度で泳げるペース</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ラン閾値 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">🏃</span>
+                    <h2 class="section-title">ラン閾値</h2>
+                    <span class="section-subtitle">rTSS計算に使用</span>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                閾値ペース
+                                <span class="hint">/km</span>
+                            </label>
+                            <div class="time-input-group">
+                                <input type="number" class="form-input" id="runThresholdMin" placeholder="5" min="2" max="15">
+                                <span class="time-separator">:</span>
+                                <input type="number" class="form-input" id="runThresholdSec" placeholder="00" min="0" max="59">
+                                <span class="time-unit">/km</span>
+                            </div>
+                            <p class="form-help">1時間持続可能なペース、または10kmレースペース</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                閾値心拍数
+                                <span class="hint">（ラン時）</span>
+                            </label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="runThresholdHr" placeholder="165" min="100" max="200">
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <p class="form-help">閾値ペースで走行時の平均心拍数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- バイク閾値 -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">🚴</span>
+                    <h2 class="section-title">バイク閾値</h2>
+                    <span class="section-subtitle">TSS計算に使用</span>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                FTP（Functional Threshold Power）
+                            </label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" id="ftp" placeholder="200" min="50" max="500">
+                                <span class="input-unit">W</span>
+                            </div>
+                            <p class="form-help">20分テストの平均パワー × 0.95、または1時間維持可能なパワー</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                パワーウェイトレシオ
+                            </label>
+                            <div class="calculated-value" style="margin-top: 0;">
+                                <span class="calculated-value-icon">⚡</span>
+                                <span class="calculated-value-text">
+                                    <span class="calculated-value-number" id="powerWeightRatio">--</span> W/kg
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 保存ボタン -->
+            <div class="save-section">
+                <button class="btn btn-secondary" onclick="resetToDefaults()">
+                    🔄 デフォルトに戻す
+                </button>
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    💾 設定を保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存成功メッセージ -->
+    <div class="save-toast" id="saveToast">
+        <span class="save-toast-icon">✅</span>
+        <span>設定を保存しました</span>
+    </div>
+
+    <script>
+        // ===== 設定キー =====
+        const STORAGE_KEYS = {
+            account: 'user_account',
+            profile: 'user_profile',
+            thresholds: 'user_thresholds'
+        };
+
+        // ===== デフォルト値 =====
+        const DEFAULTS = {
+            thresholds: {
+                maxHr: 190,
+                restingHr: 60,
+                thresholdHr: 170,
+                ftp: 200,
+                rFtpPacePerKm: 300,  // 5:00/km
+                sFtpPacePer100m: 100 // 1:40/100m
+            }
+        };
+
+        // ===== 初期化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            setupEventListeners();
+            updateCompletion();
+        });
+
+        function setupEventListeners() {
+            // 入力変更時に完了度を更新
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    updateCompletion();
+                    calculatePowerWeightRatio();
+                });
+            });
+        }
+
+        // ===== 設定読み込み =====
+        function loadSettings() {
+            // アカウント情報
+            const account = JSON.parse(localStorage.getItem(STORAGE_KEYS.account) || '{}');
+            if (account.name) document.getElementById('accountName').value = account.name;
+            if (account.email) document.getElementById('email').value = account.email;
+
+            // プロフィール
+            const profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.profile) || '{}');
+            if (profile.height) document.getElementById('height').value = profile.height;
+            if (profile.weight) document.getElementById('weight').value = profile.weight;
+            if (profile.age) document.getElementById('age').value = profile.age;
+            if (profile.gender) document.getElementById('gender').value = profile.gender;
+
+            // 閾値設定
+            const thresholds = JSON.parse(localStorage.getItem(STORAGE_KEYS.thresholds) || '{}');
+            
+            if (thresholds.maxHr) document.getElementById('maxHr').value = thresholds.maxHr;
+            if (thresholds.restingHr) document.getElementById('restingHr').value = thresholds.restingHr;
+            
+            // CSS (秒から分:秒に変換)
+            if (thresholds.sFtpPacePer100m) {
+                const cssTotal = thresholds.sFtpPacePer100m;
+                document.getElementById('cssMin').value = Math.floor(cssTotal / 60);
+                document.getElementById('cssSec').value = cssTotal % 60;
+            }
+            
+            // ランペース (秒から分:秒に変換)
+            if (thresholds.rFtpPacePerKm) {
+                const runTotal = thresholds.rFtpPacePerKm;
+                document.getElementById('runThresholdMin').value = Math.floor(runTotal / 60);
+                document.getElementById('runThresholdSec').value = runTotal % 60;
+            }
+            
+            if (thresholds.thresholdHr) document.getElementById('runThresholdHr').value = thresholds.thresholdHr;
+            if (thresholds.ftp) document.getElementById('ftp').value = thresholds.ftp;
+
+            // 計算値の更新
+            calculateMaxHR();
+            calculatePowerWeightRatio();
+        }
+
+        // ===== 設定保存 =====
+        function saveSettings() {
+            // アカウント情報
+            const account = {
+                name: document.getElementById('accountName').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+            
+            const password = document.getElementById('password').value;
+            if (password) {
+                account.passwordHash = btoa(password); // 実際はハッシュ化が必要
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.account, JSON.stringify(account));
+
+            // プロフィール
+            const profile = {
+                height: parseFloat(document.getElementById('height').value) || null,
+                weight: parseFloat(document.getElementById('weight').value) || null,
+                age: parseInt(document.getElementById('age').value) || null,
+                gender: document.getElementById('gender').value || null
+            };
+            localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+
+            // 閾値設定
+            const cssMin = parseInt(document.getElementById('cssMin').value) || 0;
+            const cssSec = parseInt(document.getElementById('cssSec').value) || 0;
+            const cssTotal = cssMin * 60 + cssSec;
+
+            const runMin = parseInt(document.getElementById('runThresholdMin').value) || 0;
+            const runSec = parseInt(document.getElementById('runThresholdSec').value) || 0;
+            const runTotal = runMin * 60 + runSec;
+
+            const thresholds = {
+                maxHr: parseInt(document.getElementById('maxHr').value) || DEFAULTS.thresholds.maxHr,
+                restingHr: parseInt(document.getElementById('restingHr').value) || DEFAULTS.thresholds.restingHr,
+                thresholdHr: parseInt(document.getElementById('runThresholdHr').value) || DEFAULTS.thresholds.thresholdHr,
+                ftp: parseInt(document.getElementById('ftp').value) || DEFAULTS.thresholds.ftp,
+                rFtpPacePerKm: runTotal || DEFAULTS.thresholds.rFtpPacePerKm,
+                sFtpPacePer100m: cssTotal || DEFAULTS.thresholds.sFtpPacePer100m
+            };
+            localStorage.setItem(STORAGE_KEYS.thresholds, JSON.stringify(thresholds));
+
+            // 成功メッセージ表示
+            showSaveToast();
+            updateCompletion();
+        }
+
+        // ===== デフォルトに戻す =====
+        function resetToDefaults() {
+            if (!confirm('全ての設定をデフォルト値に戻しますか？')) return;
+
+            document.getElementById('accountName').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('gender').value = '';
+            document.getElementById('maxHr').value = '';
+            document.getElementById('restingHr').value = '';
+            document.getElementById('cssMin').value = '';
+            document.getElementById('cssSec').value = '';
+            document.getElementById('runThresholdMin').value = '';
+            document.getElementById('runThresholdSec').value = '';
+            document.getElementById('runThresholdHr').value = '';
+            document.getElementById('ftp').value = '';
+
+            localStorage.removeItem(STORAGE_KEYS.account);
+            localStorage.removeItem(STORAGE_KEYS.profile);
+            localStorage.removeItem(STORAGE_KEYS.thresholds);
+
+            updateCompletion();
+            calculatePowerWeightRatio();
+            
+            document.getElementById('estimatedMaxHr').style.display = 'none';
+        }
+
+        // ===== 最大心拍数の推定 =====
+        function calculateMaxHR() {
+            const age = parseInt(document.getElementById('age').value);
+            const estimatedMaxHrDiv = document.getElementById('estimatedMaxHr');
+            
+            if (age && age > 0) {
+                const estimatedMaxHr = 220 - age;
+                document.getElementById('estimatedMaxHrValue').textContent = estimatedMaxHr;
+                estimatedMaxHrDiv.style.display = 'flex';
+                
+                // 最大心拍数が未入力の場合、プレースホルダーを更新
+                const maxHrInput = document.getElementById('maxHr');
+                if (!maxHrInput.value) {
+                    maxHrInput.placeholder = estimatedMaxHr;
+                }
+            } else {
+                estimatedMaxHrDiv.style.display = 'none';
+            }
+        }
+
+        // ===== パワーウェイトレシオ計算 =====
+        function calculatePowerWeightRatio() {
+            const ftp = parseFloat(document.getElementById('ftp').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const pwr = document.getElementById('powerWeightRatio');
+            
+            if (ftp && weight && weight > 0) {
+                const ratio = (ftp / weight).toFixed(2);
+                pwr.textContent = ratio;
+            } else {
+                pwr.textContent = '--';
+            }
+        }
+
+        // ===== パスワード表示切り替え =====
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('passwordToggleIcon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        // ===== 完了度計算 =====
+        function updateCompletion() {
+            const fields = [
+                { id: 'accountName', weight: 10 },
+                { id: 'email', weight: 10 },
+                { id: 'height', weight: 5 },
+                { id: 'weight', weight: 5 },
+                { id: 'age', weight: 5 },
+                { id: 'gender', weight: 5 },
+                { id: 'maxHr', weight: 15 },
+                { id: 'restingHr', weight: 5 },
+                { id: 'cssMin', weight: 10, paired: 'cssSec' },
+                { id: 'runThresholdMin', weight: 10, paired: 'runThresholdSec' },
+                { id: 'runThresholdHr', weight: 10 },
+                { id: 'ftp', weight: 10 }
+            ];
+
+            let totalWeight = 0;
+            let completedWeight = 0;
+
+            fields.forEach(field => {
+                totalWeight += field.weight;
+                const input = document.getElementById(field.id);
+                
+                if (field.paired) {
+                    const pairedInput = document.getElementById(field.paired);
+                    if (input.value || pairedInput.value) {
+                        completedWeight += field.weight;
+                    }
+                } else if (input.value) {
+                    completedWeight += field.weight;
+                }
+            });
+
+            const percent = Math.round((completedWeight / totalWeight) * 100);
+            
+            document.getElementById('completionPercent').textContent = `${percent}%`;
+            document.getElementById('completionBarFill').style.width = `${percent}%`;
+            
+            const indicator = document.getElementById('completionIndicator');
+            if (percent >= 100) {
+                indicator.classList.add('complete');
+            } else {
+                indicator.classList.remove('complete');
+            }
+        }
+
+        // ===== 保存成功トースト =====
+        function showSaveToast() {
+            const toast = document.getElementById('saveToast');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

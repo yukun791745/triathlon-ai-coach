@@ -926,6 +926,9 @@
             // Streams APIでデータを取得
             await loadStreamData(activityId);
             
+            // Laps APIでラップデータを取得（スイムなど）
+            await loadLapData(activityId);
+            
             // UIを表示
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -964,6 +967,48 @@
                 }
             } catch (error) {
                 console.error('Failed to load streams:', error);
+            }
+        }
+        
+        // ラップデータを取得（FORM/Garminなどからのスイムデータ用）
+        async function loadLapData(activityId) {
+            const authData = localStorage.getItem('strava_auth');
+            if (!authData) {
+                console.log('No auth data, skipping laps');
+                return;
+            }
+            
+            try {
+                const auth = JSON.parse(authData);
+                const response = await fetch('/.netlify/functions/strava-laps', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: auth.access_token,
+                        activityId: activityId
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Lap API response:', data);
+                    
+                    // 既存APIは lapCount を返す
+                    if (data.laps && data.laps.length > 0) {
+                        currentActivity.laps = data.laps;
+                        console.log('Lap data loaded:', data.laps.length, 'laps');
+                        console.log('First lap sample:', data.laps[0]);
+                        if (data.analysis) {
+                            console.log('Lap analysis:', data.analysis);
+                        }
+                    } else {
+                        console.log('No laps in response');
+                    }
+                } else {
+                    console.error('Lap API error:', response.status);
+                }
+            } catch (error) {
+                console.error('Failed to load laps:', error);
             }
         }
         

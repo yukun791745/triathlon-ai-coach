@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>トライアスロン AIコーチ | トレーニング進捗</title>
+    <title>トレーニング進捗 - AI Triathlon Coach</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
@@ -21,6 +21,7 @@
             display: flex;
         }
 
+        /* ナビゲーション */
         .flow-navbar {
             position: fixed;
             top: 0;
@@ -86,419 +87,442 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .flow-nav-step.available {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
         .flow-nav-step.available:hover {
             background: rgba(255, 255, 255, 0.15);
             color: white;
             transform: translateX(5px);
         }
 
+        /* メインコンテンツ */
         .content-wrapper {
             margin-left: 240px;
             flex: 1;
-            padding: 32px;
+            padding: 24px;
             width: calc(100% - 240px);
         }
-        
-        .container {
-            max-width: 1400px;
+
+        .main-container {
+            max-width: 1600px;
             margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
         }
 
-        .main-content {
+        /* Fitness/Form/Fatigue 指標カード */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .metric-card.fitness::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .metric-card.form::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .metric-card.fatigue::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .metric-card.fitness .metric-value { color: #3b82f6; }
+        .metric-card.form .metric-value { color: #10b981; }
+        .metric-card.fatigue .metric-value { color: #f59e0b; }
+
+        .metric-subtitle {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .metric-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .metric-trend.up {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .metric-trend.down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .metric-trend.neutral {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* メインコンテンツグリッド */
+        .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            align-items: start;
+            gap: 24px;
         }
 
-        .main-content .panel {
-            height: 600px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .main-content .panel .content {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .connection-footer {
-            margin-top: 10px;
-        }
-        
         .panel {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        .panel.compact {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        .panel.compact .header {
-            padding: 12px 20px;
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .panel.compact .header h1 {
-            font-size: 1.1em;
-        }
-
-        .panel.compact .content {
-            padding: 15px 20px;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 14px 20px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 1.2em;
-            margin-bottom: 2px;
+        .period-selector {
+            padding: 6px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
             font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
         }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 0.8em;
-        }
-        
-        .strava-header {
-            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
-        }
-        
-        .summary-header {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-        
-        .content {
-            padding: 15px;
+
+        .panel-content {
+            padding: 20px;
             flex: 1;
             overflow-y: auto;
         }
-        
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
+
+        /* グラフコンテナ */
+        .chart-section {
+            margin-bottom: 24px;
+        }
+
+        .chart-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            color: #374151;
             margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f3f4f6;
         }
-        
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+
+        .chart-wrapper {
+            height: 180px;
+            position: relative;
         }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+
+        /* アクティビティリスト */
+        .activity-list-container {
+            height: 620px;
+            overflow-y: auto;
         }
-        
-        .btn-strava {
-            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
-            color: white;
+
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
         }
-        
-        .btn-sync {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-        
-        .btn-disconnect {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            color: white;
-            font-size: 0.9em;
-            padding: 10px;
-        }
-        
-        .status {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: 500;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .status.connected {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            border: 1px solid #b1dfbb;
-        }
-        
-        .status.disconnected {
-            background: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-        }
-        
-        .status.loading {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            color: #856404;
-            border: 1px solid #ffc107;
-        }
-        
-        .status.error {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .athlete-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .athlete-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-            border: 3px solid #fc4c02;
-        }
-        
-        .athlete-name {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .athlete-location {
-            font-size: 0.85em;
-            color: #666;
-        }
-        
-        .stay-connected-box {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border: 1px solid #90caf9;
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .stay-connected-box input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #1976d2;
-        }
-        
-        .stay-connected-box label {
-            font-size: 0.9em;
-            color: #1565c0;
-            cursor: pointer;
-            flex: 1;
-            line-height: 1.4;
-        }
-        
-        .activity-item {
-            padding: 8px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+
+        .activity-table thead {
+            position: sticky;
+            top: 0;
             background: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            z-index: 10;
         }
-        
-        .activity-item:hover {
-            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-color: #4facfe;
-        }
-        
-        .activity-header {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .activity-type {
+
+        .activity-table th {
+            padding: 10px 8px;
+            text-align: left;
             font-weight: 600;
-            color: #333;
-            font-size: 0.85em;
+            color: #6b7280;
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+
+        .activity-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        .activity-table tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .activity-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .activity-date {
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .activity-sport {
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .activity-sport.swim {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .activity-sport.bike {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .activity-sport.run {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .activity-sport.other {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: #1f2937;
+            max-width: 180px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
-        .activity-date {
-            color: #666;
-            font-size: 0.75em;
-        }
-        
-        .activity-stats {
-            display: flex;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-        
-        .stat {
-            text-align: center;
-            display: flex;
-            align-items: baseline;
-            gap: 2px;
-        }
-        
-        .stat-value {
-            font-weight: 600;
-            color: #4facfe;
-            font-size: 0.9em;
-        }
-        
-        .stat-label {
-            color: #888;
-            font-size: 0.7em;
-        }
-        
-        .filter-section {
-            background: #f8f9fa;
-            padding: 10px 12px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .filter-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.8em;
+
+        .activity-value {
+            color: #374151;
             white-space: nowrap;
         }
-        
-        .filter-select {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+
+        .activity-tss {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        /* Strava連携フッター */
+        .strava-footer {
+            margin-top: 24px;
+        }
+
+        .strava-panel {
             background: white;
-            font-size: 0.85em;
-            min-width: 100px;
+            border-radius: 16px;
+            padding: 16px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
-        
-        .btn-reset {
-            padding: 6px 12px;
-            background: #6c757d;
-            color: white;
+
+        .strava-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .strava-status.connected {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .strava-status.disconnected {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .strava-info {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .strava-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
-            font-size: 0.8em;
-            font-weight: 500;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
-            margin-left: auto;
+            transition: all 0.3s;
+            font-size: 0.9rem;
         }
-        
-        .btn-reset:hover {
-            background: #5a6268;
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #fc4c02;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .btn-strava {
+            background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+            color: white;
         }
-        
-        .empty-state {
-            text-align: center;
-            color: #666;
-            padding: 40px 20px;
+
+        .btn-sync {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
-        
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            opacity: 0.5;
+
+        .btn-disconnect {
+            background: #f3f4f6;
+            color: #6b7280;
         }
-        
+
+        /* プログレスバー */
         .progress-container {
-            margin-top: 15px;
+            width: 100%;
+            margin-top: 12px;
             display: none;
         }
-        
+
         .progress-bar-bg {
-            background: #e9ecef;
+            background: #e5e7eb;
             border-radius: 10px;
-            height: 8px;
+            height: 6px;
             overflow: hidden;
         }
-        
+
         .progress-bar {
-            background: linear-gradient(90deg, #28a745, #20c997);
+            background: linear-gradient(90deg, #667eea, #764ba2);
             height: 100%;
             width: 0%;
             transition: width 0.3s;
         }
-        
+
         .progress-text {
             text-align: center;
             margin-top: 8px;
-            font-size: 0.85em;
-            color: #666;
+            font-size: 0.85rem;
+            color: #6b7280;
         }
-        
-        @media (max-width: 1024px) {
-            .main-content {
+
+        /* 空状態 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* ローディングスピナー */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 1200px) {
+            .main-grid {
                 grid-template-columns: 1fr;
             }
+
+            .activity-list-container {
+                height: 400px;
+            }
         }
-        
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -512,35 +536,32 @@
                 bottom: auto;
                 width: 100%;
                 height: auto;
-                max-height: 80vh;
                 padding: 12px 0;
-            }
-
-            .flow-nav-logo {
-                font-size: 1rem;
-                padding: 0 16px 16px;
-                margin-bottom: 12px;
-            }
-
-            .flow-nav-step {
-                padding: 10px 16px;
-                font-size: 0.85rem;
-            }
-
-            .flow-nav-step .nav-icon {
-                font-size: 1.2rem;
             }
 
             .content-wrapper {
                 margin-left: 0;
-                margin-top: auto;
                 padding: 16px;
+                padding-top: 200px;
                 width: 100%;
-                padding-top: 280px;
             }
-            
-            .main-content {
+
+            .metrics-row {
                 grid-template-columns: 1fr;
+            }
+
+            .metric-value {
+                font-size: 2.5rem;
+            }
+
+            .strava-panel {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .strava-buttons {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -587,114 +608,120 @@
     </nav>
 
     <div class="content-wrapper">
-        <div class="container">
-        <!-- メインコンテンツ：アクティビティ一覧とサマリー -->
-        <div class="main-content">
-            <!-- アクティビティ一覧パネル -->
-            <div class="panel">
-                <div class="header">
-                    <h1>📋 アクティビティ一覧</h1>
-                    <p id="activityCount">データ未取得</p>
-                </div>
-                
-                <div class="content">
-                    <div class="filter-section">
-                        <div class="filter-group">
-                            <label class="filter-label">種目</label>
-                            <select id="typeFilter" class="filter-select">
-                                <option value="all">すべて</option>
-                                <option value="Swim">🏊 スイム</option>
-                                <option value="Ride">🚴 バイク</option>
-                                <option value="Run">🏃 ラン</option>
-                                <option value="other">💪 その他</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">期間</label>
-                            <select id="periodFilter" class="filter-select">
-                                <option value="all">すべて</option>
-                                <option value="thisMonth">今月</option>
-                                <option value="last3Months">過去3ヶ月</option>
-                                <option value="last6Months">過去6ヶ月</option>
-                            </select>
-                        </div>
-                        <button id="resetFilterBtn" class="btn-reset">フィルターをリセット</button>
+        <div class="main-container">
+            <!-- Fitness / Form / Fatigue 指標 -->
+            <div class="metrics-row">
+                <div class="metric-card fitness">
+                    <div class="metric-label">Fitness (CTL)</div>
+                    <div class="metric-value" id="fitnessValue">--</div>
+                    <div class="metric-subtitle">長期トレーニング負荷</div>
+                    <div class="metric-trend neutral" id="fitnessTrend">
+                        <span>→</span> <span>--</span>
                     </div>
-                    
-                    <div id="activityList">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">🏃</div>
-                            <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
-                        </div>
+                </div>
+                <div class="metric-card form">
+                    <div class="metric-label">Form (TSB)</div>
+                    <div class="metric-value" id="formValue">--</div>
+                    <div class="metric-subtitle">パフォーマンス準備状態</div>
+                    <div class="metric-trend neutral" id="formStatus">
+                        <span>--</span>
+                    </div>
+                </div>
+                <div class="metric-card fatigue">
+                    <div class="metric-label">Fatigue (ATL)</div>
+                    <div class="metric-value" id="fatigueValue">--</div>
+                    <div class="metric-subtitle">短期疲労度</div>
+                    <div class="metric-trend neutral" id="fatigueTrend">
+                        <span>→</span> <span>--</span>
                     </div>
                 </div>
             </div>
-            
-            <!-- サマリーパネル -->
-            <div class="panel">
-                <div class="header summary-header">
-                    <h1>📊 トレーニングサマリー</h1>
-                    <p>統計情報</p>
-                </div>
-                
-                <div class="content">
-                    <div id="summaryContent">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📈</div>
-                            <p>データ同期後に<br>サマリーを表示します</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- フッター：Strava連携（コンパクト版） -->
-        <div class="connection-footer">
-            <div class="panel compact">
-                <div class="header strava-header">
-                    <h1>🔗 Strava連携</h1>
-                    <p id="lastSyncTime">未同期</p>
-                </div>
-                
-                <div class="content">
-                    <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 15px; align-items: center;">
-                        <div id="connectionStatus" class="status disconnected" style="margin: 0;">
-                            <span>○ 未接続</span>
-                        </div>
-                        
-                        <div id="athleteInfo" style="display: none; font-size: 0.9em; color: #666;">
-                            <span id="athleteNameCompact"></span>
-                        </div>
-                        
-                        <div style="display: flex; gap: 8px;">
-                            <div id="connectSection">
-                                <button id="connectBtn" class="btn btn-strava" style="margin: 0; padding: 10px 20px; font-size: 0.9em;">
-                                    Stravaに接続
-                                </button>
+            <!-- メインコンテンツ：グラフとアクティビティ一覧 -->
+            <div class="main-grid">
+                <!-- 左パネル：トレーニングサマリー（グラフ） -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">📊 トレーニングサマリー</h2>
+                        <select id="periodSelector" class="period-selector">
+                            <option value="1week">過去1週間</option>
+                            <option value="4weeks" selected>過去4週間</option>
+                            <option value="8weeks">過去8週間</option>
+                            <option value="16weeks">過去16週間</option>
+                        </select>
+                    </div>
+                    <div class="panel-content" id="chartContent">
+                        <div class="chart-section">
+                            <h3 class="chart-title">種目別トレーニング時間</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="trainingTimeChart"></canvas>
                             </div>
-                            
-                            <div id="syncSection" style="display: none;">
-                                <button id="syncBtn" class="btn btn-sync" style="margin: 0; padding: 10px 20px; font-size: 0.9em;">
-                                    🔄 データを同期
-                                </button>
-                                <button id="disconnectBtn" class="btn btn-disconnect" style="margin: 0; padding: 8px 16px; font-size: 0.85em;">
-                                    連携を解除
-                                </button>
+                        </div>
+                        <div class="chart-section">
+                            <h3 class="chart-title">心拍Zone別トレーニング時間</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="hrZonesChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-section">
+                            <h3 class="chart-title">種目別TSS</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="tssChart"></canvas>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="progressContainer" class="progress-container">
-                        <div class="progress-bar-bg">
-                            <div id="progressBar" class="progress-bar"></div>
+                </div>
+
+                <!-- 右パネル：アクティビティ一覧 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">📋 アクティビティ一覧</h2>
+                        <span id="activityCount" style="font-size: 0.85rem; color: #6b7280;">--</span>
+                    </div>
+                    <div class="panel-content" style="padding: 0;">
+                        <div class="activity-list-container" id="activityList">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🏃</div>
+                                <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
+                            </div>
                         </div>
-                        <div id="progressText" class="progress-text"></div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Strava連携フッター -->
+            <div class="strava-footer">
+                <div class="strava-panel">
+                    <div id="connectionStatus" class="strava-status disconnected">
+                        <span>○</span> <span>未接続</span>
+                    </div>
+                    <div class="strava-info">
+                        <span id="athleteInfo" style="display: none;"></span>
+                        <span id="lastSyncTime">未同期</span>
+                    </div>
+                    <div class="strava-buttons">
+                        <div id="connectSection">
+                            <button id="connectBtn" class="btn btn-strava">Stravaに接続</button>
+                        </div>
+                        <div id="syncSection" style="display: none;">
+                            <button id="syncBtn" class="btn btn-sync">🔄 データを同期</button>
+                            <button id="disconnectBtn" class="btn btn-disconnect">連携を解除</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-bar-bg">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <div id="progressText" class="progress-text"></div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
     <script>
         // ===== 設定 =====
@@ -702,22 +729,65 @@
         const REDIRECT_URI = window.location.origin + '/data.html';
         const AUTH_URL = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read_all`;
         
+        // 種目タイプ定義
+        const SPORT_TYPES = {
+            swim: ['Swim'],
+            bike: ['Ride', 'VirtualRide', 'EBikeRide'],
+            run: ['Run', 'TrailRun', 'VirtualRun'],
+            other: ['WeightTraining', 'Workout', 'Yoga', 'CrossTraining', 'Walk', 'Hike']
+        };
+
+        const SPORT_COLORS = {
+            swim: 'rgba(59, 130, 246, 0.85)',
+            bike: 'rgba(139, 92, 246, 0.85)',
+            run: 'rgba(34, 197, 94, 0.85)',
+            other: 'rgba(249, 115, 22, 0.85)'
+        };
+
+        const SPORT_LABELS = {
+            swim: 'スイム',
+            bike: 'バイク',
+            run: 'ラン',
+            other: 'その他'
+        };
+
+        const ZONE_COLORS = [
+            'rgba(156, 163, 175, 0.85)',  // Zone 1 - グレー
+            'rgba(59, 130, 246, 0.85)',   // Zone 2 - ブルー
+            'rgba(34, 197, 94, 0.85)',    // Zone 3 - グリーン
+            'rgba(249, 115, 22, 0.85)',   // Zone 4 - オレンジ
+            'rgba(239, 68, 68, 0.85)'     // Zone 5 - レッド
+        ];
+
         // ===== 状態管理 =====
         let accessToken = null;
         let athlete = null;
         let activities = [];
-        let filteredActivities = [];
-        
+        let charts = {};
+
+        // ===== ユーザー閾値設定（localStorage から取得、なければデフォルト） =====
+        function getUserThresholds() {
+            const saved = localStorage.getItem('user_thresholds');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {
+                ftp: 200,              // バイクFTP (W)
+                rFtpPacePerKm: 300,    // ラン閾値ペース (秒/km) = 5:00/km
+                sFtpPacePer100m: 100,  // スイム閾値ペース (秒/100m) = 1:40/100m
+                maxHr: 190,
+                thresholdHr: 170
+            };
+        }
+
         // ===== 初期化 =====
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 アプリケーション初期化');
             
-            // URLからOAuthコードを確認
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             
             if (code) {
-                console.log('📥 OAuthコード受信');
                 await handleOAuthCallback(code);
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
@@ -727,24 +797,23 @@
             setupEventListeners();
         });
         
-        // ===== イベントリスナー =====
         function setupEventListeners() {
             document.getElementById('connectBtn').addEventListener('click', connectToStrava);
             document.getElementById('syncBtn').addEventListener('click', syncActivities);
             document.getElementById('disconnectBtn').addEventListener('click', disconnect);
-            document.getElementById('typeFilter').addEventListener('change', applyFilters);
-            document.getElementById('periodFilter').addEventListener('change', applyFilters);
-            document.getElementById('resetFilterBtn').addEventListener('click', resetFilters);
+            document.getElementById('periodSelector').addEventListener('change', () => {
+                if (activities.length > 0) {
+                    renderCharts();
+                }
+            });
         }
         
         // ===== Strava接続 =====
         function connectToStrava() {
-            console.log('🔗 Stravaに接続中...');
             updateStatus('loading', '⏳ Stravaに接続中...');
             window.location.href = AUTH_URL;
         }
         
-        // ===== OAuthコールバック処理 =====
         async function handleOAuthCallback(code) {
             updateStatus('loading', '⏳ アクセストークン取得中...');
             
@@ -761,14 +830,10 @@
                 }
                 
                 const data = await response.json();
-                console.log('✅ トークン取得成功');
-                
                 accessToken = data.access_token;
                 athlete = data.athlete;
                 
-                // 常にトークンを保存
                 saveToken(data);
-                
                 onConnected();
                 await syncActivities();
                 
@@ -778,21 +843,16 @@
             }
         }
         
-        // ===== 保存されたトークンを確認 =====
         async function checkSavedToken() {
             const saved = localStorage.getItem('strava_auth');
             
-            if (!saved) {
-                console.log('💾 保存されたトークンなし');
-                return;
-            }
+            if (!saved) return;
             
             try {
                 const data = JSON.parse(saved);
                 const now = Math.floor(Date.now() / 1000);
                 
                 if (data.expires_at && data.expires_at > now) {
-                    console.log('✅ 有効なトークンを復元');
                     accessToken = data.access_token;
                     athlete = data.athlete;
                     
@@ -801,15 +861,11 @@
                     const cachedActivities = localStorage.getItem('strava_activities');
                     if (cachedActivities) {
                         activities = JSON.parse(cachedActivities);
-                        filteredActivities = [...activities];
-                        displayActivities();
-                        generateSummary();
-                        updateActivityCount();
+                        renderAll();
                     }
                 } else {
-                    console.log('⏰ トークン期限切れ');
                     localStorage.removeItem('strava_auth');
-                    updateStatus('disconnected', '○ セッション期限切れ - 再接続してください');
+                    updateStatus('disconnected', '○ セッション期限切れ');
                 }
             } catch (error) {
                 console.error('❌ トークン復元エラー:', error);
@@ -817,7 +873,6 @@
             }
         }
         
-        // ===== トークン保存 =====
         function saveToken(data) {
             localStorage.setItem('strava_auth', JSON.stringify({
                 access_token: data.access_token,
@@ -825,32 +880,24 @@
                 expires_at: data.expires_at,
                 athlete: data.athlete
             }));
-            console.log('💾 トークンを保存しました');
         }
         
-        // ===== 接続完了時の処理 =====
         function onConnected() {
             updateStatus('connected', '● 接続済み');
             
             if (athlete) {
-                const athleteInfo = document.getElementById('athleteInfo');
                 const athleteName = `${athlete.firstname || ''} ${athlete.lastname || ''}`.trim() || 'アスリート';
-                document.getElementById('athleteNameCompact').textContent = athleteName;
-                athleteInfo.style.display = 'block';
+                document.getElementById('athleteInfo').textContent = athleteName;
+                document.getElementById('athleteInfo').style.display = 'inline';
             }
             
             document.getElementById('connectSection').style.display = 'none';
             document.getElementById('syncSection').style.display = 'flex';
             
-            // 最終同期時刻を復元
             const lastSync = localStorage.getItem('last_sync_time');
             if (lastSync) {
-                updateLastSyncTime(lastSync);
+                document.getElementById('lastSyncTime').textContent = `最終同期: ${lastSync}`;
             }
-        }
-
-        function updateLastSyncTime(timeStr) {
-            document.getElementById('lastSyncTime').textContent = `最終同期: ${timeStr}`;
         }
         
         // ===== データ同期 =====
@@ -870,41 +917,26 @@
             progressContainer.style.display = 'block';
             
             try {
-                // 既存データを確認
                 const existingActivities = JSON.parse(localStorage.getItem('strava_activities') || '[]');
                 const isInitialSync = existingActivities.length === 0;
                 
                 let allActivities = [];
-                let newActivitiesCount = 0;
-                
-                // 1年前のタイムスタンプ
                 const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
                 
                 if (isInitialSync) {
-                    // 初回：過去1年分を取得（最新から古い順に取得）
-                    console.log('📥 初回同期：過去1年分のデータを取得中...');
                     progressText.textContent = '初回同期中...';
                     
                     let hasMore = true;
-                    let beforeTimestamp = null; // 最初は現在から
+                    let beforeTimestamp = null;
                     let pageCount = 0;
                     
-                    while (hasMore && pageCount < 30) { // 最大30ページ（6000件）
+                    while (hasMore && pageCount < 30) {
                         pageCount++;
                         progressBar.style.width = `${Math.min(pageCount * 3, 90)}%`;
                         progressText.textContent = `初回同期中... (${allActivities.length}件)`;
                         
-                        const requestBody = {
-                            token: accessToken,
-                            per_page: 200
-                        };
-                        
-                        // 2回目以降はbeforeパラメータを使用
-                        if (beforeTimestamp) {
-                            requestBody.before = beforeTimestamp;
-                        }
-                        
-                        console.log(`📥 ページ${pageCount}: リクエスト`, requestBody);
+                        const requestBody = { token: accessToken, per_page: 200 };
+                        if (beforeTimestamp) requestBody.before = beforeTimestamp;
                         
                         const response = await fetch('/.netlify/functions/strava-activities', {
                             method: 'POST',
@@ -912,84 +944,53 @@
                             body: JSON.stringify(requestBody)
                         });
                         
-                        if (!response.ok) {
-                            const error = await response.json();
-                            throw new Error(error.error || 'データ取得に失敗');
-                        }
+                        if (!response.ok) throw new Error('データ取得に失敗');
                         
                         const data = await response.json();
                         
                         if (data.activities && data.activities.length > 0) {
                             allActivities = allActivities.concat(data.activities);
                             
-                            // 最も古いアクティビティの日付を取得
                             const lastActivity = data.activities[data.activities.length - 1];
                             const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
                             
-                            console.log(`📥 ページ${pageCount}: ${data.activities.length}件取得 (合計: ${allActivities.length}件), 最古: ${lastActivity.start_date}`);
-                            
-                            // 1年以上前のデータに到達したら終了
-                            if (lastActivityTime <= oneYearAgo) {
-                                console.log('📅 1年分のデータに到達');
+                            if (lastActivityTime <= oneYearAgo || data.activities.length < 200) {
                                 hasMore = false;
                             } else {
                                 beforeTimestamp = lastActivityTime;
                             }
-                            
-                            // 200件未満なら全データ取得完了
-                            if (data.activities.length < 200) {
-                                console.log('📅 全データ取得完了（200件未満）');
-                                hasMore = false;
-                            }
                         } else {
-                            console.log('📅 データなし、終了');
                             hasMore = false;
                         }
                         
-                        // APIレート制限を避けるため少し待機
                         await new Promise(resolve => setTimeout(resolve, 200));
                     }
                     
-                    // 1年以上前のデータを除外
                     allActivities = allActivities.filter(a => {
                         const actTime = Math.floor(new Date(a.start_date).getTime() / 1000);
                         return actTime >= oneYearAgo;
                     });
                     
-                    newActivitiesCount = allActivities.length;
-                    console.log(`✅ 初回同期完了: ${newActivitiesCount}件（過去1年分）`);
-                    
                 } else {
-                    // 2回目以降：最新データのみ取得
-                    console.log('🔄 差分更新：最新データを取得中...');
+                    // 差分更新
                     progressText.textContent = '最新データを確認中...';
                     progressBar.style.width = '30%';
                     
-                    // 既存データの最新の日時を取得
                     const sortedExisting = [...existingActivities].sort((a, b) => 
                         new Date(b.start_date) - new Date(a.start_date)
                     );
                     const latestActivity = sortedExisting[0];
+                    const latestTimestamp = Math.floor(new Date(latestActivity.start_date).getTime() / 1000);
                     
-                    console.log('📅 既存の最新データ:', latestActivity?.start_date);
-                    
-                    // 最新データより後のアクティビティを取得
                     let hasMore = true;
                     let beforeTimestamp = null;
                     let pageCount = 0;
-                    const latestTimestamp = Math.floor(new Date(latestActivity.start_date).getTime() / 1000);
                     
                     while (hasMore && pageCount < 10) {
                         pageCount++;
                         
-                        const requestBody = {
-                            token: accessToken,
-                            per_page: 200
-                        };
-                        
-                        if (beforeTimestamp) {
-                            requestBody.before = beforeTimestamp;
-                        }
+                        const requestBody = { token: accessToken, per_page: 200 };
+                        if (beforeTimestamp) requestBody.before = beforeTimestamp;
                         
                         const response = await fetch('/.netlify/functions/strava-activities', {
                             method: 'POST',
@@ -997,15 +998,11 @@
                             body: JSON.stringify(requestBody)
                         });
                         
-                        if (!response.ok) {
-                            const error = await response.json();
-                            throw new Error(error.error || 'データ取得に失敗');
-                        }
+                        if (!response.ok) throw new Error('データ取得に失敗');
                         
                         const data = await response.json();
                         
                         if (data.activities && data.activities.length > 0) {
-                            // 既存データより新しいもののみ追加
                             const existingIds = new Set(existingActivities.map(a => a.id));
                             const newActivities = data.activities.filter(a => {
                                 const actTime = Math.floor(new Date(a.start_date).getTime() / 1000);
@@ -1014,102 +1011,43 @@
                             
                             allActivities = allActivities.concat(newActivities);
                             
-                            // 最も古いアクティビティの日付を取得
                             const lastActivity = data.activities[data.activities.length - 1];
                             const lastActivityTime = Math.floor(new Date(lastActivity.start_date).getTime() / 1000);
                             
-                            // 既存データの日時まで到達したら終了
-                            if (lastActivityTime <= latestTimestamp) {
+                            if (lastActivityTime <= latestTimestamp || data.activities.length < 200) {
                                 hasMore = false;
                             } else {
                                 beforeTimestamp = lastActivityTime;
-                            }
-                            
-                            if (data.activities.length < 200) {
-                                hasMore = false;
                             }
                         } else {
                             hasMore = false;
                         }
                     }
                     
-                    newActivitiesCount = allActivities.length;
-                    
-                    // 新規データを既存データの前に追加
                     allActivities = [...allActivities, ...existingActivities];
-                    
-                    if (newActivitiesCount > 0) {
-                        console.log(`✅ 差分更新完了: ${newActivitiesCount}件の新規データ`);
-                    } else {
-                        console.log('✅ 新規データなし');
-                    }
-                    
-                    progressBar.style.width = '70%';
                 }
                 
-                // 詳細データ取得（最新5件のみ）
-                console.log('💓 詳細データを取得中...');
-                progressText.textContent = `詳細データ取得中...`;
-                
-                const activitiesNeedingDetails = allActivities
-                    .filter(a => !a.detailData)
-                    .slice(0, 5);
-                
-                let detailSuccessCount = 0;
-                
-                for (const activity of activitiesNeedingDetails) {
-                    try {
-                        const detailResponse = await fetch('/.netlify/functions/strava-activity-detail', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                token: accessToken,
-                                activityId: activity.id
-                            })
-                        });
-                        
-                        if (detailResponse.ok) {
-                            const detailData = await detailResponse.json();
-                            activity.detailData = detailData;
-                            detailSuccessCount++;
-                        }
-                    } catch (err) {
-                        console.log(`⚠️ アクティビティ ${activity.id} の詳細取得エラー:`, err.message);
-                    }
-                }
-                
-                console.log(`✅ 詳細データ取得完了: ${detailSuccessCount}/${activitiesNeedingDetails.length}件成功`);
-                
-                activities = allActivities;
                 progressBar.style.width = '100%';
+                activities = allActivities;
                 
-                if (isInitialSync) {
-                    progressText.textContent = `${activities.length}件のアクティビティを取得しました（過去1年分）`;
-                } else if (newActivitiesCount > 0) {
-                    progressText.textContent = `${newActivitiesCount}件の新規アクティビティを追加しました（合計${activities.length}件）`;
-                } else {
-                    progressText.textContent = `最新の状態です（合計${activities.length}件）`;
-                }
+                // TSS計算
+                progressText.textContent = 'TSS計算中...';
+                await calculateAllTSS();
                 
                 localStorage.setItem('strava_activities', JSON.stringify(activities));
                 
-                // 最終同期時刻を保存
                 const now = new Date();
                 const syncTimeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                 localStorage.setItem('last_sync_time', syncTimeStr);
-                updateLastSyncTime(syncTimeStr);
+                document.getElementById('lastSyncTime').textContent = `最終同期: ${syncTimeStr}`;
                 
-                filteredActivities = [...activities];
-                displayActivities();
-                generateSummary();
-                updateActivityCount();
+                progressText.textContent = `${activities.length}件のアクティビティを同期しました`;
                 
-                console.log(`✅ 同期完了: ${activities.length}件のアクティビティ`);
+                renderAll();
                 
             } catch (error) {
                 console.error('❌ 同期エラー:', error);
                 progressText.textContent = `エラー: ${error.message}`;
-                progressBar.style.background = '#dc3545';
             } finally {
                 syncBtn.disabled = false;
                 syncBtn.innerHTML = '🔄 データを同期';
@@ -1117,16 +1055,614 @@
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
                     progressBar.style.width = '0%';
-                    progressBar.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
                 }, 3000);
             }
         }
         
-        // ===== 連携解除 =====
-        function disconnect() {
-            if (!confirm('Strava連携を解除しますか？\n保存されたデータも削除されます。')) {
+        // ===== TSS計算 =====
+        async function calculateAllTSS() {
+            const thresholds = getUserThresholds();
+            
+            activities.forEach(activity => {
+                if (activity.tss !== undefined) return; // 既に計算済み
+                
+                const sportType = activity.sport_type || activity.type;
+                const movingTime = activity.moving_time || activity.elapsed_time || 0;
+                const durationHours = movingTime / 3600;
+                
+                let tss = 0;
+                let sport = getSportCategory(sportType);
+                
+                if (sport === 'bike') {
+                    // バイク: パワーベース or 心拍ベース
+                    const np = activity.weighted_average_watts || activity.average_watts;
+                    if (np && np > 0) {
+                        const intensityFactor = np / thresholds.ftp;
+                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
+                    } else if (activity.average_heartrate) {
+                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
+                    } else {
+                        tss = Math.round(durationHours * 50);
+                    }
+                } else if (sport === 'run') {
+                    // ラン: ペースベース
+                    if (activity.average_speed && activity.average_speed > 0) {
+                        const avgPacePerKm = 1000 / activity.average_speed;
+                        const intensityFactor = thresholds.rFtpPacePerKm / avgPacePerKm;
+                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
+                    } else if (activity.average_heartrate) {
+                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
+                    } else {
+                        tss = Math.round(durationHours * 60);
+                    }
+                } else if (sport === 'swim') {
+                    // スイム: ペースベース
+                    if (activity.average_speed && activity.average_speed > 0 && activity.distance > 0) {
+                        const avgPacePer100m = 100 / activity.average_speed;
+                        const intensityFactor = thresholds.sFtpPacePer100m / avgPacePer100m;
+                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
+                    } else if (activity.average_heartrate) {
+                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
+                    } else {
+                        tss = Math.round(durationHours * 50);
+                    }
+                } else {
+                    // その他
+                    if (activity.average_heartrate) {
+                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
+                    } else {
+                        tss = Math.round(durationHours * 40);
+                    }
+                }
+                
+                activity.tss = Math.max(0, Math.min(tss, 500)); // 0-500の範囲に制限
+            });
+        }
+        
+        function getSportCategory(sportType) {
+            for (const [sport, types] of Object.entries(SPORT_TYPES)) {
+                if (types.includes(sportType)) return sport;
+            }
+            return 'other';
+        }
+        
+        // ===== CTL/ATL/TSB計算 =====
+        function calculateTrainingMetrics() {
+            if (activities.length === 0) return { ctl: 0, atl: 0, tsb: 0 };
+            
+            // 日別TSSを集計
+            const dailyTss = {};
+            activities.forEach(activity => {
+                const date = activity.start_date.split('T')[0];
+                if (!dailyTss[date]) dailyTss[date] = 0;
+                dailyTss[date] += activity.tss || 0;
+            });
+            
+            // 過去90日分のデータを準備
+            const today = new Date();
+            const days = [];
+            for (let i = 89; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                days.push({ date: dateStr, tss: dailyTss[dateStr] || 0 });
+            }
+            
+            // CTL/ATL計算（指数移動平均）
+            const ctlFactor = 1 - Math.exp(-1 / 42);
+            const atlFactor = 1 - Math.exp(-1 / 7);
+            
+            let ctl = 0;
+            let atl = 0;
+            let prevCtl = 0;
+            let prevAtl = 0;
+            
+            days.forEach((day, i) => {
+                ctl = ctl + (day.tss - ctl) * ctlFactor;
+                atl = atl + (day.tss - atl) * atlFactor;
+                
+                if (i === days.length - 8) {
+                    prevCtl = ctl;
+                    prevAtl = atl;
+                }
+            });
+            
+            const tsb = ctl - atl;
+            const ctlTrend = ctl - prevCtl;
+            const atlTrend = atl - prevAtl;
+            
+            return {
+                ctl: Math.round(ctl * 10) / 10,
+                atl: Math.round(atl * 10) / 10,
+                tsb: Math.round(tsb * 10) / 10,
+                ctlTrend: Math.round(ctlTrend * 10) / 10,
+                atlTrend: Math.round(atlTrend * 10) / 10
+            };
+        }
+        
+        // ===== 全体レンダリング =====
+        function renderAll() {
+            renderMetrics();
+            renderCharts();
+            renderActivityList();
+        }
+        
+        // ===== 指標表示 =====
+        function renderMetrics() {
+            const metrics = calculateTrainingMetrics();
+            
+            // Fitness (CTL)
+            document.getElementById('fitnessValue').textContent = metrics.ctl.toFixed(0);
+            const fitnessTrend = document.getElementById('fitnessTrend');
+            if (metrics.ctlTrend > 0) {
+                fitnessTrend.className = 'metric-trend up';
+                fitnessTrend.innerHTML = `<span>↑</span> <span>+${metrics.ctlTrend.toFixed(1)}</span>`;
+            } else if (metrics.ctlTrend < 0) {
+                fitnessTrend.className = 'metric-trend down';
+                fitnessTrend.innerHTML = `<span>↓</span> <span>${metrics.ctlTrend.toFixed(1)}</span>`;
+            } else {
+                fitnessTrend.className = 'metric-trend neutral';
+                fitnessTrend.innerHTML = `<span>→</span> <span>変化なし</span>`;
+            }
+            
+            // Form (TSB)
+            document.getElementById('formValue').textContent = metrics.tsb.toFixed(0);
+            const formStatus = document.getElementById('formStatus');
+            let formText = '';
+            let formClass = 'neutral';
+            
+            if (metrics.tsb >= 25) {
+                formText = '🟢 レース最適';
+                formClass = 'up';
+            } else if (metrics.tsb >= 5) {
+                formText = '🟢 好調';
+                formClass = 'up';
+            } else if (metrics.tsb >= -10) {
+                formText = '🟡 通常';
+                formClass = 'neutral';
+            } else if (metrics.tsb >= -30) {
+                formText = '🟠 疲労蓄積';
+                formClass = 'down';
+            } else {
+                formText = '🔴 要休養';
+                formClass = 'down';
+            }
+            formStatus.className = `metric-trend ${formClass}`;
+            formStatus.innerHTML = `<span>${formText}</span>`;
+            
+            // Fatigue (ATL)
+            document.getElementById('fatigueValue').textContent = metrics.atl.toFixed(0);
+            const fatigueTrend = document.getElementById('fatigueTrend');
+            if (metrics.atlTrend > 5) {
+                fatigueTrend.className = 'metric-trend down';
+                fatigueTrend.innerHTML = `<span>↑</span> <span>+${metrics.atlTrend.toFixed(1)}</span>`;
+            } else if (metrics.atlTrend < -5) {
+                fatigueTrend.className = 'metric-trend up';
+                fatigueTrend.innerHTML = `<span>↓</span> <span>${metrics.atlTrend.toFixed(1)}</span>`;
+            } else {
+                fatigueTrend.className = 'metric-trend neutral';
+                fatigueTrend.innerHTML = `<span>→</span> <span>安定</span>`;
+            }
+        }
+        
+        // ===== グラフレンダリング =====
+        function renderCharts() {
+            const period = document.getElementById('periodSelector').value;
+            let numWeeks;
+            
+            switch(period) {
+                case '1week': numWeeks = 1; break;
+                case '4weeks': numWeeks = 4; break;
+                case '8weeks': numWeeks = 8; break;
+                case '16weeks': numWeeks = 16; break;
+                default: numWeeks = 4;
+            }
+            
+            const weeklyData = calculateWeeklyStats(numWeeks);
+            const weeklyZones = calculateWeeklyZones(numWeeks);
+            const weeklyTss = calculateWeeklyTSS(numWeeks);
+            
+            renderTrainingTimeChart(weeklyData);
+            renderHRZonesChart(weeklyZones);
+            renderTSSChart(weeklyTss);
+        }
+        
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+        
+        function calculateWeeklyStats(numWeeks) {
+            const weeks = {};
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - numWeeks * 7);
+            
+            activities.forEach(activity => {
+                const actDate = new Date(activity.start_date);
+                if (actDate < startDate) return;
+                
+                const weekStart = getWeekStart(actDate);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                const sportType = activity.sport_type || activity.type;
+                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600;
+                const sport = getSportCategory(sportType);
+                
+                if (!weeks[weekKey]) weeks[weekKey] = { swim: 0, bike: 0, run: 0, other: 0 };
+                weeks[weekKey][sport] += duration;
+            });
+            
+            const result = [];
+            for (let i = numWeeks - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i * 7);
+                const weekStart = getWeekStart(date);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
+                
+                result.push({
+                    week: weekLabel,
+                    data: weeks[weekKey] || { swim: 0, bike: 0, run: 0, other: 0 }
+                });
+            }
+            
+            return result;
+        }
+        
+        function calculateWeeklyZones(numWeeks) {
+            const weeks = {};
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - numWeeks * 7);
+            const thresholds = getUserThresholds();
+            const maxHR = thresholds.maxHr;
+            
+            activities.forEach(activity => {
+                const actDate = new Date(activity.start_date);
+                if (actDate < startDate) return;
+                
+                const weekStart = getWeekStart(actDate);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                
+                if (!weeks[weekKey]) weeks[weekKey] = { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
+                
+                const avgHR = activity.average_heartrate;
+                const duration = (activity.moving_time || activity.elapsed_time || 0) / 3600;
+                
+                if (!avgHR || avgHR === 0) return;
+                
+                const hrPercent = (avgHR / maxHR) * 100;
+                let zone;
+                if (hrPercent < 60) zone = 'zone1';
+                else if (hrPercent < 70) zone = 'zone2';
+                else if (hrPercent < 80) zone = 'zone3';
+                else if (hrPercent < 90) zone = 'zone4';
+                else zone = 'zone5';
+                
+                weeks[weekKey][zone] += duration;
+            });
+            
+            const result = [];
+            for (let i = numWeeks - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i * 7);
+                const weekStart = getWeekStart(date);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
+                
+                result.push({
+                    week: weekLabel,
+                    data: weeks[weekKey] || { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 }
+                });
+            }
+            
+            return result;
+        }
+        
+        function calculateWeeklyTSS(numWeeks) {
+            const weeks = {};
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - numWeeks * 7);
+            
+            activities.forEach(activity => {
+                const actDate = new Date(activity.start_date);
+                if (actDate < startDate) return;
+                
+                const weekStart = getWeekStart(actDate);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                const sportType = activity.sport_type || activity.type;
+                const sport = getSportCategory(sportType);
+                const tss = activity.tss || 0;
+                
+                if (!weeks[weekKey]) weeks[weekKey] = { swim: 0, bike: 0, run: 0, other: 0 };
+                weeks[weekKey][sport] += tss;
+            });
+            
+            const result = [];
+            for (let i = numWeeks - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i * 7);
+                const weekStart = getWeekStart(date);
+                const weekKey = weekStart.toISOString().split('T')[0];
+                const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
+                
+                result.push({
+                    week: weekLabel,
+                    data: weeks[weekKey] || { swim: 0, bike: 0, run: 0, other: 0 }
+                });
+            }
+            
+            return result;
+        }
+        
+        function renderTrainingTimeChart(weeklyData) {
+            const ctx = document.getElementById('trainingTimeChart').getContext('2d');
+            
+            if (charts.trainingTime) charts.trainingTime.destroy();
+            
+            charts.trainingTime = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weeklyData.map(w => w.week),
+                    datasets: [
+                        {
+                            label: SPORT_LABELS.swim,
+                            data: weeklyData.map(w => w.data.swim),
+                            backgroundColor: SPORT_COLORS.swim
+                        },
+                        {
+                            label: SPORT_LABELS.bike,
+                            data: weeklyData.map(w => w.data.bike),
+                            backgroundColor: SPORT_COLORS.bike
+                        },
+                        {
+                            label: SPORT_LABELS.run,
+                            data: weeklyData.map(w => w.data.run),
+                            backgroundColor: SPORT_COLORS.run
+                        },
+                        {
+                            label: SPORT_LABELS.other,
+                            data: weeklyData.map(w => w.data.other),
+                            backgroundColor: SPORT_COLORS.other
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            title: { display: true, text: '時間 (h)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+                        datalabels: { display: false }
+                    }
+                }
+            });
+        }
+        
+        function renderHRZonesChart(weeklyZones) {
+            const ctx = document.getElementById('hrZonesChart').getContext('2d');
+            
+            if (charts.hrZones) charts.hrZones.destroy();
+            
+            const percentageData = weeklyZones.map(week => {
+                const total = week.data.zone1 + week.data.zone2 + week.data.zone3 + week.data.zone4 + week.data.zone5;
+                if (total === 0) return { week: week.week, zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
+                return {
+                    week: week.week,
+                    zone1: (week.data.zone1 / total) * 100,
+                    zone2: (week.data.zone2 / total) * 100,
+                    zone3: (week.data.zone3 / total) * 100,
+                    zone4: (week.data.zone4 / total) * 100,
+                    zone5: (week.data.zone5 / total) * 100
+                };
+            });
+            
+            charts.hrZones = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: percentageData.map(w => w.week),
+                    datasets: [
+                        { label: 'Z1', data: percentageData.map(w => w.zone1), backgroundColor: ZONE_COLORS[0] },
+                        { label: 'Z2', data: percentageData.map(w => w.zone2), backgroundColor: ZONE_COLORS[1] },
+                        { label: 'Z3', data: percentageData.map(w => w.zone3), backgroundColor: ZONE_COLORS[2] },
+                        { label: 'Z4', data: percentageData.map(w => w.zone4), backgroundColor: ZONE_COLORS[3] },
+                        { label: 'Z5', data: percentageData.map(w => w.zone5), backgroundColor: ZONE_COLORS[4] }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, max: 100, title: { display: true, text: '割合 (%)' } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+                        datalabels: { display: false }
+                    }
+                }
+            });
+        }
+        
+        function renderTSSChart(weeklyTss) {
+            const ctx = document.getElementById('tssChart').getContext('2d');
+            
+            if (charts.tss) charts.tss.destroy();
+            
+            charts.tss = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weeklyTss.map(w => w.week),
+                    datasets: [
+                        {
+                            label: SPORT_LABELS.swim,
+                            data: weeklyTss.map(w => w.data.swim),
+                            backgroundColor: SPORT_COLORS.swim
+                        },
+                        {
+                            label: SPORT_LABELS.bike,
+                            data: weeklyTss.map(w => w.data.bike),
+                            backgroundColor: SPORT_COLORS.bike
+                        },
+                        {
+                            label: SPORT_LABELS.run,
+                            data: weeklyTss.map(w => w.data.run),
+                            backgroundColor: SPORT_COLORS.run
+                        },
+                        {
+                            label: SPORT_LABELS.other,
+                            data: weeklyTss.map(w => w.data.other),
+                            backgroundColor: SPORT_COLORS.other
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            title: { display: true, text: 'TSS' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+                        datalabels: { display: false }
+                    }
+                }
+            });
+        }
+        
+        // ===== アクティビティリスト =====
+        function renderActivityList() {
+            const container = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏃</div>
+                        <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
+                    </div>
+                `;
+                document.getElementById('activityCount').textContent = '--';
                 return;
             }
+            
+            const sorted = [...activities].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+            
+            document.getElementById('activityCount').textContent = `${sorted.length}件`;
+            
+            let html = `
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>種目</th>
+                            <th>タイトル</th>
+                            <th>距離</th>
+                            <th>時間</th>
+                            <th>ペース</th>
+                            <th>心拍</th>
+                            <th>TSS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            sorted.forEach(activity => {
+                const date = new Date(activity.start_date);
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+                const sportType = activity.sport_type || activity.type;
+                const sport = getSportCategory(sportType);
+                const sportLabel = getSportLabel(sportType);
+                
+                const distance = activity.distance ? (activity.distance / 1000).toFixed(2) : '-';
+                const duration = formatDuration(activity.moving_time || activity.elapsed_time);
+                const pace = formatPace(activity, sport);
+                const hr = activity.average_heartrate ? Math.round(activity.average_heartrate) : '-';
+                const tss = activity.tss || '-';
+                
+                html += `
+                    <tr onclick="openActivityDetail(${activity.id})">
+                        <td class="activity-date">${dateStr}</td>
+                        <td><span class="activity-sport ${sport}">${sportLabel}</span></td>
+                        <td class="activity-title" title="${activity.name || ''}">${activity.name || '-'}</td>
+                        <td class="activity-value">${distance}</td>
+                        <td class="activity-value">${duration}</td>
+                        <td class="activity-value">${pace}</td>
+                        <td class="activity-value">${hr}</td>
+                        <td class="activity-tss">${tss}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function getSportLabel(sportType) {
+            if (SPORT_TYPES.swim.includes(sportType)) return 'スイム';
+            if (SPORT_TYPES.bike.includes(sportType)) return 'バイク';
+            if (SPORT_TYPES.run.includes(sportType)) return 'ラン';
+            return 'その他';
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            
+            if (h > 0) {
+                return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+        
+        function formatPace(activity, sport) {
+            if (!activity.average_speed || activity.average_speed <= 0) return '-';
+            
+            if (sport === 'swim') {
+                // スイム: 分:秒/100m
+                const pacePer100m = 100 / activity.average_speed;
+                const min = Math.floor(pacePer100m / 60);
+                const sec = Math.round(pacePer100m % 60);
+                return `${min}:${String(sec).padStart(2, '0')}/100m`;
+            } else if (sport === 'bike') {
+                // バイク: km/h
+                const kmh = activity.average_speed * 3.6;
+                return `${kmh.toFixed(1)}km/h`;
+            } else if (sport === 'run') {
+                // ラン: 分:秒/km
+                const pacePerKm = 1000 / activity.average_speed;
+                const min = Math.floor(pacePerKm / 60);
+                const sec = Math.round(pacePerKm % 60);
+                return `${min}:${String(sec).padStart(2, '0')}/km`;
+            }
+            return '-';
+        }
+        
+        function openActivityDetail(id) {
+            window.open(`activity-detail.html?id=${id}`, '_blank');
+        }
+        
+        // ===== 連携解除 =====
+        function disconnect() {
+            if (!confirm('Strava連携を解除しますか？\n保存されたデータも削除されます。')) return;
             
             localStorage.removeItem('strava_auth');
             localStorage.removeItem('strava_activities');
@@ -1135,7 +1671,6 @@
             accessToken = null;
             athlete = null;
             activities = [];
-            filteredActivities = [];
             
             updateStatus('disconnected', '○ 未接続');
             document.getElementById('athleteInfo').style.display = 'none';
@@ -1143,289 +1678,28 @@
             document.getElementById('syncSection').style.display = 'none';
             document.getElementById('lastSyncTime').textContent = '未同期';
             
+            // 指標をリセット
+            document.getElementById('fitnessValue').textContent = '--';
+            document.getElementById('formValue').textContent = '--';
+            document.getElementById('fatigueValue').textContent = '--';
+            
             document.getElementById('activityList').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">🏃</div>
                     <p>Stravaに接続して<br>トレーニングデータを取得しましょう</p>
                 </div>
             `;
+            document.getElementById('activityCount').textContent = '--';
             
-            document.getElementById('summaryContent').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📈</div>
-                    <p>データ同期後に<br>サマリーを表示します</p>
-                </div>
-            `;
-            
-            document.getElementById('activityCount').textContent = 'データ未取得';
-            console.log('🔌 連携を解除しました');
+            // グラフをクリア
+            Object.values(charts).forEach(chart => chart && chart.destroy());
+            charts = {};
         }
         
-        // ===== ステータス更新 =====
         function updateStatus(type, text) {
             const status = document.getElementById('connectionStatus');
-            status.className = `status ${type}`;
-            status.innerHTML = `<span>${text}</span>`;
-        }
-        
-        // ===== アクティビティ表示 =====
-        let currentPage = 1;
-        const itemsPerPage = 200;
-
-        function displayActivities() {
-            const container = document.getElementById('activityList');
-            
-            if (filteredActivities.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <p>条件に一致するアクティビティがありません</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const sorted = [...filteredActivities].sort((a, b) => 
-                new Date(b.start_date) - new Date(a.start_date)
-            );
-            
-            const totalPages = Math.ceil(sorted.length / itemsPerPage);
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageActivities = sorted.slice(startIndex, endIndex);
-            
-            let html = '';
-            
-            // ページネーションコントロール（上部）
-            if (totalPages > 1) {
-                html += renderPagination(totalPages, 'top');
-            }
-            
-            // アクティビティリスト
-            html += '<div class="activity-list-items">';
-            html += pageActivities.map(activity => {
-                const date = new Date(activity.start_date).toLocaleDateString('ja-JP');
-                const distance = activity.distance ? (activity.distance / 1000).toFixed(1) : '0';
-                const duration = formatDuration(activity.moving_time || activity.elapsed_time);
-                const heartRate = activity.average_heartrate ? `${Math.round(activity.average_heartrate)}` : '-';
-                
-                return `
-                    <div class="activity-item" onclick="openActivityDetail(${activity.id})">
-                        <div class="activity-header">
-                            <span class="activity-type">${getActivityIcon(activity.sport_type || activity.type)} ${activity.name || 'アクティビティ'}</span>
-                            <span class="activity-date">${date}</span>
-                        </div>
-                        <div class="activity-stats">
-                            <div class="stat">
-                                <div class="stat-value">${distance}</div>
-                                <div class="stat-label">km</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-value">${duration}</div>
-                                <div class="stat-label">時間</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-value">${heartRate}</div>
-                                <div class="stat-label">bpm</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            html += '</div>';
-            
-            // ページネーションコントロール（下部）
-            if (totalPages > 1) {
-                html += renderPagination(totalPages, 'bottom');
-            }
-            
-            container.innerHTML = html;
-            container.style.flex = '1';
-            container.style.overflowY = 'auto';
-        }
-        
-        function renderPagination(totalPages, position) {
-            const startIndex = (currentPage - 1) * itemsPerPage + 1;
-            const endIndex = Math.min(currentPage * itemsPerPage, filteredActivities.length);
-            
-            return `
-                <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px; background: #f8f9fa; border-radius: 6px; margin: ${position === 'top' ? '0 0 8px 0' : '8px 0 0 0'}; font-size: 0.8em;">
-                    <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">≪</button>
-                    <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === 1 ? 'opacity: 0.5;' : ''}">＜</button>
-                    <span style="padding: 4px 8px; color: #666;">
-                        ${startIndex}-${endIndex} / ${filteredActivities.length}件（${currentPage}/${totalPages}）
-                    </span>
-                    <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">＞</button>
-                    <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 0.9em; ${currentPage === totalPages ? 'opacity: 0.5;' : ''}">≫</button>
-                </div>
-            `;
-        }
-        
-        function goToPage(page) {
-            const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            displayActivities();
-            // スクロールを上部に戻す
-            document.getElementById('activityList').scrollTop = 0;
-        }
-        
-        function openActivityDetail(id) {
-            window.open(`activity-detail.html?id=${id}`, '_blank');
-        }
-        
-        // ===== フィルター =====
-        function applyFilters() {
-            currentPage = 1;  // ページをリセット
-            const typeFilter = document.getElementById('typeFilter').value;
-            const periodFilter = document.getElementById('periodFilter').value;
-            
-            filteredActivities = activities.filter(activity => {
-                if (typeFilter !== 'all') {
-                    const type = activity.sport_type || activity.type;
-                    if (typeFilter === 'Run' && !['Run', 'TrailRun'].includes(type)) return false;
-                    if (typeFilter === 'Ride' && !['Ride', 'VirtualRide'].includes(type)) return false;
-                    if (typeFilter === 'Swim' && type !== 'Swim') return false;
-                    if (typeFilter === 'other' && ['Run', 'TrailRun', 'Ride', 'VirtualRide', 'Swim'].includes(type)) return false;
-                }
-                
-                if (periodFilter !== 'all') {
-                    const activityDate = new Date(activity.start_date);
-                    const now = new Date();
-                    
-                    if (periodFilter === 'thisMonth') {
-                        if (activityDate.getMonth() !== now.getMonth() || activityDate.getFullYear() !== now.getFullYear()) return false;
-                    } else if (periodFilter === 'last3Months') {
-                        const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-                        if (activityDate < threeMonthsAgo) return false;
-                    } else if (periodFilter === 'last6Months') {
-                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-                        if (activityDate < sixMonthsAgo) return false;
-                    }
-                }
-                
-                return true;
-            });
-            
-            displayActivities();
-            generateSummary();
-            updateActivityCount();
-        }
-        
-        function resetFilters() {
-            document.getElementById('typeFilter').value = 'all';
-            document.getElementById('periodFilter').value = 'all';
-            filteredActivities = [...activities];
-            currentPage = 1;  // ページをリセット
-            displayActivities();
-            generateSummary();
-            updateActivityCount();
-        }
-        
-        function updateActivityCount() {
-            const count = document.getElementById('activityCount');
-            if (filteredActivities.length === activities.length) {
-                count.textContent = `${activities.length}件のアクティビティ`;
-            } else {
-                count.textContent = `${filteredActivities.length}件表示 (全${activities.length}件中)`;
-            }
-        }
-        
-        // ===== サマリー生成 =====
-        function generateSummary() {
-            const container = document.getElementById('summaryContent');
-            
-            if (filteredActivities.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📈</div>
-                        <p>データがありません</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const totalTime = filteredActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
-            const totalDistance = filteredActivities.reduce((sum, a) => sum + (a.distance || 0), 0);
-            
-            const monthlyCount = {};
-            filteredActivities.forEach(activity => {
-                const date = new Date(activity.start_date);
-                const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                const type = activity.sport_type || activity.type;
-                
-                let sport;
-                if (['Run', 'TrailRun'].includes(type)) sport = 'ラン';
-                else if (['Ride', 'VirtualRide'].includes(type)) sport = 'バイク';
-                else if (type === 'Swim') sport = 'スイム';
-                else return;
-                
-                if (!monthlyCount[monthKey]) monthlyCount[monthKey] = { スイム: 0, バイク: 0, ラン: 0 };
-                monthlyCount[monthKey][sport]++;
-            });
-            
-            const months = Object.keys(monthlyCount).sort((a, b) => b.localeCompare(a));
-            
-            // 全期間を表示
-            let tableRows = months.map((month, i) => {
-                const counts = monthlyCount[month];
-                const [year, monthNum] = month.split('-');
-                return `
-                    <tr style="background: ${i % 2 === 0 ? '#fafafa' : 'white'}">
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; font-size: 0.9em;">${year}年${parseInt(monthNum)}月</td>
-                        <td style="padding: 6px; text-align: center; color: #4facfe; border-bottom: 1px solid #eee;">${counts.スイム}</td>
-                        <td style="padding: 6px; text-align: center; color: #764ba2; border-bottom: 1px solid #eee;">${counts.バイク}</td>
-                        <td style="padding: 6px; text-align: center; color: #28a745; border-bottom: 1px solid #eee;">${counts.ラン}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-            container.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.3em; font-weight: bold; color: #4facfe;">${formatDuration(totalTime)}</div>
-                        <div style="font-size: 0.8em; color: #666;">総時間</div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.3em; font-weight: bold; color: #4facfe;">${(totalDistance / 1000).toFixed(0)}km</div>
-                        <div style="font-size: 0.8em; color: #666;">総距離</div>
-                    </div>
-                </div>
-                
-                <h3 style="font-size: 0.95em; margin-bottom: 10px; color: #333;">月別トレーニング回数</h3>
-                <div style="overflow-x: auto; flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
-                        <thead style="position: sticky; top: 0; z-index: 1;">
-                            <tr style="background: #f8f9fa;">
-                                <th style="padding: 8px 6px; text-align: left;">月</th>
-                                <th style="padding: 8px 6px; text-align: center; color: #4facfe;">🏊</th>
-                                <th style="padding: 8px 6px; text-align: center; color: #764ba2;">🚴</th>
-                                <th style="padding: 8px 6px; text-align: center; color: #28a745;">🏃</th>
-                            </tr>
-                        </thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        // ===== ユーティリティ =====
-        function formatDuration(seconds) {
-            if (!seconds) return '0:00';
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            return h > 0 ? `${h}:${m.toString().padStart(2, '0')}` : `${m}分`;
-        }
-        
-        function getActivityIcon(type) {
-            const icons = {
-                'Run': '🏃', 'TrailRun': '🏃',
-                'Ride': '🚴', 'VirtualRide': '🚴',
-                'Swim': '🏊',
-                'WeightTraining': '🏋️', 'Yoga': '🧘',
-                'Workout': '💪', 'CrossTraining': '💪'
-            };
-            return icons[type] || '💪';
+            status.className = `strava-status ${type === 'connected' ? 'connected' : 'disconnected'}`;
+            status.innerHTML = `<span>${text.split(' ')[0]}</span> <span>${text.split(' ').slice(1).join(' ')}</span>`;
         }
     </script>
 </body>

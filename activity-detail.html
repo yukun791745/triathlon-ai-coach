@@ -2038,45 +2038,43 @@
                 return { min: undefined, max: undefined };
             }
             
-            // ソートしてパーセンタイルを計算
+            // ソートして範囲を計算
             const sorted = [...values].sort((a, b) => a - b);
-            const p5 = sorted[Math.floor(sorted.length * 0.05)];
-            const p95 = sorted[Math.floor(sorted.length * 0.95)];
-            const median = sorted[Math.floor(sorted.length * 0.5)];
-            
-            // 範囲を計算（パーセンタイルを基準に少し余裕を持たせる）
-            const range = p95 - p5;
-            const padding = range * 0.15; // 15%の余白
+            const minVal = sorted[0];
+            const maxVal = sorted[sorted.length - 1];
+            const range = maxVal - minVal;
+            const padding = range * 0.05; // 5%の余白
             
             if (sportCategory === 'bike') {
-                // 速度の場合：速いほど上なので通常のmin/max
+                // バイク速度：全データ表示（0から最大値）
                 return {
-                    min: Math.max(0, Math.floor(p5 - padding)),
-                    max: Math.ceil(p95 + padding)
+                    min: 0,
+                    max: Math.ceil(maxVal + padding)
                 };
-            } else {
-                // ペースの場合：遅いほど数値が大きい（グラフは反転するのでminが速い、maxが遅い）
-                // より細かいペース変動が見えるように範囲を狭める
-                const minPace = Math.max(0, p5 - padding * 0.5); // 速い側（数値小さい）
-                const maxPace = p95 + padding * 0.5; // 遅い側（数値大きい）
-                
-                // ランの場合、表示範囲を適切に制限（例：3:00〜8:00/km程度に収める）
-                if (sportCategory === 'run') {
-                    return {
-                        min: Math.max(2.5, minPace), // 最速でも2:30/km
-                        max: Math.min(10, maxPace)   // 最遅でも10:00/km
-                    };
-                } else if (sportCategory === 'swim') {
-                    // スイム: データに基づいて範囲を設定（固定値ではなく）
-                    console.log('スイムY軸計算: p5=', formatPaceDebug(p5), 'p95=', formatPaceDebug(p95));
-                    return {
-                        min: Math.max(60, p5 - padding),   // 最速でも1:00/100m、ただしデータに合わせる
-                        max: Math.min(300, p95 + padding)  // 最遅でも5:00/100m、ただしデータに合わせる
-                    };
-                }
-                
-                return { min: minPace, max: maxPace };
+            } else if (sportCategory === 'run') {
+                // ランペース：全データ表示
+                return {
+                    min: Math.max(0, Math.floor(minVal - padding)),
+                    max: Math.ceil(maxVal + padding)
+                };
+            } else if (sportCategory === 'swim') {
+                // スイム: パーセンタイルベースで範囲を設定
+                const p5 = sorted[Math.floor(sorted.length * 0.05)];
+                const p95 = sorted[Math.floor(sorted.length * 0.95)];
+                const pRange = p95 - p5;
+                const pPadding = pRange * 0.15;
+                console.log('スイムY軸計算: p5=', formatPaceDebug(p5), 'p95=', formatPaceDebug(p95));
+                return {
+                    min: Math.max(60, p5 - pPadding),   // 最速でも1:00/100m
+                    max: Math.min(300, p95 + pPadding)  // 最遅でも5:00/100m
+                };
             }
+            
+            // デフォルト
+            return { 
+                min: Math.max(0, Math.floor(minVal - padding)), 
+                max: Math.ceil(maxVal + padding) 
+            };
         }
         
         // スイムのターン単位（25m/50m）平均ペースを計算
@@ -2291,17 +2289,27 @@
                 }
             }
             
-            // Y軸範囲をパーセンタイルベースで計算
+            // Y軸範囲を計算（ランとバイクは全データ表示、スイムはパーセンタイル）
             let yMin, yMax;
             if (validValues.length > 0) {
                 const sorted = [...validValues].sort((a, b) => a - b);
-                const p5 = sorted[Math.floor(sorted.length * 0.05)];
-                const p95 = sorted[Math.floor(sorted.length * 0.95)];
-                const range = p95 - p5;
-                const padding = range * 0.1;
+                const minVal = sorted[0];
+                const maxVal = sorted[sorted.length - 1];
                 
-                yMin = Math.max(minValid, Math.floor(p5 - padding));
-                yMax = Math.min(maxValid, Math.ceil(p95 + padding));
+                if (sportCategory === 'swim') {
+                    // スイムはパーセンタイルベースで表示範囲を制限
+                    const p5 = sorted[Math.floor(sorted.length * 0.05)];
+                    const p95 = sorted[Math.floor(sorted.length * 0.95)];
+                    const range = p95 - p5;
+                    const padding = range * 0.1;
+                    yMin = Math.max(minValid, Math.floor(p5 - padding));
+                    yMax = Math.min(maxValid, Math.ceil(p95 + padding));
+                } else {
+                    // ランとバイクは0から最大値まで全データ表示
+                    const padding = (maxVal - minVal) * 0.05;
+                    yMin = Math.max(0, Math.floor(minVal - padding));
+                    yMax = Math.ceil(maxVal + padding);
+                }
             }
             
             charts[chartKey] = new Chart(ctx, {
@@ -2390,10 +2398,11 @@
                     <tr>
                         <th>Lap</th>
                         <th>距離</th>
-                        <th>時間</th>
+                        ${sportCategory !== 'run' ? '<th>時間</th>' : ''}
                         <th>${sportCategory === 'bike' ? '速度' : 'ペース'}</th>
                         <th>心拍</th>
                         ${sportCategory === 'bike' ? '<th>パワー</th>' : ''}
+                        ${sportCategory === 'run' ? '<th>ピッチ</th><th>ストライド</th>' : ''}
                         ${sportCategory === 'swim' ? '<th>Strokes</th><th>Rate</th><th>DPS</th>' : ''}
                     </tr>
                 </thead>
@@ -2454,14 +2463,33 @@
                     strokeRate = Math.round(lap.average_cadence) + ' spm';
                 }
                 
+                // ラン用のピッチとストライド長計算
+                let runPitch = '-';
+                let runStride = '-';
+                if (sportCategory === 'run') {
+                    // ピッチ（ケイデンス）- Stravaは片足のステップ数を返すので2倍
+                    if (lap.average_cadence) {
+                        runPitch = Math.round(lap.average_cadence * 2) + ' spm';
+                    }
+                    // ストライド長 = 距離 / (ピッチ * 時間(分))
+                    // ピッチはsteps per minute（両足合計）、時間は秒なので分に変換
+                    if (lap.average_cadence && lap.moving_time && lap.distance) {
+                        const timeMinutes = lap.moving_time / 60;
+                        const totalSteps = lap.average_cadence * 2 * timeMinutes; // 両足合計ステップ数
+                        const stride = lap.distance / totalSteps;
+                        runStride = stride.toFixed(2) + 'm';
+                    }
+                }
+                
                 html += `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${distance}</td>
-                        <td>${formatDuration(lap.moving_time || lap.elapsed_time)}</td>
+                        ${sportCategory !== 'run' ? `<td>${formatDuration(lap.moving_time || lap.elapsed_time)}</td>` : ''}
                         <td>${pace}</td>
                         <td>${lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}</td>
                         ${sportCategory === 'bike' ? `<td>${lap.average_watts ? Math.round(lap.average_watts) : '-'} W</td>` : ''}
+                        ${sportCategory === 'run' ? `<td>${runPitch}</td><td>${runStride}</td>` : ''}
                         ${sportCategory === 'swim' ? `<td>${strokes || '-'}</td><td>${strokeRate}</td><td>${dps}</td>` : ''}
                     </tr>
                 `;

@@ -1553,9 +1553,11 @@
                         max: Math.min(10, maxPace)   // 最遅でも10:00/km
                     };
                 } else if (sportCategory === 'swim') {
+                    // スイム: データに基づいて範囲を設定（固定値ではなく）
+                    console.log('スイムY軸計算: p5=', formatPaceDebug(p5), 'p95=', formatPaceDebug(p95));
                     return {
-                        min: Math.max(60, minPace),  // 最速でも1:00/100m
-                        max: Math.min(180, maxPace)  // 最遅でも3:00/100m
+                        min: Math.max(60, p5 - padding),   // 最速でも1:00/100m、ただしデータに合わせる
+                        max: Math.min(300, p95 + padding)  // 最遅でも5:00/100m、ただしデータに合わせる
                     };
                 }
                 
@@ -1568,6 +1570,20 @@
             if (!velocityData || !distanceData || velocityData.length === 0) {
                 return { labels: [], paces: [] };
             }
+            
+            // デバッグ: velocity_smoothの統計を出力
+            const validVelocities = velocityData.filter(v => v > 0);
+            console.log('=== スイムペースデバッグ ===');
+            console.log('velocity_smooth サンプル数:', velocityData.length);
+            console.log('有効な速度データ数:', validVelocities.length);
+            console.log('速度 最小値 (m/s):', Math.min(...validVelocities).toFixed(3));
+            console.log('速度 最大値 (m/s):', Math.max(...validVelocities).toFixed(3));
+            console.log('速度 平均値 (m/s):', (validVelocities.reduce((a,b)=>a+b,0)/validVelocities.length).toFixed(3));
+            // ペース換算
+            const minVel = Math.min(...validVelocities);
+            const maxVel = Math.max(...validVelocities);
+            console.log('ペース換算 最速 (sec/100m):', (100/maxVel).toFixed(1), '=', formatPaceDebug(100/maxVel));
+            console.log('ペース換算 最遅 (sec/100m):', (100/minVel).toFixed(1), '=', formatPaceDebug(100/minVel));
             
             const labels = [];
             const paces = [];
@@ -1606,13 +1622,29 @@
                     
                     labels.push(targetDist); // ラップ終了地点の距離
                     paces.push(paceSeconds);
+                    
+                    // 異常値のデバッグ
+                    if (paceSeconds < 90 || paceSeconds > 200) {
+                        console.log(`ラップ${lapNumber} (${targetDist}m): 異常ペース ${formatPaceDebug(paceSeconds)}, 平均速度=${avgVelocity.toFixed(3)}m/s, サンプル数=${lapVelocities.length}`);
+                    }
                 }
                 
                 currentLapStart = lapEnd;
                 lapNumber++;
             }
             
+            console.log('計算されたラップ数:', paces.length);
+            console.log('ペース範囲:', formatPaceDebug(Math.min(...paces)), '〜', formatPaceDebug(Math.max(...paces)));
+            console.log('=========================');
+            
             return { labels, paces };
+        }
+        
+        // デバッグ用ペースフォーマット
+        function formatPaceDebug(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = Math.round(seconds % 60);
+            return `${min}:${String(sec).padStart(2, '0')}/100m`;
         }
         
         // プール長を推定（アクティビティデータまたはデフォルト値から）

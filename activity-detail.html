@@ -1359,48 +1359,49 @@
             // 速度の閾値を設定（停止や歩行を除外）
             const minVelocity = getMinVelocityThreshold(sportCategory);
             
-            const maxPoints = 500;
-            const step = Math.max(1, Math.floor(velData.length / maxPoints));
+            let labels = [];
+            let data = [];
+            let rawPaceValues = [];
             
-            const labels = [];
-            const data = [];
-            const rawPaceValues = []; // Y軸範囲計算用
-            
-            for (let i = 0; i < velData.length; i += step) {
-                if (distanceData) {
-                    // スイムはm単位、それ以外はkm単位
-                    if (sportCategory === 'swim') {
-                        labels.push(Math.round(distanceData[i]));
-                    } else {
+            // スイムの場合はターン単位（25m/50m）の平均ペースを使用
+            if (sportCategory === 'swim' && distanceData) {
+                const poolLength = detectPoolLength();
+                const lapData = calculateSwimLapPaces(velData, distanceData, poolLength);
+                labels = lapData.labels;
+                data = lapData.paces;
+                rawPaceValues = lapData.paces.filter(p => p && p > 0);
+            } else {
+                // 通常の処理（ラン、バイク等）
+                const maxPoints = 500;
+                const step = Math.max(1, Math.floor(velData.length / maxPoints));
+                
+                for (let i = 0; i < velData.length; i += step) {
+                    if (distanceData) {
                         labels.push((distanceData[i] / 1000).toFixed(1));
+                    } else {
+                        labels.push(formatDurationShort(timeData[i]));
                     }
-                } else {
-                    labels.push(formatDurationShort(timeData[i]));
-                }
-                
-                const vel = velData[i];
-                
-                if (sportCategory === 'bike') {
-                    const speed = vel * 3.6; // km/h
-                    data.push(speed);
-                    if (vel >= minVelocity) rawPaceValues.push(speed);
-                } else if (sportCategory === 'swim') {
-                    // スイム: 秒/100mで計算し、表示時に分:秒に変換
-                    const pace = vel > 0 ? 100 / vel : null; // sec/100m
-                    data.push(pace);
-                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
-                } else {
-                    // ラン: min/km
-                    const pace = vel > 0 ? 1000 / vel / 60 : null;
-                    data.push(pace);
-                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
+                    
+                    const vel = velData[i];
+                    
+                    if (sportCategory === 'bike') {
+                        const speed = vel * 3.6; // km/h
+                        data.push(speed);
+                        if (vel >= minVelocity) rawPaceValues.push(speed);
+                    } else {
+                        // ラン: min/km
+                        const pace = vel > 0 ? 1000 / vel / 60 : null;
+                        data.push(pace);
+                        if (vel >= minVelocity && pace) rawPaceValues.push(pace);
+                    }
                 }
             }
             
             // Y軸の範囲を計算（外れ値を除外）
             const yAxisRange = calculateYAxisRange(rawPaceValues, sportCategory);
             
-            const xLabel = distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間';
+            const xLabel = sportCategory === 'swim' ? '距離 (m)' : (distanceData ? '距離 (km)' : '時間');
+            const poolLength = sportCategory === 'swim' ? detectPoolLength() : null;
             
             charts.pace = new Chart(ctx, {
                 type: 'line',
@@ -1410,10 +1411,11 @@
                         label: sportCategory === 'bike' ? '速度' : 'ペース',
                         data: data,
                         borderColor: '#3b82f6',
-                        borderWidth: 1.5,
+                        borderWidth: sportCategory === 'swim' ? 2 : 1.5,
                         fill: false,
                         tension: 0.2,
-                        pointRadius: 0,
+                        pointRadius: sportCategory === 'swim' ? 3 : 0, // スイムはポイントを表示
+                        pointBackgroundColor: '#3b82f6',
                         spanGaps: true
                     }]
                 },
@@ -1425,14 +1427,14 @@
                         x: { 
                             title: { display: true, text: xLabel },
                             ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                                maxTicksLimit: sportCategory === 'swim' ? 15 : 12,
                                 callback: function(value, index) {
                                     const label = this.getLabelForValue(value);
-                                    // スイムは200mおきに表示
-                                    if (sportCategory === 'swim' && distanceData) {
+                                    // スイムは100mおきにラベルを表示
+                                    if (sportCategory === 'swim') {
                                         const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
+                                        if (dist % 100 === 0) {
+                                            return label + 'm';
                                         }
                                         return '';
                                     }
@@ -1471,6 +1473,14 @@
                     plugins: {
                         tooltip: {
                             callbacks: {
+                                title: function(context) {
+                                    if (sportCategory === 'swim') {
+                                        const dist = context[0].label;
+                                        const lapNum = Math.ceil(parseFloat(dist) / poolLength);
+                                        return `${dist}m (ラップ ${lapNum})`;
+                                    }
+                                    return context[0].label;
+                                },
                                 label: function(context) {
                                     const value = context.raw;
                                     if (value === null) return '停止中';
@@ -1551,6 +1561,69 @@
                 
                 return { min: minPace, max: maxPace };
             }
+        }
+        
+        // スイムのターン単位（25m/50m）平均ペースを計算
+        function calculateSwimLapPaces(velocityData, distanceData, poolLength = 25) {
+            if (!velocityData || !distanceData || velocityData.length === 0) {
+                return { labels: [], paces: [] };
+            }
+            
+            const labels = [];
+            const paces = [];
+            
+            let currentLapStart = 0;
+            let lapNumber = 1;
+            
+            // 各ラップの開始・終了インデックスを特定して平均ペースを計算
+            for (let targetDist = poolLength; targetDist <= distanceData[distanceData.length - 1]; targetDist += poolLength) {
+                // このラップの終了位置を見つける
+                let lapEnd = currentLapStart;
+                while (lapEnd < distanceData.length && distanceData[lapEnd] < targetDist) {
+                    lapEnd++;
+                }
+                
+                if (lapEnd <= currentLapStart) {
+                    currentLapStart = lapEnd;
+                    continue;
+                }
+                
+                // このラップ内の有効な速度データを収集
+                const lapVelocities = [];
+                for (let i = currentLapStart; i < lapEnd; i++) {
+                    const vel = velocityData[i];
+                    // 有効な速度のみを使用（0.2 m/s = 8:20/100m より速いもの）
+                    if (vel && vel > 0.2) {
+                        lapVelocities.push(vel);
+                    }
+                }
+                
+                if (lapVelocities.length > 0) {
+                    // 平均速度を計算
+                    const avgVelocity = lapVelocities.reduce((a, b) => a + b, 0) / lapVelocities.length;
+                    // ペース（秒/100m）に変換
+                    const paceSeconds = 100 / avgVelocity;
+                    
+                    labels.push(targetDist); // ラップ終了地点の距離
+                    paces.push(paceSeconds);
+                }
+                
+                currentLapStart = lapEnd;
+                lapNumber++;
+            }
+            
+            return { labels, paces };
+        }
+        
+        // プール長を推定（アクティビティデータまたはデフォルト値から）
+        function detectPoolLength() {
+            // Stravaアクティビティからプール長を取得（pool_lengthフィールドがある場合）
+            if (currentActivity.pool_length) {
+                return currentActivity.pool_length;
+            }
+            // 距離から推測（25mプールか50mプールか）
+            // 通常、25mプールが多いのでデフォルトは25m
+            return 25;
         }
         
         function renderSportSpecificCharts() {

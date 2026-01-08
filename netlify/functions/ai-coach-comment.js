@@ -1,2215 +1,379 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アクティビティ詳細 | AI Triathlon Coach</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #cffafe 100%);
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        
-        /* ナビゲーション */
-        .flow-navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 240px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            padding: 24px 0;
-            overflow-y: auto;
-        }
+// netlify/functions/ai-coach-comment.js
+// OpenAI APIを使用してAIコーチの洞察に富んだコメントを生成
 
-        .flow-nav-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+exports.handler = async (event) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
 
-        .flow-nav-logo {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: white;
-            text-align: center;
-            padding: 0 20px 30px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
 
-        .flow-nav-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 0 16px;
-            flex: 1;
-        }
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
 
-        .flow-nav-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: rgba(255, 255, 255, 0.8);
-            white-space: nowrap;
-        }
+    try {
+        const { 
+            activity, 
+            trainingStatus, 
+            streamAnalysis,
+            similarActivities,
+            userQuestion,
+            conversationHistory 
+        } = JSON.parse(event.body);
 
-        .flow-nav-step .nav-icon {
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-        .flow-nav-step.current {
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .flow-nav-step.available:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        /* メインコンテンツ */
-        .content-wrapper {
-            margin-left: 240px;
-            flex: 1;
-            padding: 24px;
-            width: calc(100% - 240px);
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .back-button {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-bottom: 16px;
-            transition: background 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .back-button:hover {
-            background: #5a6268;
-        }
-        
-        /* 概要ヘッダー */
-        .activity-header {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-        
-        .activity-title-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .activity-icon {
-            font-size: 2.5rem;
-        }
-        
-        .activity-info h1 {
-            font-size: 1.8rem;
-            color: #1f2937;
-            margin-bottom: 4px;
-        }
-        
-        .activity-date {
-            color: #6b7280;
-            font-size: 0.95rem;
-        }
-        
-        .activity-sport-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-left: auto;
-        }
-        
-        .activity-sport-badge.swim { background: #dbeafe; color: #1d4ed8; }
-        .activity-sport-badge.bike { background: #f3e8ff; color: #7c3aed; }
-        .activity-sport-badge.run { background: #dcfce7; color: #16a34a; }
-        .activity-sport-badge.other { background: #fef3c7; color: #b45309; }
-        
-        /* 概要メトリクス */
-        .summary-metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-        }
-        
-        .summary-metric {
-            text-align: center;
-            padding: 16px 12px;
-            background: #f9fafb;
-            border-radius: 12px;
-        }
-        
-        .summary-metric-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1f2937;
-            line-height: 1.2;
-        }
-        
-        .summary-metric-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
-        }
-        
-        /* グリッドレイアウト */
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .detail-grid.full-width {
-            grid-template-columns: 1fr;
-        }
-        
-        .panel {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .panel-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .panel-content {
-            padding: 20px;
-        }
-        
-        /* 地図 */
-        #routeMap {
-            height: 350px;
-            border-radius: 8px;
-        }
-        
-        .no-map-message {
-            height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            font-size: 0.95rem;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-        
-        /* グラフ */
-        .chart-container {
-            position: relative;
-            height: 250px;
-        }
-        
-        .chart-container.small {
-            height: 180px;
-        }
-        
-        .chart-container.wide {
-            height: 300px;
-            width: 100%;
-        }
-        
-        /* タブボタン */
-        .tab-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .tab-btn {
-            padding: 8px 16px;
-            border: 2px solid #e5e7eb;
-            background: white;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tab-btn:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-        
-        .tab-btn.active {
-            background: #667eea;
-            border-color: #667eea;
-            color: white;
-        }
-        
-        .chart-tab-content {
-            width: 100%;
-        }
-        
-        .sport-metrics-row {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        
-        .sport-metric-item {
-            background: #f3f4f6;
-            padding: 12px 20px;
-            border-radius: 10px;
-            text-align: center;
-            min-width: 120px;
-        }
-        
-        .sport-metric-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .sport-metric-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-        
-        /* Zone分布 */
-        .zone-summary {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .zone-item {
-            text-align: center;
-            padding: 12px 8px;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.8rem;
-        }
-        
-        .zone-item.z1 { background: #9ca3af; }
-        .zone-item.z2 { background: #3b82f6; }
-        .zone-item.z3 { background: #22c55e; }
-        .zone-item.z4 { background: #f97316; }
-        .zone-item.z5 { background: #ef4444; }
-        
-        .zone-time {
-            font-size: 1.1rem;
-            font-weight: 700;
-            display: block;
-        }
-        
-        .zone-percent {
-            font-size: 0.7rem;
-            opacity: 0.9;
-        }
-        
-        /* Lapテーブル */
-        .lap-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-        
-        .lap-table th {
-            background: #f3f4f6;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            color: #4b5563;
-        }
-        
-        .lap-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        
-        .lap-table tbody tr:hover {
-            background: #f9fafb;
-        }
-        
-        /* AIコーチセクション */
-        .ai-coach-panel {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .ai-coach-header {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            color: white;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .ai-coach-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-        
-        .ai-coach-content {
-            padding: 24px;
-        }
-        
-        .ai-comment {
-            font-size: 1rem;
-            line-height: 1.8;
-            color: #374151;
-            white-space: pre-wrap;
-        }
-        
-        .ai-loading {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #6b7280;
-            padding: 20px 0;
-        }
-        
-        .ai-loading .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #e5e7eb;
-            border-top-color: #f97316;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* 質問入力 */
-        .question-section {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        .question-section h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 12px;
-        }
-        
-        .question-input-row {
-            display: flex;
-            gap: 12px;
-        }
-        
-        .question-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-        }
-        
-        .question-input:focus {
-            outline: none;
-            border-color: #f97316;
-        }
-        
-        .question-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .question-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-        }
-        
-        .question-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        /* 会話履歴 */
-        .chat-history {
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .chat-message {
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-        
-        .chat-message.user {
-            background: #f3f4f6;
-            margin-left: 40px;
-        }
-        
-        .chat-message.coach {
-            background: #fff7ed;
-            margin-right: 40px;
-        }
-        
-        .chat-message-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-        
-        .chat-message.coach .chat-message-label {
-            color: #ea580c;
-        }
-        
-        .chat-message-content {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        
-        /* ローディング */
-        .loading-container {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 4px solid #667eea;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        /* エラー */
-        .error-message {
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        /* 種目別メトリクス */
-        .sport-specific-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-        
-        .sport-metric-card {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .sport-metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .sport-metric-label {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
-        /* レスポンシブ */
-        @media (max-width: 1024px) {
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .flow-navbar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: auto;
-                width: 100%;
-                height: auto;
-                padding: 12px 0;
-            }
-
-            .flow-nav-logo {
-                padding: 0 20px 15px;
-                margin-bottom: 10px;
-                font-size: 1.1rem;
-            }
-
-            .flow-nav-steps {
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 5px;
-                padding: 0 10px;
-            }
-
-            .flow-nav-step {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-            }
-
-            .flow-nav-step span:not(.nav-icon) {
-                display: none;
-            }
-
-            .content-wrapper {
-                margin-left: 0;
-                padding: 16px;
-                padding-top: 140px;
-                width: 100%;
-            }
-            
-            .activity-title-row {
-                flex-wrap: wrap;
-            }
-            
-            .activity-sport-badge {
-                margin-left: 0;
-                margin-top: 8px;
-            }
-            
-            .summary-metrics {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .zone-summary {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .question-input-row {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- ナビゲーション -->
-    <nav class="flow-navbar">
-        <div class="flow-nav-container">
-            <div class="flow-nav-logo">AI Triathlon Coach</div>
-            <div class="flow-nav-steps">
-                <a href="home.html" class="flow-nav-step available">
-                    <span class="nav-icon">🏠</span>
-                    <span>ホーム</span>
-                </a>
-                <a href="index.html" class="flow-nav-step available">
-                    <span class="nav-icon">🤖</span>
-                    <span>AIコーチ</span>
-                </a>
-                <a href="news.html" class="flow-nav-step available">
-                    <span class="nav-icon">📰</span>
-                    <span>ニュース</span>
-                </a>
-                <a href="race-selection.html" class="flow-nav-step available">
-                    <span class="nav-icon">🎯</span>
-                    <span>レース選択</span>
-                </a>
-                <a href="goal-setting.html" class="flow-nav-step available">
-                    <span class="nav-icon">🏆</span>
-                    <span>目標設定</span>
-                </a>
-                <a href="training-plan.html" class="flow-nav-step available">
-                    <span class="nav-icon">📋</span>
-                    <span>計画</span>
-                </a>
-                <a href="simulator.html" class="flow-nav-step available">
-                    <span class="nav-icon">🔬</span>
-                    <span>シミュレーター</span>
-                </a>
-                <a href="data.html" class="flow-nav-step current">
-                    <span class="nav-icon">📊</span>
-                    <span>進捗</span>
-                </a>
-                <a href="settings.html" class="flow-nav-step available">
-                    <span class="nav-icon">⚙️</span>
-                    <span>設定</span>
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="content-wrapper">
-        <div class="container">
-            <button class="back-button" onclick="goBackToData()">← 進捗ページに戻る</button>
-            
-            <!-- ローディング -->
-            <div id="loadingSection" class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>アクティビティデータを読み込み中...</p>
-            </div>
-            
-            <!-- メインコンテンツ -->
-            <div id="mainContent" style="display: none;">
-                <!-- 概要ヘッダー -->
-                <div class="activity-header">
-                    <div class="activity-title-row">
-                        <span class="activity-icon" id="activityIcon">🏃‍♂️</span>
-                        <div class="activity-info">
-                            <h1 id="activityName">アクティビティ名</h1>
-                            <div class="activity-date" id="activityDate">日時</div>
-                        </div>
-                        <span class="activity-sport-badge run" id="sportBadge">ラン</span>
-                    </div>
-                    <div class="summary-metrics" id="summaryMetrics">
-                        <!-- 動的に生成 -->
-                    </div>
-                </div>
-                
-                <!-- 地図とゾーン分析 -->
-                <div class="detail-grid">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2 class="panel-title">🗺️ ルートマップ</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div id="mapContainer">
-                                <div id="routeMap"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2 class="panel-title">💓 心拍ゾーン分布</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div class="zone-summary" id="zoneSummary">
-                                <!-- 動的に生成 -->
-                            </div>
-                            <div class="chart-container small">
-                                <canvas id="zoneChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 時系列グラフ（タブ切り替え） -->
-                <div class="detail-grid full-width">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2 class="panel-title">📈 時系列データ</h2>
-                            <div class="tab-buttons" id="chartTabs">
-                                <button class="tab-btn active" data-tab="hr">💓 心拍数</button>
-                                <button class="tab-btn" data-tab="pace">⏱️ ペース</button>
-                                <button class="tab-btn" data-tab="cadence" id="cadenceTab" style="display: none;">🔄 ケイデンス</button>
-                                <button class="tab-btn" data-tab="power" id="powerTab" style="display: none;">⚡ パワー</button>
-                            </div>
-                        </div>
-                        <div class="panel-content">
-                            <div class="chart-tab-content" id="hrTabContent">
-                                <div class="chart-container wide">
-                                    <canvas id="hrChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="chart-tab-content" id="paceTabContent" style="display: none;">
-                                <div class="chart-container wide">
-                                    <canvas id="paceChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="chart-tab-content" id="cadenceTabContent" style="display: none;">
-                                <div class="sport-metrics-row" id="cadenceMetrics"></div>
-                                <div class="chart-container wide">
-                                    <canvas id="cadenceChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="chart-tab-content" id="powerTabContent" style="display: none;">
-                                <div class="sport-metrics-row" id="powerMetrics"></div>
-                                <div class="chart-container wide">
-                                    <canvas id="powerChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Lapデータ -->
-                <div class="detail-grid full-width" id="lapSection" style="display: none;">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h2 class="panel-title">📋 Lap詳細</h2>
-                        </div>
-                        <div class="panel-content">
-                            <div style="max-height: 300px; overflow-y: auto;">
-                                <table class="lap-table" id="lapTable">
-                                    <!-- 動的に生成 -->
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- AIコーチコメント -->
-                <div class="ai-coach-panel">
-                    <div class="ai-coach-header">
-                        <span style="font-size: 1.5rem;">🤖</span>
-                        <h2>AIコーチからのコメント</h2>
-                    </div>
-                    <div class="ai-coach-content">
-                        <div id="aiCommentLoading" class="ai-loading">
-                            <div class="spinner"></div>
-                            <span>AIコーチがアクティビティを分析中...</span>
-                        </div>
-                        <div id="aiComment" class="ai-comment" style="display: none;"></div>
-                        
-                        <!-- 質問セクション -->
-                        <div class="question-section">
-                            <h3>💬 コーチに質問する</h3>
-                            <div class="question-input-row">
-                                <input type="text" class="question-input" id="questionInput" 
-                                    placeholder="例: 次回のトレーニングではどこを意識すべき？">
-                                <button class="question-btn" id="askBtn" onclick="askQuestion()">質問する</button>
-                            </div>
-                            <div class="chat-history" id="chatHistory" style="display: none;">
-                                <!-- 会話履歴 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- エラー -->
-            <div id="errorSection" style="display: none;">
-                <div class="error-message">
-                    <h3>❌ データの取得に失敗しました</h3>
-                    <p id="errorMessage">エラーメッセージ</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <script>
-        // ===== グローバル変数 =====
-        let currentActivity = null;
-        let streamData = null;
-        let trainingStatus = null;
-        let map = null;
-        let charts = {};
-        
-        // ===== 初期化 =====
-        document.addEventListener('DOMContentLoaded', async () => {
-            const activityId = getActivityId();
-            
-            if (!activityId) {
-                showError('アクティビティIDが指定されていません');
-                return;
-            }
-            
-            try {
-                await loadActivityData(activityId);
-            } catch (error) {
-                console.error('Error loading activity:', error);
-                showError(error.message);
-            }
-        });
-        
-        function getActivityId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
-        }
-        
-        // ===== データ読み込み =====
-        async function loadActivityData(activityId) {
-            // キャッシュからアクティビティを取得
-            const cachedActivities = localStorage.getItem('strava_activities');
-            if (!cachedActivities) {
-                throw new Error('アクティビティデータがありません。進捗ページでデータを同期してください。');
-            }
-            
-            const activities = JSON.parse(cachedActivities);
-            currentActivity = activities.find(a => a.id.toString() === activityId.toString());
-            
-            if (!currentActivity) {
-                throw new Error('指定されたアクティビティが見つかりません');
-            }
-            
-            // トレーニングステータスを計算
-            trainingStatus = calculateTrainingStatus(activities);
-            
-            // 基本情報を表示
-            renderActivityHeader();
-            renderSummaryMetrics();
-            
-            // Streams APIでデータを取得
-            await loadStreamData(activityId);
-            
-            // UIを表示
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            
-            // グラフを描画
-            renderCharts();
-            
-            // AIコメントを取得
-            fetchAIComment();
-        }
-        
-        async function loadStreamData(activityId) {
-            const authData = localStorage.getItem('strava_auth');
-            if (!authData) {
-                console.log('No auth data, skipping streams');
-                return;
-            }
-            
-            try {
-                const auth = JSON.parse(authData);
-                const response = await fetch('/.netlify/functions/strava-streams', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: auth.access_token,
-                        activityId: activityId
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.hasStreams) {
-                        streamData = data.streams;
-                        console.log('Stream data loaded:', Object.keys(streamData));
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load streams:', error);
-            }
-        }
-        
-        // ===== トレーニングステータス計算 =====
-        function calculateTrainingStatus(activities) {
-            if (activities.length === 0) return null;
-            
-            const dailyTss = {};
-            activities.forEach(activity => {
-                const date = activity.start_date.split('T')[0];
-                if (!dailyTss[date]) dailyTss[date] = 0;
-                dailyTss[date] += activity.tss || 0;
-            });
-            
-            const today = new Date();
-            const days = [];
-            for (let i = 89; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                days.push({ date: dateStr, tss: dailyTss[dateStr] || 0 });
-            }
-            
-            const ctlFactor = 1 - Math.exp(-1 / 42);
-            const atlFactor = 1 - Math.exp(-1 / 7);
-            
-            let ctl = 0, atl = 0, prevCtl = 0;
-            
-            days.forEach((day, i) => {
-                ctl = ctl + (day.tss - ctl) * ctlFactor;
-                atl = atl + (day.tss - atl) * atlFactor;
-                if (i === days.length - 8) prevCtl = ctl;
-            });
-            
+        if (!activity) {
             return {
-                ctl: Math.round(ctl * 10) / 10,
-                atl: Math.round(atl * 10) / 10,
-                tsb: Math.round((ctl - atl) * 10) / 10,
-                ctlTrend: Math.round((ctl - prevCtl) * 10) / 10
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'アクティビティデータが必要です' })
             };
         }
+
+        const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
         
-        // ===== ヘッダー描画 =====
-        function renderActivityHeader() {
-            const sportType = currentActivity.sport_type || currentActivity.type;
-            const sportCategory = getSportCategory(sportType);
-            
-            document.getElementById('activityIcon').textContent = getActivityIcon(sportType);
-            document.getElementById('activityName').textContent = currentActivity.name || '無題のアクティビティ';
-            document.getElementById('activityDate').textContent = new Date(currentActivity.start_date).toLocaleString('ja-JP', {
-                year: 'numeric', month: 'long', day: 'numeric',
-                weekday: 'short', hour: '2-digit', minute: '2-digit'
-            });
-            
-            const badge = document.getElementById('sportBadge');
-            badge.textContent = getSportLabel(sportType);
-            badge.className = `activity-sport-badge ${sportCategory}`;
+        if (!OPENAI_API_KEY) {
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: 'OpenAI APIキーが設定されていません' })
+            };
         }
+
+        // システムプロンプト
+        const systemPrompt = buildSystemPrompt(!!userQuestion);
         
-        function renderSummaryMetrics() {
-            const sportType = currentActivity.sport_type || currentActivity.type;
-            const sportCategory = getSportCategory(sportType);
-            
-            let html = '';
-            
-            // 距離
-            if (currentActivity.distance) {
-                html += createMetricCard((currentActivity.distance / 1000).toFixed(2), 'km', '距離');
-            }
-            
-            // 時間
-            html += createMetricCard(formatDuration(currentActivity.moving_time), '', '時間');
-            
-            // ペース/速度
-            if (currentActivity.average_speed) {
-                if (sportCategory === 'swim') {
-                    html += createMetricCard(formatSwimPace(currentActivity.average_speed), '/100m', 'ペース');
-                } else if (sportCategory === 'bike') {
-                    html += createMetricCard((currentActivity.average_speed * 3.6).toFixed(1), 'km/h', '平均速度');
-                } else {
-                    html += createMetricCard(formatRunPace(currentActivity.average_speed), '/km', 'ペース');
-                }
-            }
-            
-            // 心拍
-            if (currentActivity.average_heartrate) {
-                html += createMetricCard(Math.round(currentActivity.average_heartrate), 'bpm', '平均心拍');
-            }
-            
-            // TSS
-            if (currentActivity.tss) {
-                html += createMetricCard(currentActivity.tss, '', 'TSS');
-            }
-            
-            // 標高
-            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
-                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
-            }
-            
-            document.getElementById('summaryMetrics').innerHTML = html;
-        }
+        // ユーザーメッセージの構築
+        const userMessage = buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion);
+
+        // メッセージ配列の構築
+        const messages = [
+            { role: 'system', content: systemPrompt }
+        ];
         
-        function createMetricCard(value, unit, label) {
-            return `
-                <div class="summary-metric">
-                    <div class="summary-metric-value">${value}<small style="font-size: 0.6em; font-weight: 400;">${unit}</small></div>
-                    <div class="summary-metric-label">${label}</div>
-                </div>
-            `;
-        }
-        
-        // ===== グラフ描画 =====
-        function renderCharts() {
-            renderMap();
-            renderZoneChart();
-            setupChartTabs();
-            renderHeartRateChart();
-            renderPaceChart();
-            renderSportSpecificCharts();
-            renderLapTable();
-        }
-        
-        function setupChartTabs() {
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            // バイクの場合はペースタブを「速度」に変更
-            const paceTabBtn = document.querySelector('.tab-btn[data-tab="pace"]');
-            if (sportCategory === 'bike' && paceTabBtn) {
-                paceTabBtn.textContent = '🚴 速度';
-            }
-            
-            // 種目別タブの表示制御
-            if (sportCategory === 'bike') {
-                document.getElementById('cadenceTab').style.display = 'inline-block';
-                document.getElementById('cadenceTab').textContent = '🔄 ケイデンス';
-                if (currentActivity.average_watts || (streamData && streamData.watts)) {
-                    document.getElementById('powerTab').style.display = 'inline-block';
-                }
-            } else if (sportCategory === 'run') {
-                if (currentActivity.average_cadence || (streamData && streamData.cadence)) {
-                    document.getElementById('cadenceTab').style.display = 'inline-block';
-                    document.getElementById('cadenceTab').textContent = '👟 ピッチ';
-                }
-            }
-            
-            // タブクリックイベント
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const tabId = e.target.dataset.tab;
-                    switchChartTab(tabId);
-                });
+        // 会話履歴があれば追加
+        if (conversationHistory && conversationHistory.length > 0) {
+            conversationHistory.forEach(msg => {
+                messages.push(msg);
             });
         }
         
-        function switchChartTab(tabId) {
-            // タブボタンのアクティブ状態を更新
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.tab === tabId) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // タブコンテンツの表示を切り替え
-            document.querySelectorAll('.chart-tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            document.getElementById(`${tabId}TabContent`).style.display = 'block';
-            
-            // グラフのリサイズをトリガー（表示後に描画を更新）
-            if (charts[tabId]) {
-                charts[tabId].resize();
+        messages.push({ role: 'user', content: userMessage });
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: messages,
+                max_tokens: 2000,
+                temperature: 0.8
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('OpenAI API error:', errorData);
+            return {
+                statusCode: response.status,
+                headers,
+                body: JSON.stringify({ 
+                    error: 'AI APIエラー',
+                    details: errorData.error?.message || 'Unknown error'
+                })
+            };
+        }
+
+        const data = await response.json();
+        const comment = data.choices[0]?.message?.content || 'コメントを生成できませんでした';
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                comment: comment,
+                usage: data.usage
+            })
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+                error: error.message 
+            })
+        };
+    }
+};
+
+function buildSystemPrompt(isQuestion) {
+    if (isQuestion) {
+        return `あなたは経験豊富なトライアスロンコーチです。選手からの質問に対して、提供されたデータに基づいて具体的かつ洞察に富んだ回答をします。
+
+回答の原則：
+- 質問に直接、具体的に答える
+- データに基づいた根拠を示す
+- 実践的で明日から使えるアドバイス
+- 必要なら追加の質問で深掘りする
+- 300-500字程度`;
+    }
+
+    return `あなたは経験豊富なトライアスロンコーチであり、運動生理学とパフォーマンスデータ分析の専門家です。
+
+## あなたの役割
+選手のトレーニングデータを深く分析し、**データの表面ではなく、データが示す意味と洞察**を提供すること。
+
+## 絶対に避けること
+- 「今日は○kmを○分で走りました」のような単なるファクトの復唱
+- 「TSS○は中強度です」のような定義の説明
+- 項目ごとに1行ずつの箇条書き
+- 誰にでも言える一般的なアドバイス
+
+## 必ず行うこと
+データから**ストーリー**を読み取り、選手に**気づき**を与える
+
+## 分析の切り口（最も関連性の高い2-3個を選んで深掘り）
+
+### 1. ペーシング分析
+- 前半と後半のペース差は何を意味するか？
+- ペースの変動係数（CV）が高い/低いことの意味
+- 「このペース変動パターンは、○○を示唆しています」
+
+### 2. 心拍-パフォーマンス関係
+- 同じペースでの心拍上昇（心拍ドリフト）→ 脱水？暑熱？グリコーゲン枯渇？
+- 心拍に対してペースが遅い/速い → 調子の良し悪し
+- 「心拍148bpmでこのペースは、あなたの通常より○○」
+
+### 3. 地形との相互作用（標高データがある場合）
+- 登りでのペース低下率、下りでの回復率
+- 獲得標高と総合ペースの関係
+- 「登り区間でペースが○%落ちていますが、これは標準的/要改善」
+
+### 4. 過去との比較（類似アクティビティがある場合）
+- 同じ距離・同じ強度でのタイム比較
+- 同じペースでの心拍数比較（フィットネス指標）
+- 「前回の類似トレーニングと比較して○○」
+
+### 5. トレーニング文脈
+- CTL/ATL/TSBの状態でこのパフォーマンスの意味
+- 「疲労が溜まっている中でこの走りは○○」
+- 今週の負荷の文脈での位置づけ
+
+## 出力構成
+
+**冒頭**（2-3文）
+最も重要な洞察を1つ。「今日のランで最も注目すべきは○○です」
+
+**分析本文**（3-4段落）
+選んだ切り口での深い分析。なぜそうなったか、何を意味するか。
+
+**アクション**（2-3文）
+具体的に次に何をすべきか。「次回の○○では△△を意識してみてください」
+
+**質問**（任意、1つ）
+より良いアドバイスのために選手に確認したいこと。
+
+## トーン
+- データに裏付けられた自信のある分析
+- でも押し付けがましくなく、選手の判断を尊重
+- 専門用語は使うが、意味がわかるように
+
+## 文字数
+600-900字`;
+}
+
+function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion) {
+    const sportType = activity.sport_type || activity.type;
+    const sportName = getSportName(sportType);
+    const distance = activity.distance ? (activity.distance / 1000).toFixed(2) : 0;
+    const durationMin = Math.round((activity.moving_time || activity.elapsed_time || 0) / 60);
+    
+    let message = `## アクティビティ基本情報
+- 種目: ${sportName}
+- 日時: ${new Date(activity.start_date).toLocaleString('ja-JP')}
+- 距離: ${distance} km
+- 時間: ${durationMin}分
+- TSS: ${activity.tss || '不明'}
+`;
+
+    // ペース/速度
+    if (activity.average_speed) {
+        message += `- 平均: ${formatPace(activity.average_speed, sportType)}\n`;
+    }
+
+    // 心拍
+    if (activity.average_heartrate) {
+        message += `- 平均心拍: ${Math.round(activity.average_heartrate)} bpm`;
+        if (activity.max_heartrate) {
+            message += ` / 最大: ${Math.round(activity.max_heartrate)} bpm`;
+        }
+        message += '\n';
+    }
+
+    // パワー（バイク）
+    if (activity.average_watts) {
+        message += `- 平均パワー: ${Math.round(activity.average_watts)} W`;
+        if (activity.weighted_average_watts) {
+            message += ` / NP: ${Math.round(activity.weighted_average_watts)} W`;
+        }
+        message += '\n';
+    }
+
+    // 標高
+    if (activity.total_elevation_gain && activity.total_elevation_gain > 20) {
+        message += `- 獲得標高: ${Math.round(activity.total_elevation_gain)} m\n`;
+    }
+
+    // ケイデンス/ピッチ
+    if (activity.average_cadence) {
+        if (sportType.includes('Run')) {
+            message += `- 平均ピッチ: ${Math.round(activity.average_cadence * 2)} spm\n`;
+        } else if (sportType.includes('Ride')) {
+            message += `- 平均ケイデンス: ${Math.round(activity.average_cadence)} rpm\n`;
+        }
+    }
+
+    // ストリーム分析データ（詳細な統計情報）
+    if (streamAnalysis) {
+        message += `\n## パフォーマンス分析データ\n`;
+        
+        if (streamAnalysis.paceAnalysis) {
+            const pa = streamAnalysis.paceAnalysis;
+            message += `### ペーシング\n`;
+            message += `- 前半ペース: ${pa.firstHalfPace}\n`;
+            message += `- 後半ペース: ${pa.secondHalfPace}\n`;
+            message += `- スプリット: ${pa.splitType}（差: ${pa.splitDiff}）\n`;
+            if (pa.variability) {
+                message += `- ペース変動係数: ${pa.variability}%\n`;
+            }
+            if (pa.slowestSection && pa.fastestSection) {
+                message += `- 最速区間: ${pa.fastestSection}\n`;
+                message += `- 最遅区間: ${pa.slowestSection}\n`;
             }
         }
         
-        function renderMap() {
-            const mapContainer = document.getElementById('mapContainer');
-            
-            if (!streamData || !streamData.latlng || !streamData.latlng.data || streamData.latlng.data.length === 0) {
-                mapContainer.innerHTML = '<div class="no-map-message">🗺️ GPSデータがありません（インドアアクティビティの可能性）</div>';
-                return;
+        if (streamAnalysis.heartRateAnalysis) {
+            const hra = streamAnalysis.heartRateAnalysis;
+            message += `### 心拍分析\n`;
+            if (hra.drift !== undefined) {
+                message += `- 心拍ドリフト: ${hra.drift > 0 ? '+' : ''}${hra.drift}%（前半→後半）\n`;
             }
-            
-            const coords = streamData.latlng.data;
-            
-            map = L.map('routeMap');
-            
-            // CartoDB Positron - 薄いグレー系でルートが見やすい
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                maxZoom: 19,
-                subdomains: 'abcd'
-            }).addTo(map);
-            
-            // ルートラインのスタイル
-            const polyline = L.polyline(coords, { 
-                color: '#667eea', 
-                weight: 5, 
-                opacity: 0.9,
-                lineJoin: 'round'
-            }).addTo(map);
-            
-            map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
-            
-            // スタート・ゴールマーカー
-            const startIcon = L.divIcon({ 
-                className: 'custom-marker', 
-                html: '<div style="background: #22c55e; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-            const endIcon = L.divIcon({ 
-                className: 'custom-marker', 
-                html: '<div style="background: #ef4444; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-            
-            L.marker(coords[0], { icon: startIcon }).addTo(map).bindPopup('スタート');
-            L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(map).bindPopup('ゴール');
-        }
-        
-        function renderZoneChart() {
-            const zones = calculateHeartRateZones();
-            
-            // Zone サマリー
-            const zoneSummaryHtml = zones.map((z, i) => `
-                <div class="zone-item z${i + 1}">
-                    <span class="zone-time">${formatDurationShort(z.time)}</span>
-                    <span class="zone-percent">${z.percent.toFixed(0)}%</span>
-                </div>
-            `).join('');
-            document.getElementById('zoneSummary').innerHTML = zoneSummaryHtml;
-            
-            // Zone チャート
-            const ctx = document.getElementById('zoneChart').getContext('2d');
-            if (charts.zone) charts.zone.destroy();
-            
-            charts.zone = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
-                    datasets: [{
-                        data: zones.map(z => z.percent),
-                        backgroundColor: ['#9ca3af', '#3b82f6', '#22c55e', '#f97316', '#ef4444']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, max: 100, title: { display: true, text: '%' } }
-                    }
-                }
-            });
-        }
-        
-        function calculateHeartRateZones() {
-            const thresholds = getUserThresholds();
-            const maxHr = thresholds.maxHr || 190;
-            const totalTime = currentActivity.moving_time || 0;
-            
-            // Streamデータがある場合は詳細計算
-            if (streamData && streamData.heartrate && streamData.heartrate.data && streamData.time) {
-                const hrData = streamData.heartrate.data;
-                const timeData = streamData.time.data;
-                
-                const zoneTimes = [0, 0, 0, 0, 0];
-                
-                for (let i = 1; i < hrData.length; i++) {
-                    const hr = hrData[i];
-                    const duration = timeData[i] - timeData[i - 1];
-                    const hrPercent = (hr / maxHr) * 100;
-                    
-                    if (hrPercent < 60) zoneTimes[0] += duration;
-                    else if (hrPercent < 70) zoneTimes[1] += duration;
-                    else if (hrPercent < 80) zoneTimes[2] += duration;
-                    else if (hrPercent < 90) zoneTimes[3] += duration;
-                    else zoneTimes[4] += duration;
-                }
-                
-                const total = zoneTimes.reduce((a, b) => a + b, 0) || 1;
-                return zoneTimes.map(t => ({ time: t, percent: (t / total) * 100 }));
+            if (hra.zones) {
+                message += `- Zone分布: Z1=${hra.zones.z1}%, Z2=${hra.zones.z2}%, Z3=${hra.zones.z3}%, Z4=${hra.zones.z4}%, Z5=${hra.zones.z5}%\n`;
             }
-            
-            // 平均心拍から推定
-            const avgHr = currentActivity.average_heartrate;
-            if (!avgHr) return [0, 1, 2, 3, 4].map(() => ({ time: 0, percent: 0 }));
-            
-            const hrPercent = (avgHr / maxHr) * 100;
-            const zones = [0, 0, 0, 0, 0];
-            
-            if (hrPercent < 60) zones[0] = 100;
-            else if (hrPercent < 70) zones[1] = 100;
-            else if (hrPercent < 80) zones[2] = 100;
-            else if (hrPercent < 90) zones[3] = 100;
-            else zones[4] = 100;
-            
-            return zones.map((p, i) => ({ time: p > 0 ? totalTime : 0, percent: p }));
-        }
-        
-        function renderHeartRateChart() {
-            const ctx = document.getElementById('hrChart').getContext('2d');
-            if (charts.hr) charts.hr.destroy();
-            
-            if (!streamData || !streamData.heartrate || !streamData.heartrate.data) {
-                ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">心拍データがありません</div>';
-                return;
-            }
-            
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            const hrData = streamData.heartrate.data;
-            const timeData = streamData.time?.data || hrData.map((_, i) => i);
-            const distanceData = streamData.distance?.data;
-            
-            // データをサンプリング（多すぎる場合）
-            const maxPoints = 500;
-            const step = Math.max(1, Math.floor(hrData.length / maxPoints));
-            
-            const labels = [];
-            const data = [];
-            
-            for (let i = 0; i < hrData.length; i += step) {
-                if (distanceData) {
-                    // スイムはm単位、それ以外はkm単位
-                    if (sportCategory === 'swim') {
-                        labels.push(Math.round(distanceData[i]));
-                    } else {
-                        labels.push((distanceData[i] / 1000).toFixed(1));
-                    }
-                } else {
-                    labels.push(formatDurationShort(timeData[i]));
-                }
-                data.push(hrData[i]);
-            }
-            
-            charts.hr = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '心拍数',
-                        data: data,
-                        borderColor: '#ef4444',
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    // スイムは200mおきに表示
-                                    if (sportCategory === 'swim' && distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { title: { display: true, text: 'bpm' } }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
-        }
-        
-        function renderPaceChart() {
-            const ctx = document.getElementById('paceChart').getContext('2d');
-            if (charts.pace) charts.pace.destroy();
-            
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            if (!streamData || !streamData.velocity_smooth || !streamData.velocity_smooth.data) {
-                ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">ペース/速度データがありません</div>';
-                return;
-            }
-            
-            const velData = streamData.velocity_smooth.data;
-            const distanceData = streamData.distance?.data;
-            const timeData = streamData.time?.data || velData.map((_, i) => i);
-            
-            // 速度の閾値を設定（停止や歩行を除外）
-            const minVelocity = getMinVelocityThreshold(sportCategory);
-            
-            const maxPoints = 500;
-            const step = Math.max(1, Math.floor(velData.length / maxPoints));
-            
-            const labels = [];
-            const data = [];
-            const rawPaceValues = []; // Y軸範囲計算用
-            
-            for (let i = 0; i < velData.length; i += step) {
-                if (distanceData) {
-                    // スイムはm単位、それ以外はkm単位
-                    if (sportCategory === 'swim') {
-                        labels.push(Math.round(distanceData[i]));
-                    } else {
-                        labels.push((distanceData[i] / 1000).toFixed(1));
-                    }
-                } else {
-                    labels.push(formatDurationShort(timeData[i]));
-                }
-                
-                const vel = velData[i];
-                
-                if (sportCategory === 'bike') {
-                    const speed = vel * 3.6; // km/h
-                    data.push(speed);
-                    if (vel >= minVelocity) rawPaceValues.push(speed);
-                } else if (sportCategory === 'swim') {
-                    const pace = vel > 0 ? 100 / vel : null; // sec/100m
-                    data.push(pace);
-                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
-                } else {
-                    // ラン: min/km
-                    const pace = vel > 0 ? 1000 / vel / 60 : null;
-                    data.push(pace);
-                    if (vel >= minVelocity && pace) rawPaceValues.push(pace);
-                }
-            }
-            
-            // Y軸の範囲を計算（外れ値を除外）
-            const yAxisRange = calculateYAxisRange(rawPaceValues, sportCategory);
-            
-            const yLabel = sportCategory === 'bike' ? 'km/h' : sportCategory === 'swim' ? 'sec/100m' : 'min/km';
-            const xLabel = distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間';
-            
-            charts.pace = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: sportCategory === 'bike' ? '速度' : 'ペース',
-                        data: data,
-                        borderColor: '#3b82f6',
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: 0,
-                        spanGaps: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: xLabel },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    // スイムは200mおきに表示
-                                    if (sportCategory === 'swim' && distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { 
-                            title: { display: true, text: yLabel },
-                            reverse: sportCategory !== 'bike',
-                            min: yAxisRange.min,
-                            max: yAxisRange.max,
-                            ticks: {
-                                callback: function(value) {
-                                    if (sportCategory === 'bike') {
-                                        return value.toFixed(0);
-                                    } else {
-                                        const min = Math.floor(value);
-                                        const sec = Math.round((value - min) * 60);
-                                        return `${min}:${String(sec).padStart(2, '0')}`;
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    if (value === null) return '停止中';
-                                    if (sportCategory === 'bike') {
-                                        return `速度: ${value.toFixed(1)} km/h`;
-                                    } else {
-                                        const min = Math.floor(value);
-                                        const sec = Math.round((value - min) * 60);
-                                        return `ペース: ${min}:${String(sec).padStart(2, '0')} ${sportCategory === 'swim' ? '/100m' : '/km'}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // 種目別の最小速度閾値（これ以下は停止/歩行とみなす）
-        function getMinVelocityThreshold(sportCategory) {
-            switch (sportCategory) {
-                case 'bike':
-                    return 3.0; // 10.8 km/h 以下は除外
-                case 'run':
-                    return 1.5; // 5.4 km/h (約11:00/km) 以下は除外
-                case 'swim':
-                    return 0.3; // 3:20/100m より遅いものは除外
-                default:
-                    return 1.0;
+            if (hra.efficiency) {
+                message += `- 心拍効率: ${hra.efficiency}（ペースあたりの心拍コスト）\n`;
             }
         }
         
-        // Y軸の範囲をパーセンタイルベースで計算
-        function calculateYAxisRange(values, sportCategory) {
-            if (values.length === 0) {
-                return { min: undefined, max: undefined };
+        if (streamAnalysis.elevationAnalysis) {
+            const ea = streamAnalysis.elevationAnalysis;
+            message += `### 地形分析\n`;
+            if (ea.climbingPaceLoss) {
+                message += `- 登りでのペース低下: ${ea.climbingPaceLoss}%\n`;
             }
-            
-            // ソートしてパーセンタイルを計算
-            const sorted = [...values].sort((a, b) => a - b);
-            const p5 = sorted[Math.floor(sorted.length * 0.05)];
-            const p95 = sorted[Math.floor(sorted.length * 0.95)];
-            const median = sorted[Math.floor(sorted.length * 0.5)];
-            
-            // 範囲を計算（パーセンタイルを基準に少し余裕を持たせる）
-            const range = p95 - p5;
-            const padding = range * 0.15; // 15%の余白
-            
-            if (sportCategory === 'bike') {
-                // 速度の場合：速いほど上なので通常のmin/max
-                return {
-                    min: Math.max(0, Math.floor(p5 - padding)),
-                    max: Math.ceil(p95 + padding)
-                };
-            } else {
-                // ペースの場合：遅いほど数値が大きい（グラフは反転するのでminが速い、maxが遅い）
-                // より細かいペース変動が見えるように範囲を狭める
-                const minPace = Math.max(0, p5 - padding * 0.5); // 速い側（数値小さい）
-                const maxPace = p95 + padding * 0.5; // 遅い側（数値大きい）
-                
-                // ランの場合、表示範囲を適切に制限（例：3:00〜8:00/km程度に収める）
-                if (sportCategory === 'run') {
-                    return {
-                        min: Math.max(2.5, minPace), // 最速でも2:30/km
-                        max: Math.min(10, maxPace)   // 最遅でも10:00/km
-                    };
-                } else if (sportCategory === 'swim') {
-                    return {
-                        min: Math.max(60, minPace),  // 最速でも1:00/100m
-                        max: Math.min(180, maxPace)  // 最遅でも3:00/100m
-                    };
-                }
-                
-                return { min: minPace, max: maxPace };
+            if (ea.gradeAdjustedPace) {
+                message += `- 勾配調整ペース (GAP): ${ea.gradeAdjustedPace}\n`;
             }
         }
-        
-        function renderSportSpecificCharts() {
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            if (sportCategory === 'bike') {
-                renderBikeCharts();
-            } else if (sportCategory === 'run') {
-                renderRunCharts();
-            }
-        }
-        
-        function renderBikeCharts() {
-            // パワーチャート
-            if (streamData && streamData.watts && streamData.watts.data) {
-                // パワーメトリクス
-                const avgPower = currentActivity.average_watts || 0;
-                const np = currentActivity.weighted_average_watts || 0;
-                document.getElementById('powerMetrics').innerHTML = `
-                    <div class="sport-metric-item">
-                        <div class="sport-metric-value">${Math.round(avgPower)}</div>
-                        <div class="sport-metric-label">平均パワー (W)</div>
-                    </div>
-                    <div class="sport-metric-item">
-                        <div class="sport-metric-value">${Math.round(np)}</div>
-                        <div class="sport-metric-label">NP (W)</div>
-                    </div>
-                `;
-                
-                renderTimeSeriesChart('powerChart', streamData.watts.data, 'パワー', '#8b5cf6', 'W', 'power');
-            }
-            
-            // ケイデンスチャート
-            if (streamData && streamData.cadence && streamData.cadence.data) {
-                const avgCadence = currentActivity.average_cadence || 0;
-                document.getElementById('cadenceMetrics').innerHTML = `
-                    <div class="sport-metric-item">
-                        <div class="sport-metric-value">${Math.round(avgCadence)}</div>
-                        <div class="sport-metric-label">平均ケイデンス (rpm)</div>
-                    </div>
-                `;
-                
-                renderTimeSeriesChart('cadenceChart', streamData.cadence.data, 'ケイデンス', '#22c55e', 'rpm', 'cadence');
-            }
-        }
-        
-        function renderRunCharts() {
-            // ピッチ/ケイデンスチャート
-            if (streamData && streamData.cadence && streamData.cadence.data) {
-                const avgCadence = currentActivity.average_cadence || 0;
-                document.getElementById('cadenceMetrics').innerHTML = `
-                    <div class="sport-metric-item">
-                        <div class="sport-metric-value">${Math.round(avgCadence * 2)}</div>
-                        <div class="sport-metric-label">平均ピッチ (spm)</div>
-                    </div>
-                `;
-                
-                // ランの場合はケイデンスを2倍（左右合計）
-                const pitchData = streamData.cadence.data.map(c => c * 2);
-                renderTimeSeriesChart('cadenceChart', pitchData, 'ピッチ', '#22c55e', 'spm', 'cadence');
-            }
-        }
-        
-        function renderTimeSeriesChart(canvasId, data, label, color, unit, chartKey) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if (charts[chartKey]) charts[chartKey].destroy();
-            
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            const distanceData = streamData?.distance?.data;
-            const timeData = streamData?.time?.data || data.map((_, i) => i);
-            
-            const maxPoints = 500;
-            const step = Math.max(1, Math.floor(data.length / maxPoints));
-            
-            const labels = [];
-            const chartData = [];
-            
-            for (let i = 0; i < data.length; i += step) {
-                if (distanceData) {
-                    // スイムはm単位、それ以外はkm単位
-                    if (sportCategory === 'swim') {
-                        labels.push(Math.round(distanceData[i]));
-                    } else {
-                        labels.push((distanceData[i] / 1000).toFixed(1));
-                    }
-                } else {
-                    labels.push(formatDurationShort(timeData[i]));
-                }
-                chartData.push(data[i]);
-            }
-            
-            charts[chartKey] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: chartData,
-                        borderColor: color,
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    if (sportCategory === 'swim' && distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { title: { display: true, text: unit } }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
-        }
-        
-        function renderLapTable() {
-            if (!currentActivity.laps || currentActivity.laps.length === 0) {
-                return;
-            }
-            
-            document.getElementById('lapSection').style.display = 'block';
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            let html = `
-                <thead>
-                    <tr>
-                        <th>Lap</th>
-                        <th>距離</th>
-                        <th>時間</th>
-                        <th>${sportCategory === 'bike' ? '速度' : 'ペース'}</th>
-                        <th>心拍</th>
-                        ${sportCategory === 'bike' ? '<th>パワー</th>' : ''}
-                    </tr>
-                </thead>
-                <tbody>
-            `;
-            
-            currentActivity.laps.forEach((lap, index) => {
-                const pace = sportCategory === 'bike' 
-                    ? `${(lap.average_speed * 3.6).toFixed(1)} km/h`
-                    : formatRunPace(lap.average_speed);
-                
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${(lap.distance / 1000).toFixed(2)} km</td>
-                        <td>${formatDuration(lap.moving_time || lap.elapsed_time)}</td>
-                        <td>${pace}</td>
-                        <td>${lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}</td>
-                        ${sportCategory === 'bike' ? `<td>${lap.average_watts ? Math.round(lap.average_watts) : '-'} W</td>` : ''}
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody>';
-            document.getElementById('lapTable').innerHTML = html;
-        }
-        
-        // ===== ストリームデータ分析 =====
-        function analyzeStreamData() {
-            if (!streamData) return null;
-            
-            const analysis = {};
-            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
-            
-            // ペース分析
-            if (streamData.velocity_smooth && streamData.velocity_smooth.data && streamData.distance?.data) {
-                const velData = streamData.velocity_smooth.data;
-                const distData = streamData.distance.data;
-                const totalDist = distData[distData.length - 1];
-                const halfDist = totalDist / 2;
-                
-                // 前半・後半のペースを計算
-                let firstHalfVels = [];
-                let secondHalfVels = [];
-                
-                for (let i = 0; i < velData.length; i++) {
-                    if (velData[i] > 0.5) { // 停止を除外
-                        if (distData[i] <= halfDist) {
-                            firstHalfVels.push(velData[i]);
-                        } else {
-                            secondHalfVels.push(velData[i]);
-                        }
-                    }
-                }
-                
-                const avgFirstHalf = firstHalfVels.length > 0 ? firstHalfVels.reduce((a, b) => a + b, 0) / firstHalfVels.length : 0;
-                const avgSecondHalf = secondHalfVels.length > 0 ? secondHalfVels.reduce((a, b) => a + b, 0) / secondHalfVels.length : 0;
-                
-                // ペース変動係数
-                const validVels = velData.filter(v => v > 0.5);
-                const meanVel = validVels.reduce((a, b) => a + b, 0) / validVels.length;
-                const variance = validVels.reduce((sum, v) => sum + Math.pow(v - meanVel, 2), 0) / validVels.length;
-                const stdDev = Math.sqrt(variance);
-                const cv = (stdDev / meanVel) * 100;
-                
-                // スプリットタイプ
-                const splitDiff = ((avgSecondHalf / avgFirstHalf) - 1) * 100;
-                let splitType = '均等';
-                if (splitDiff > 3) splitType = 'ネガティブ（後半ペースアップ）';
-                else if (splitDiff < -3) splitType = 'ポジティブ（後半ペースダウン）';
-                
-                analysis.paceAnalysis = {
-                    firstHalfPace: formatPaceFromSpeed(avgFirstHalf, sportCategory),
-                    secondHalfPace: formatPaceFromSpeed(avgSecondHalf, sportCategory),
-                    splitType: splitType,
-                    splitDiff: `${splitDiff > 0 ? '+' : ''}${splitDiff.toFixed(1)}%`,
-                    variability: cv.toFixed(1)
-                };
-                
-                // 最速・最遅区間（1km単位で分析）
-                if (sportCategory !== 'swim') {
-                    const kmSections = [];
-                    let currentKm = 1000;
-                    let sectionVels = [];
-                    
-                    for (let i = 0; i < distData.length; i++) {
-                        if (distData[i] <= currentKm) {
-                            if (velData[i] > 0.5) sectionVels.push(velData[i]);
-                        } else {
-                            if (sectionVels.length > 0) {
-                                const avgVel = sectionVels.reduce((a, b) => a + b, 0) / sectionVels.length;
-                                kmSections.push({ km: Math.floor(currentKm / 1000), pace: avgVel });
-                            }
-                            currentKm += 1000;
-                            sectionVels = [velData[i]];
-                        }
-                    }
-                    
-                    if (kmSections.length > 0) {
-                        const fastest = kmSections.reduce((max, s) => s.pace > max.pace ? s : max);
-                        const slowest = kmSections.reduce((min, s) => s.pace < min.pace ? s : min);
-                        analysis.paceAnalysis.fastestSection = `${fastest.km}km目 (${formatPaceFromSpeed(fastest.pace, sportCategory)})`;
-                        analysis.paceAnalysis.slowestSection = `${slowest.km}km目 (${formatPaceFromSpeed(slowest.pace, sportCategory)})`;
-                    }
-                }
-            }
-            
-            // 心拍分析
-            if (streamData.heartrate && streamData.heartrate.data) {
-                const hrData = streamData.heartrate.data;
-                const validHr = hrData.filter(h => h > 0);
-                
-                if (validHr.length > 0) {
-                    const thresholds = getUserThresholds();
-                    const maxHr = thresholds.maxHr || 190;
-                    
-                    // 前半・後半の心拍比較（ドリフト）
-                    const midPoint = Math.floor(validHr.length / 2);
-                    const firstHalfHr = validHr.slice(0, midPoint);
-                    const secondHalfHr = validHr.slice(midPoint);
-                    
-                    const avgFirstHr = firstHalfHr.reduce((a, b) => a + b, 0) / firstHalfHr.length;
-                    const avgSecondHr = secondHalfHr.reduce((a, b) => a + b, 0) / secondHalfHr.length;
-                    const drift = ((avgSecondHr / avgFirstHr) - 1) * 100;
-                    
-                    // Zone分布
-                    const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
-                    validHr.forEach(hr => {
-                        const percent = (hr / maxHr) * 100;
-                        if (percent < 60) zones.z1++;
-                        else if (percent < 70) zones.z2++;
-                        else if (percent < 80) zones.z3++;
-                        else if (percent < 90) zones.z4++;
-                        else zones.z5++;
-                    });
-                    
-                    const total = validHr.length;
-                    Object.keys(zones).forEach(z => {
-                        zones[z] = Math.round((zones[z] / total) * 100);
-                    });
-                    
-                    // 心拍効率（ペースがある場合）
-                    let efficiency = null;
-                    if (currentActivity.average_speed && currentActivity.average_heartrate) {
-                        // 心拍1bpmあたりのペース（数値が小さいほど効率的）
-                        const pacePerKm = 1000 / currentActivity.average_speed / 60;
-                        efficiency = (currentActivity.average_heartrate / pacePerKm).toFixed(1);
-                    }
-                    
-                    analysis.heartRateAnalysis = {
-                        drift: drift.toFixed(1),
-                        zones: zones,
-                        efficiency: efficiency
-                    };
-                }
-            }
-            
-            // 標高分析
-            if (streamData.altitude && streamData.altitude.data && streamData.velocity_smooth?.data) {
-                const altData = streamData.altitude.data;
-                const velData = streamData.velocity_smooth.data;
-                const gradeData = streamData.grade_smooth?.data;
-                
-                if (gradeData) {
-                    // 登り・平地・下りでのペース比較
-                    const climbVels = [];
-                    const flatVels = [];
-                    const descentVels = [];
-                    
-                    for (let i = 0; i < gradeData.length; i++) {
-                        if (velData[i] > 0.5) {
-                            if (gradeData[i] > 2) climbVels.push(velData[i]);
-                            else if (gradeData[i] < -2) descentVels.push(velData[i]);
-                            else flatVels.push(velData[i]);
-                        }
-                    }
-                    
-                    if (climbVels.length > 0 && flatVels.length > 0) {
-                        const avgClimb = climbVels.reduce((a, b) => a + b, 0) / climbVels.length;
-                        const avgFlat = flatVels.reduce((a, b) => a + b, 0) / flatVels.length;
-                        const climbLoss = ((avgFlat / avgClimb) - 1) * 100;
-                        
-                        analysis.elevationAnalysis = {
-                            climbingPaceLoss: climbLoss.toFixed(0)
-                        };
-                    }
-                }
-            }
-            
-            return Object.keys(analysis).length > 0 ? analysis : null;
-        }
-        
-        function formatPaceFromSpeed(speed, sportCategory) {
-            if (!speed || speed <= 0) return '-';
-            if (sportCategory === 'bike') {
-                return `${(speed * 3.6).toFixed(1)} km/h`;
-            } else if (sportCategory === 'swim') {
-                const pace = 100 / speed;
-                const min = Math.floor(pace / 60);
-                const sec = Math.round(pace % 60);
-                return `${min}:${String(sec).padStart(2, '0')}/100m`;
-            } else {
-                const pace = 1000 / speed / 60;
-                const min = Math.floor(pace);
-                const sec = Math.round((pace - min) * 60);
-                return `${min}:${String(sec).padStart(2, '0')}/km`;
-            }
-        }
-        
-        // ===== 類似アクティビティ検索 =====
-        function findSimilarActivities() {
-            const cachedActivities = localStorage.getItem('strava_activities');
-            if (!cachedActivities) return [];
-            
-            const activities = JSON.parse(cachedActivities);
-            const currentSport = currentActivity.sport_type || currentActivity.type;
-            const currentDist = currentActivity.distance || 0;
-            const currentId = currentActivity.id;
-            
-            // 同じ種目、距離が±30%以内のアクティビティを検索
-            const similar = activities.filter(a => {
-                if (a.id === currentId) return false;
-                const sport = a.sport_type || a.type;
-                if (sport !== currentSport) return false;
-                
-                const dist = a.distance || 0;
-                const ratio = dist / currentDist;
-                return ratio >= 0.7 && ratio <= 1.3;
-            });
-            
-            // 日付で降順ソート、最新3件を返す
-            similar.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
-            return similar.slice(0, 5);
-        }
-        
-        // ===== AIコメント =====
-        let conversationHistory = [];
-        
-        async function fetchAIComment(userQuestion = null) {
-            const loadingEl = document.getElementById('aiCommentLoading');
-            const commentEl = document.getElementById('aiComment');
-            
-            if (!userQuestion) {
-                loadingEl.style.display = 'flex';
-                commentEl.style.display = 'none';
-            }
-            
-            try {
-                // ストリーム分析データを計算
-                const streamAnalysis = analyzeStreamData();
-                
-                // 類似アクティビティを検索
-                const similarActivities = findSimilarActivities();
-                
-                const response = await fetch('/.netlify/functions/ai-coach-comment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        activity: currentActivity,
-                        trainingStatus: trainingStatus,
-                        streamAnalysis: streamAnalysis,
-                        similarActivities: similarActivities,
-                        userQuestion: userQuestion,
-                        conversationHistory: userQuestion ? conversationHistory : []
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('AIコメントの取得に失敗しました');
-                }
-                
-                const data = await response.json();
-                
-                if (userQuestion) {
-                    // 会話履歴を更新
-                    conversationHistory.push({ role: 'user', content: userQuestion });
-                    conversationHistory.push({ role: 'assistant', content: data.comment });
-                    
-                    // 質問への回答を履歴に追加
-                    addChatMessage('coach', data.comment);
-                } else {
-                    // 初期コメント
-                    commentEl.innerHTML = formatAIComment(data.comment);
-                    loadingEl.style.display = 'none';
-                    commentEl.style.display = 'block';
-                }
-                
-            } catch (error) {
-                console.error('AI comment error:', error);
-                
-                if (!userQuestion) {
-                    commentEl.innerHTML = formatAIComment(generateFallbackComment());
-                    loadingEl.style.display = 'none';
-                    commentEl.style.display = 'block';
-                } else {
-                    addChatMessage('coach', '申し訳ありません、回答の生成に失敗しました。しばらくしてからお試しください。');
-                }
-            }
-        }
-        
-        // AIコメントのMarkdownを整形
-        function formatAIComment(text) {
-            // 改行を維持しつつ、**太字**を<strong>に変換
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
-        }
-        
-        function generateFallbackComment() {
-            const sportType = currentActivity.sport_type || currentActivity.type;
-            const sportCategory = getSportCategory(sportType);
-            const distance = currentActivity.distance ? (currentActivity.distance / 1000).toFixed(1) : '0';
-            const tss = currentActivity.tss || 0;
-            const avgHr = currentActivity.average_heartrate;
-            const duration = (currentActivity.moving_time || 0) / 60;
-            
-            let comment = `🏃 **セッション総評**\n`;
-            comment += `${distance}kmの${getSportLabel(sportType)}トレーニング、お疲れさまでした！`;
-            
-            // 時間に基づくコメント
-            if (duration > 120) {
-                comment += `${Math.round(duration)}分という長時間のセッションをやり遂げたことは素晴らしいです。`;
-            } else if (duration > 60) {
-                comment += `1時間以上のしっかりとしたトレーニングでしたね。`;
-            }
-            
-            // TSS基づく強度評価
-            comment += `\n\n💪 **強度と効果**\n`;
-            if (tss > 150) {
-                comment += `TSS ${tss}は高強度セッションです。心肺機能と乳酸閾値の向上に大きく貢献するトレーニングでした。`;
-            } else if (tss > 80) {
-                comment += `TSS ${tss}は適度な負荷で、有酸素ベースの構築に効果的なセッションでした。`;
-            } else {
-                comment += `TSS ${tss}は低〜中強度で、回復を促しながらフィットネスを維持する良いセッションでした。`;
-            }
-            
-            // 心拍数に基づくコメント
-            if (avgHr) {
-                const hr = Math.round(avgHr);
-                comment += `\n\n💓 **心拍分析**\n`;
-                if (hr < 140) {
-                    comment += `平均心拍${hr}bpmは有酸素ゾーン（Zone 1-2）でのトレーニングです。ミトコンドリアの増加と脂肪燃焼効率の向上が期待できます。`;
-                } else if (hr < 160) {
-                    comment += `平均心拍${hr}bpmは中強度ゾーン（Zone 3）付近です。持久力の基盤構築と乳酸処理能力の向上に効果的です。`;
-                } else {
-                    comment += `平均心拍${hr}bpmは高強度ゾーン（Zone 4-5）です。VO2maxの向上と高強度への耐性構築に貢献します。`;
-                }
-            }
-            
-            // 種目別コメント
-            comment += `\n\n🎯 **種目別ポイント**\n`;
-            if (sportCategory === 'swim') {
-                comment += `スイムは全身の筋群を使用し、関節への負担が少ない状態で心肺機能を向上させる優れたトレーニングです。`;
-            } else if (sportCategory === 'bike') {
-                comment += `バイクトレーニングは下肢の筋持久力と心血管系の強化に優れています。ペダリング効率を意識することで、さらに効果が高まります。`;
-            } else if (sportCategory === 'run') {
-                comment += `ランニングは骨密度の向上と下肢筋力の強化に効果的です。着地衝撃による適応は、骨格系の強化にもつながります。`;
-            }
-            
-            // 回復アドバイス
-            comment += `\n\n🔄 **リカバリーと次のステップ**\n`;
-            if (tss > 150) {
-                comment += `このセッション後は24-48時間の回復を推奨します。明日は完全休養か、軽いリカバリースイム/ウォーキングにとどめましょう。`;
-            } else if (tss > 80) {
-                comment += `明日は軽めのリカバリーセッションが良いでしょう。Zone 1-2での30-45分程度の軽い運動で血流を促進しましょう。`;
-            } else {
-                comment += `明日も通常通りトレーニングを継続できます。質の高いセッションに挑戦するのも良いタイミングです。`;
-            }
-            
-            // トレーニングステータスに基づくコメント
-            if (trainingStatus) {
-                comment += `\n\n📈 **コンディション状況**\n`;
-                comment += `現在のFitness（CTL）は${trainingStatus.ctl}、Form（TSB）は${trainingStatus.tsb}です。`;
-                
-                if (trainingStatus.tsb < -20) {
-                    comment += `疲労が蓄積しています。1-2日の休息を入れて、オーバートレーニングを防ぎましょう。`;
-                } else if (trainingStatus.tsb < -10) {
-                    comment += `適度な負荷状態です。このままトレーニングを継続しつつ、回復にも気を配りましょう。`;
-                } else if (trainingStatus.tsb > 15) {
-                    comment += `フレッシュな状態です！質の高いキーワークアウトに挑戦する絶好のタイミングです。`;
-                } else {
-                    comment += `バランスの取れた状態です。計画通りのトレーニングを継続しましょう。`;
-                }
-            }
-            
-            return comment;
-        }
-        
-        async function askQuestion() {
-            const input = document.getElementById('questionInput');
-            const btn = document.getElementById('askBtn');
-            const question = input.value.trim();
-            
-            if (!question) return;
-            
-            // 質問を履歴に追加
-            addChatMessage('user', question);
-            input.value = '';
-            btn.disabled = true;
-            btn.textContent = '送信中...';
-            
-            // 履歴を表示
-            document.getElementById('chatHistory').style.display = 'block';
-            
-            await fetchAIComment(question);
-            
-            btn.disabled = false;
-            btn.textContent = '質問する';
-        }
-        
-        function addChatMessage(type, content) {
-            const historyEl = document.getElementById('chatHistory');
-            const label = type === 'user' ? '👤 あなた' : '🤖 AIコーチ';
-            
-            // コーチの回答はMarkdownフォーマットを適用
-            const formattedContent = type === 'coach' ? formatAIComment(content) : content;
-            
-            const messageHtml = `
-                <div class="chat-message ${type}">
-                    <div class="chat-message-label">${label}</div>
-                    <div class="chat-message-content">${formattedContent}</div>
-                </div>
-            `;
-            
-            historyEl.insertAdjacentHTML('beforeend', messageHtml);
-            historyEl.scrollTop = historyEl.scrollHeight;
-        }
-        
-        // Enterキーで送信
-        document.getElementById('questionInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') askQuestion();
+    }
+
+    // 過去の類似アクティビティとの比較
+    if (similarActivities && similarActivities.length > 0) {
+        message += `\n## 過去の類似トレーニングとの比較\n`;
+        similarActivities.slice(0, 3).forEach((sim, i) => {
+            const simDate = new Date(sim.start_date).toLocaleDateString('ja-JP');
+            const simPace = formatPace(sim.average_speed, sportType);
+            const simHr = sim.average_heartrate ? Math.round(sim.average_heartrate) : '-';
+            message += `${i + 1}. ${simDate}: ${(sim.distance/1000).toFixed(1)}km, ${simPace}, HR ${simHr}bpm\n`;
         });
         
-        // ===== ユーティリティ =====
-        function getUserThresholds() {
-            const saved = localStorage.getItem('user_thresholds');
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch (e) {}
-            }
-            return { ftp: 200, rFtpPacePerKm: 300, sFtpPacePer100m: 100, maxHr: 190, thresholdHr: 170 };
+        // 比較分析
+        const latest = similarActivities[0];
+        if (latest && activity.average_speed && latest.average_speed) {
+            const paceChange = ((activity.average_speed / latest.average_speed) - 1) * 100;
+            message += `→ 直近の類似トレーニングと比較: ペース${paceChange > 0 ? '+' : ''}${paceChange.toFixed(1)}%\n`;
         }
+    }
+
+    // トレーニングステータス
+    if (trainingStatus) {
+        message += `\n## 現在のトレーニングステータス\n`;
+        message += `- CTL (フィットネス): ${trainingStatus.ctl}\n`;
+        message += `- ATL (疲労): ${trainingStatus.atl}\n`;
+        message += `- TSB (フォーム): ${trainingStatus.tsb}\n`;
         
-        function getSportCategory(sportType) {
-            const swim = ['Swim'];
-            const bike = ['Ride', 'VirtualRide', 'EBikeRide'];
-            const run = ['Run', 'TrailRun', 'VirtualRun'];
-            
-            if (swim.includes(sportType)) return 'swim';
-            if (bike.includes(sportType)) return 'bike';
-            if (run.includes(sportType)) return 'run';
-            return 'other';
+        if (trainingStatus.ctlTrend !== undefined) {
+            const trend = trainingStatus.ctlTrend > 0 ? '上昇中' : trainingStatus.ctlTrend < 0 ? '低下中' : '横ばい';
+            message += `- 7日間のCTL変化: ${trainingStatus.ctlTrend > 0 ? '+' : ''}${trainingStatus.ctlTrend}（${trend}）\n`;
         }
-        
-        function getSportLabel(sportType) {
-            const labels = {
-                'Run': 'ラン', 'TrailRun': 'トレイル', 'VirtualRun': 'バーチャルラン',
-                'Ride': 'バイク', 'VirtualRide': 'バーチャルライド', 'EBikeRide': 'E-Bike',
-                'Swim': 'スイム', 'WeightTraining': 'ウェイト', 'Yoga': 'ヨガ'
-            };
-            return labels[sportType] || sportType;
-        }
-        
-        function getActivityIcon(sportType) {
-            const icons = {
-                'Run': '🏃‍♂️', 'TrailRun': '🏔️', 'VirtualRun': '🏃‍♂️',
-                'Ride': '🚴‍♂️', 'VirtualRide': '🚴‍♂️', 'EBikeRide': '🚴‍♂️',
-                'Swim': '🏊‍♂️', 'WeightTraining': '🏋️‍♂️', 'Yoga': '🧘‍♂️'
-            };
-            return icons[sportType] || '🏃‍♂️';
-        }
-        
-        function formatDuration(seconds) {
-            if (!seconds) return '0:00';
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            const s = Math.floor(seconds % 60);
-            
-            if (h > 0) {
-                return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            }
-            return `${m}:${String(s).padStart(2, '0')}`;
-        }
-        
-        function formatDurationShort(seconds) {
-            if (!seconds) return '0:00';
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m}:${String(s).padStart(2, '0')}`;
-        }
-        
-        function formatRunPace(avgSpeed) {
-            if (!avgSpeed || avgSpeed <= 0) return '-';
-            const pace = 1000 / avgSpeed;
-            const min = Math.floor(pace / 60);
-            const sec = Math.round(pace % 60);
-            return `${min}:${String(sec).padStart(2, '0')}`;
-        }
-        
-        function formatSwimPace(avgSpeed) {
-            if (!avgSpeed || avgSpeed <= 0) return '-';
-            const pace = 100 / avgSpeed;
-            const min = Math.floor(pace / 60);
-            const sec = Math.round(pace % 60);
-            return `${min}:${String(sec).padStart(2, '0')}`;
-        }
-        
-        function showError(message) {
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('errorSection').style.display = 'block';
-            document.getElementById('errorMessage').textContent = message;
-        }
-        
-        function goBackToData() {
-            window.location.href = 'data.html';
-        }
-    </script>
-</body>
-</html>
+    }
+
+    // Lapデータがある場合
+    if (activity.laps && activity.laps.length > 1) {
+        message += `\n## Lap詳細\n`;
+        activity.laps.forEach((lap, i) => {
+            const lapPace = formatPace(lap.average_speed, sportType);
+            const lapHr = lap.average_heartrate ? Math.round(lap.average_heartrate) : '-';
+            message += `Lap ${i + 1}: ${(lap.distance/1000).toFixed(2)}km, ${lapPace}, HR ${lapHr}bpm\n`;
+        });
+    }
+
+    // 質問がある場合
+    if (userQuestion) {
+        message += `\n---\n## 選手からの質問\n${userQuestion}\n\nこの質問に対して、上記データを踏まえて具体的に回答してください。`;
+    } else {
+        message += `\n---\n上記データを分析し、最も重要な洞察とアクションを提供してください。`;
+    }
+
+    return message;
+}
+
+function getSportName(sportType) {
+    const names = {
+        'Run': 'ランニング',
+        'TrailRun': 'トレイルラン',
+        'VirtualRun': 'トレッドミル',
+        'Ride': 'バイク',
+        'VirtualRide': 'インドアバイク',
+        'EBikeRide': 'E-Bike',
+        'Swim': 'スイム',
+        'WeightTraining': 'ウェイト',
+        'Yoga': 'ヨガ',
+        'Workout': 'ワークアウト'
+    };
+    return names[sportType] || sportType;
+}
+
+function formatPace(avgSpeed, sportType) {
+    if (!avgSpeed || avgSpeed <= 0) return '-';
+    
+    if (sportType === 'Swim') {
+        const pace = 100 / avgSpeed;
+        const min = Math.floor(pace / 60);
+        const sec = Math.round(pace % 60);
+        return `${min}:${String(sec).padStart(2, '0')}/100m`;
+    } else if (sportType.includes('Ride')) {
+        return `${(avgSpeed * 3.6).toFixed(1)} km/h`;
+    } else {
+        const pace = 1000 / avgSpeed;
+        const min = Math.floor(pace / 60);
+        const sec = Math.round(pace % 60);
+        return `${min}:${String(sec).padStart(2, '0')}/km`;
+    }
+}

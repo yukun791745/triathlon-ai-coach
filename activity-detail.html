@@ -1733,7 +1733,7 @@
             });
         }
         
-        // スイムラップ棒グラフ（Garminスタイル：X軸=時間、Y軸=ペース）
+        // スイムラップ棒グラフ（X軸=距離、下から上に伸びる棒グラフ）
         function renderSwimLapBarChart() {
             if (!currentActivity.laps || currentActivity.laps.length === 0) {
                 return;
@@ -1746,15 +1746,14 @@
             
             // 各ラップのデータを整理
             const lapData = [];
-            let cumulativeTime = 0;
+            let cumulativeDistance = 0;
             
             laps.forEach((lap, index) => {
-                const distance = lap.distance || 25; // デフォルト25m
+                const distance = lap.distance || 25;
                 const elapsedTime = lap.elapsed_time || lap.moving_time || 0;
                 const movingTime = lap.moving_time || elapsedTime;
                 
                 // ペース計算（秒/100m）
-                // average_speedがあればそれを使う、なければ距離/時間から計算
                 let paceSeconds;
                 if (lap.average_speed && lap.average_speed > 0) {
                     paceSeconds = 100 / lap.average_speed;
@@ -1764,64 +1763,59 @@
                     paceSeconds = null;
                 }
                 
-                // レスト判定:
-                // - moving_timeが0
-                // - 極端に遅いペース（5:00/100m = 300秒より遅い）
-                // - 極端に速いペース（1:00/100m = 60秒より速い）← 物理的に不可能なのでレスト区間
-                // - moving_timeが10秒未満（ターン/壁タッチの時間）
+                // レスト判定
                 const isRest = movingTime === 0 || 
                                movingTime < 10 ||
                                (paceSeconds && paceSeconds > 300) ||
                                (paceSeconds && paceSeconds < 60);
                 
-                lapData.push({
-                    lapNumber: index + 1,
-                    distance: distance,
-                    elapsedTime: elapsedTime,
-                    movingTime: movingTime,
-                    paceSeconds: paceSeconds,
-                    startTime: cumulativeTime,
-                    isRest: isRest,
-                    heartrate: lap.average_heartrate,
-                    strokes: lap.total_strokes,
-                    cadence: lap.average_cadence
-                });
+                if (!isRest && paceSeconds) {
+                    lapData.push({
+                        lapNumber: index + 1,
+                        distance: distance,
+                        startDistance: cumulativeDistance,
+                        endDistance: cumulativeDistance + distance,
+                        movingTime: movingTime,
+                        paceSeconds: paceSeconds,
+                        heartrate: lap.average_heartrate,
+                        strokes: lap.total_strokes,
+                        cadence: lap.average_cadence
+                    });
+                }
                 
-                cumulativeTime += elapsedTime;
+                cumulativeDistance += distance;
             });
             
-            console.log('=== 加工後ラップデータ ===');
-            lapData.forEach(d => console.log(`Lap ${d.lapNumber}: ${d.distance}m, ${d.elapsedTime}s, pace=${d.paceSeconds ? formatPaceDebug(d.paceSeconds) : 'REST'}`));
+            console.log(`泳ぎラップ: ${lapData.length}, 総距離: ${cumulativeDistance}m`);
             
-            // 有効な泳ぎラップのみ抽出（レストを除外）
-            const swimLaps = lapData.filter(d => !d.isRest && d.paceSeconds);
-            
-            console.log(`泳ぎラップ: ${swimLaps.length}, レストラップ: ${lapData.length - swimLaps.length}`);
-            
-            if (swimLaps.length === 0) {
+            if (lapData.length === 0) {
                 ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">有効なスイムラップデータがありません</div>';
                 return;
             }
             
             // Y軸範囲を計算
-            const validPaces = swimLaps.map(d => d.paceSeconds);
-            const minPace = Math.min(...validPaces);
-            const maxPace = Math.max(...validPaces);
-            const padding = (maxPace - minPace) * 0.15 || 10;
+            const validPaces = lapData.map(d => d.paceSeconds);
+            const minPace = Math.min(...validPaces); // 最速
+            const maxPace = Math.max(...validPaces); // 最遅
+            const avgPace = validPaces.reduce((a,b)=>a+b,0) / validPaces.length;
+            const padding = Math.max((maxPace - minPace) * 0.1, 5);
             
-            // ラベル（元のラップ番号を保持）
-            const labels = swimLaps.map(d => `${d.lapNumber}`);
+            // Y軸の基準値（最も遅いペース + padding）
+            const yMax = maxPace + padding;
+            const yMin = Math.max(60, minPace - padding);
             
-            // ペースデータ
-            const paces = swimLaps.map(d => d.paceSeconds);
+            // X軸ラベル（距離）
+            const labels = lapData.map(d => d.endDistance);
+            
+            // 棒グラフの値を変換（下から上に伸ばすため）
+            // 変換値 = yMax - ペース（速いペースほど値が大きくなる）
+            const barValues = lapData.map(d => yMax - d.paceSeconds);
             
             // 棒の色（ペースに応じてグラデーション）
-            const avgPace = validPaces.reduce((a,b)=>a+b,0) / validPaces.length;
-            const barColors = swimLaps.map(d => {
-                // 平均より速い=青、遅い=赤
-                if (d.paceSeconds < avgPace - 5) return 'rgba(59, 130, 246, 0.8)'; // 速い
-                if (d.paceSeconds > avgPace + 5) return 'rgba(239, 68, 68, 0.8)';  // 遅い
-                return 'rgba(34, 197, 94, 0.8)'; // 平均
+            const barColors = lapData.map(d => {
+                if (d.paceSeconds < avgPace - 5) return 'rgba(59, 130, 246, 0.85)'; // 速い=青
+                if (d.paceSeconds > avgPace + 5) return 'rgba(239, 68, 68, 0.85)';  // 遅い=赤
+                return 'rgba(34, 197, 94, 0.85)'; // 平均=緑
             });
             
             charts.pace = new Chart(ctx, {
@@ -1830,10 +1824,12 @@
                     labels: labels,
                     datasets: [{
                         label: 'ペース',
-                        data: paces,
+                        data: barValues,
                         backgroundColor: barColors,
-                        borderColor: barColors.map(c => c.replace('0.8', '1')),
-                        borderWidth: 1
+                        borderColor: barColors.map(c => c.replace('0.85', '1')),
+                        borderWidth: 1,
+                        barPercentage: 1.0,      // 棒の幅を最大に
+                        categoryPercentage: 1.0  // カテゴリ幅を最大に（隙間なし）
                     }]
                 },
                 options: {
@@ -1843,24 +1839,35 @@
                         legend: { display: false },
                         title: {
                             display: true,
-                            text: `ラップペース（${swimLaps.length}本、平均: ${formatPaceDebug(avgPace)}）`
+                            text: `ラップペース（${lapData.length}本、平均: ${formatPaceDebug(avgPace)}）`
                         }
                     },
                     scales: {
                         x: { 
-                            title: { display: true, text: 'ラップ' }
+                            title: { display: true, text: '距離 (m)' },
+                            ticks: {
+                                callback: function(value, index) {
+                                    const dist = labels[index];
+                                    // 100m/200m/500mなどキリの良い数字のみ表示
+                                    if (dist % 100 === 0) return dist + 'm';
+                                    return '';
+                                },
+                                maxRotation: 0
+                            }
                         },
                         y: { 
                             title: { display: true, text: 'ペース (/100m)' },
-                            reverse: true, // 速いほど上
-                            min: Math.max(60, minPace - padding),
-                            max: maxPace + padding,
+                            min: 0,
+                            max: yMax - yMin,
                             ticks: {
                                 callback: function(value) {
-                                    const min = Math.floor(value / 60);
-                                    const sec = Math.round(value % 60);
+                                    // 変換値から元のペースに戻す
+                                    const pace = yMax - value;
+                                    const min = Math.floor(pace / 60);
+                                    const sec = Math.round(pace % 60);
                                     return `${min}:${String(sec).padStart(2, '0')}`;
-                                }
+                                },
+                                stepSize: 10
                             }
                         }
                     },
@@ -1873,12 +1880,12 @@
                             callbacks: {
                                 title: function(context) {
                                     const idx = context[0].dataIndex;
-                                    const lap = swimLaps[idx];
-                                    return `Lap ${lap.lapNumber} (${lap.distance}m)`;
+                                    const lap = lapData[idx];
+                                    return `${lap.startDistance}m - ${lap.endDistance}m (Lap ${lap.lapNumber})`;
                                 },
                                 label: function(context) {
                                     const idx = context.dataIndex;
-                                    const lap = swimLaps[idx];
+                                    const lap = lapData[idx];
                                     const lines = [];
                                     
                                     lines.push(`ペース: ${formatPaceDebug(lap.paceSeconds)}`);

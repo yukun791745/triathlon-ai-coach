@@ -1764,8 +1764,15 @@
                     paceSeconds = null;
                 }
                 
-                // レスト判定（moving_timeが0、または極端に遅いペース）
-                const isRest = movingTime === 0 || (paceSeconds && paceSeconds > 300);
+                // レスト判定:
+                // - moving_timeが0
+                // - 極端に遅いペース（5:00/100m = 300秒より遅い）
+                // - 極端に速いペース（1:00/100m = 60秒より速い）← 物理的に不可能なのでレスト区間
+                // - moving_timeが10秒未満（ターン/壁タッチの時間）
+                const isRest = movingTime === 0 || 
+                               movingTime < 10 ||
+                               (paceSeconds && paceSeconds > 300) ||
+                               (paceSeconds && paceSeconds < 60);
                 
                 lapData.push({
                     lapNumber: index + 1,
@@ -1786,24 +1793,31 @@
             console.log('=== 加工後ラップデータ ===');
             lapData.forEach(d => console.log(`Lap ${d.lapNumber}: ${d.distance}m, ${d.elapsedTime}s, pace=${d.paceSeconds ? formatPaceDebug(d.paceSeconds) : 'REST'}`));
             
-            // 有効なペースデータのみ抽出してY軸範囲を計算
-            const validPaces = lapData.filter(d => d.paceSeconds && !d.isRest).map(d => d.paceSeconds);
-            const minPace = validPaces.length > 0 ? Math.min(...validPaces) : 90;
-            const maxPace = validPaces.length > 0 ? Math.max(...validPaces) : 180;
-            const padding = (maxPace - minPace) * 0.15;
+            // 有効な泳ぎラップのみ抽出（レストを除外）
+            const swimLaps = lapData.filter(d => !d.isRest && d.paceSeconds);
             
-            // ラベル（ラップ番号または距離）
-            const labels = lapData.map(d => `${d.lapNumber}`);
+            console.log(`泳ぎラップ: ${swimLaps.length}, レストラップ: ${lapData.length - swimLaps.length}`);
             
-            // ペースデータ（レストは別色で表示）
-            const paces = lapData.map(d => d.isRest ? null : d.paceSeconds);
-            const restPaces = lapData.map(d => d.isRest ? (d.paceSeconds || maxPace + padding) : null);
+            if (swimLaps.length === 0) {
+                ctx.canvas.parentElement.innerHTML = '<div class="no-map-message">有効なスイムラップデータがありません</div>';
+                return;
+            }
+            
+            // Y軸範囲を計算
+            const validPaces = swimLaps.map(d => d.paceSeconds);
+            const minPace = Math.min(...validPaces);
+            const maxPace = Math.max(...validPaces);
+            const padding = (maxPace - minPace) * 0.15 || 10;
+            
+            // ラベル（元のラップ番号を保持）
+            const labels = swimLaps.map(d => `${d.lapNumber}`);
+            
+            // ペースデータ
+            const paces = swimLaps.map(d => d.paceSeconds);
             
             // 棒の色（ペースに応じてグラデーション）
-            const avgPace = validPaces.length > 0 ? validPaces.reduce((a,b)=>a+b,0)/validPaces.length : 120;
-            const barColors = lapData.map(d => {
-                if (d.isRest) return 'rgba(200, 200, 200, 0.5)';
-                if (!d.paceSeconds) return 'rgba(200, 200, 200, 0.5)';
+            const avgPace = validPaces.reduce((a,b)=>a+b,0) / validPaces.length;
+            const barColors = swimLaps.map(d => {
                 // 平均より速い=青、遅い=赤
                 if (d.paceSeconds < avgPace - 5) return 'rgba(59, 130, 246, 0.8)'; // 速い
                 if (d.paceSeconds > avgPace + 5) return 'rgba(239, 68, 68, 0.8)';  // 遅い
@@ -1820,12 +1834,6 @@
                         backgroundColor: barColors,
                         borderColor: barColors.map(c => c.replace('0.8', '1')),
                         borderWidth: 1
-                    }, {
-                        label: 'レスト',
-                        data: restPaces,
-                        backgroundColor: 'rgba(200, 200, 200, 0.5)',
-                        borderColor: 'rgba(150, 150, 150, 0.8)',
-                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -1835,13 +1843,12 @@
                         legend: { display: false },
                         title: {
                             display: true,
-                            text: `ラップペース（平均: ${formatPaceDebug(avgPace)}）`
+                            text: `ラップペース（${swimLaps.length}本、平均: ${formatPaceDebug(avgPace)}）`
                         }
                     },
                     scales: {
                         x: { 
-                            title: { display: true, text: 'ラップ' },
-                            stacked: true
+                            title: { display: true, text: 'ラップ' }
                         },
                         y: { 
                             title: { display: true, text: 'ペース (/100m)' },
@@ -1854,8 +1861,7 @@
                                     const sec = Math.round(value % 60);
                                     return `${min}:${String(sec).padStart(2, '0')}`;
                                 }
-                            },
-                            stacked: true
+                            }
                         }
                     },
                     interaction: {
@@ -1867,21 +1873,16 @@
                             callbacks: {
                                 title: function(context) {
                                     const idx = context[0].dataIndex;
-                                    const lap = lapData[idx];
+                                    const lap = swimLaps[idx];
                                     return `Lap ${lap.lapNumber} (${lap.distance}m)`;
                                 },
                                 label: function(context) {
                                     const idx = context.dataIndex;
-                                    const lap = lapData[idx];
+                                    const lap = swimLaps[idx];
                                     const lines = [];
                                     
-                                    if (lap.isRest) {
-                                        lines.push('🏊 レスト');
-                                        lines.push(`時間: ${lap.elapsedTime}秒`);
-                                    } else if (lap.paceSeconds) {
-                                        lines.push(`ペース: ${formatPaceDebug(lap.paceSeconds)}`);
-                                        lines.push(`時間: ${lap.movingTime}秒`);
-                                    }
+                                    lines.push(`ペース: ${formatPaceDebug(lap.paceSeconds)}`);
+                                    lines.push(`時間: ${lap.movingTime}秒`);
                                     
                                     if (lap.heartrate) {
                                         lines.push(`心拍: ${Math.round(lap.heartrate)} bpm`);
@@ -2287,14 +2288,25 @@
                     distance = `${(lap.distance / 1000).toFixed(2)} km`;
                 } else if (sportCategory === 'swim') {
                     // スイム: ペースを秒/100mで表示
+                    let paceSeconds = null;
+                    const movingTime = lap.moving_time || 0;
+                    
                     if (lap.average_speed && lap.average_speed > 0) {
-                        const paceSeconds = 100 / lap.average_speed;
-                        pace = formatPaceDebug(paceSeconds);
-                    } else if (lap.moving_time && lap.distance) {
-                        const paceSeconds = (lap.moving_time / lap.distance) * 100;
-                        pace = formatPaceDebug(paceSeconds);
+                        paceSeconds = 100 / lap.average_speed;
+                    } else if (movingTime > 0 && lap.distance > 0) {
+                        paceSeconds = (movingTime / lap.distance) * 100;
+                    }
+                    
+                    // レスト判定: 10秒未満 or 異常に速いペース(60秒/100m未満) or 異常に遅いペース(300秒/100m超)
+                    const isRest = movingTime < 10 || 
+                                   (paceSeconds && paceSeconds < 60) || 
+                                   (paceSeconds && paceSeconds > 300) ||
+                                   !paceSeconds;
+                    
+                    if (isRest) {
+                        pace = '<span style="color: #9ca3af;">REST</span>';
                     } else {
-                        pace = 'REST';
+                        pace = formatPaceDebug(paceSeconds);
                     }
                     distance = `${Math.round(lap.distance)}m`;
                 } else {

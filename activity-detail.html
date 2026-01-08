@@ -913,6 +913,7 @@
                             <div class="tab-buttons" id="chartTabs">
                                 <button class="tab-btn" data-tab="hr">💓 心拍数</button>
                                 <button class="tab-btn active" data-tab="pace">⏱️ ペース</button>
+                                <button class="tab-btn" data-tab="gap" id="gapTab" style="display: none;">📐 GAP</button>
                                 <button class="tab-btn" data-tab="cadence" id="cadenceTab" style="display: none;">🔄 ケイデンス</button>
                                 <button class="tab-btn" data-tab="power" id="powerTab" style="display: none;">⚡ パワー</button>
                             </div>
@@ -926,6 +927,12 @@
                             <div class="chart-tab-content" id="paceTabContent">
                                 <div class="chart-container wide">
                                     <canvas id="paceChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-tab-content" id="gapTabContent" style="display: none;">
+                                <div class="sport-metrics-row" id="gapMetrics"></div>
+                                <div class="chart-container wide">
+                                    <canvas id="gapChart"></canvas>
                                 </div>
                             </div>
                             <div class="chart-tab-content" id="cadenceTabContent" style="display: none;">
@@ -1233,7 +1240,7 @@
                 html += createMetricCard(Math.round(currentActivity.average_heartrate), 'bpm', '平均心拍');
             }
             
-            // バイク: パワーメトリック（心拍とTSSの間）
+            // バイク: パワーメトリック（心拍と獲得標高の間）
             if (sportCategory === 'bike') {
                 if (currentActivity.average_watts) {
                     html += createMetricCard(Math.round(currentActivity.average_watts), 'W', '平均パワー');
@@ -1244,6 +1251,21 @@
                 if (currentActivity.average_watts && currentActivity.weighted_average_watts) {
                     const vi = (currentActivity.weighted_average_watts / currentActivity.average_watts).toFixed(2);
                     html += createMetricCard(vi, '', 'VI');
+                }
+            }
+            
+            // ラン: ピッチとストライド（心拍と獲得標高の間）
+            if (sportCategory === 'run' && currentActivity.average_cadence) {
+                // ピッチ（Stravaは片足分なので2倍）
+                const avgPitch = Math.round(currentActivity.average_cadence * 2);
+                html += createMetricCard(avgPitch, 'spm', 'ピッチ');
+                
+                // ストライド長 = 速度(m/min) / ピッチ(steps/min)
+                // 速度 = average_speed (m/s) * 60 = m/min
+                if (currentActivity.average_speed) {
+                    const speedMPerMin = currentActivity.average_speed * 60;
+                    const stride = speedMPerMin / avgPitch;
+                    html += createMetricCard(stride.toFixed(2), 'm', 'ストライド');
                 }
             }
             
@@ -1379,6 +1401,7 @@
             setupChartTabs();
             renderHeartRateChart();
             renderPaceChart();
+            renderGAPChart();
             renderSportSpecificCharts();
             renderLapTable();
         }
@@ -1403,6 +1426,11 @@
                 if (currentActivity.average_cadence || (streamData && streamData.cadence)) {
                     document.getElementById('cadenceTab').style.display = 'inline-block';
                     document.getElementById('cadenceTab').textContent = '👟 ピッチ';
+                }
+                // GAP（Grade Adjusted Pace）タブ - 標高データがある場合のみ
+                if (streamData && streamData.altitude && streamData.altitude.data && 
+                    streamData.grade_smooth && streamData.grade_smooth.data) {
+                    document.getElementById('gapTab').style.display = 'inline-block';
                 }
             }
             
@@ -1576,6 +1604,7 @@
             const hrData = streamData.heartrate.data;
             const timeData = streamData.time?.data || hrData.map((_, i) => i);
             const distanceData = streamData.distance?.data;
+            const altitudeData = streamData.altitude?.data;
             
             // データをサンプリング（多すぎる場合）
             const maxPoints = 500;
@@ -1583,6 +1612,7 @@
             
             const labels = [];
             const data = [];
+            const altData = [];
             
             for (let i = 0; i < hrData.length; i += step) {
                 if (distanceData) {
@@ -1596,47 +1626,83 @@
                     labels.push(formatDurationShort(timeData[i]));
                 }
                 data.push(hrData[i]);
+                if (altitudeData) {
+                    altData.push(altitudeData[i]);
+                }
+            }
+            
+            // データセット
+            const datasets = [{
+                label: '心拍数',
+                data: data,
+                borderColor: '#ef4444',
+                borderWidth: 1.5,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                yAxisID: 'y'
+            }];
+            
+            // 標高データがあれば背景として追加
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                datasets.unshift({
+                    label: '標高',
+                    data: altData,
+                    borderColor: 'rgba(156, 163, 175, 0.3)',
+                    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    yAxisID: 'y1'
+                });
+            }
+            
+            const scales = {
+                x: { 
+                    title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
+                    ticks: {
+                        maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                        callback: function(value, index) {
+                            const label = this.getLabelForValue(value);
+                            if (sportCategory === 'swim' && distanceData) {
+                                const dist = parseFloat(label);
+                                if (dist % 200 === 0 || index === 0) {
+                                    return label;
+                                }
+                                return '';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                y: { 
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: 'bpm' }
+                }
+            };
+            
+            // 標高用の右Y軸
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                scales.y1 = {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '標高 (m)' },
+                    grid: { drawOnChartArea: false },
+                    min: Math.min(...altData) - 10,
+                    max: Math.max(...altData) + 10
+                };
             }
             
             charts.hr = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '心拍数',
-                        data: data,
-                        borderColor: '#ef4444',
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: 0
-                    }]
-                },
+                data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    // スイムは200mおきに表示
-                                    if (sportCategory === 'swim' && distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { title: { display: true, text: 'bpm' } }
-                    },
+                    plugins: { legend: { display: altData.length > 0 && sportCategory !== 'swim' } },
+                    scales: scales,
                     interaction: {
                         intersect: false,
                         mode: 'index'
@@ -1666,12 +1732,14 @@
             const velData = streamData.velocity_smooth.data;
             const distanceData = streamData.distance?.data;
             const timeData = streamData.time?.data || velData.map((_, i) => i);
+            const altitudeData = streamData.altitude?.data;
             
             // 速度の閾値を設定（停止や歩行を除外）
             const minVelocity = getMinVelocityThreshold(sportCategory);
             
             let labels = [];
             let data = [];
+            let altData = [];
             let rawPaceValues = [];
             
             // スイムの場合はターン単位（25m/50m）の平均ペースを使用（ラップデータがない場合のフォールバック）
@@ -1705,6 +1773,11 @@
                         data.push(pace);
                         if (vel >= minVelocity && pace) rawPaceValues.push(pace);
                     }
+                    
+                    // 標高データ
+                    if (altitudeData) {
+                        altData.push(altitudeData[i]);
+                    }
                 }
             }
             
@@ -1714,69 +1787,101 @@
             const xLabel = sportCategory === 'swim' ? '距離 (m)' : (distanceData ? '距離 (km)' : '時間');
             const poolLength = sportCategory === 'swim' ? detectPoolLength() : null;
             
+            // データセット
+            const datasets = [];
+            
+            // 標高背景（ラン、バイクのみ）
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                datasets.push({
+                    label: '標高',
+                    data: altData,
+                    borderColor: 'rgba(156, 163, 175, 0.3)',
+                    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    yAxisID: 'y1'
+                });
+            }
+            
+            // メインのペース/速度データ
+            datasets.push({
+                label: sportCategory === 'bike' ? '速度' : 'ペース',
+                data: data,
+                borderColor: '#3b82f6',
+                borderWidth: sportCategory === 'swim' ? 2 : 1.5,
+                fill: false,
+                tension: 0.2,
+                pointRadius: sportCategory === 'swim' ? 3 : 0,
+                pointBackgroundColor: '#3b82f6',
+                spanGaps: true,
+                yAxisID: 'y'
+            });
+            
+            const scales = {
+                x: { 
+                    title: { display: true, text: xLabel },
+                    ticks: {
+                        maxTicksLimit: sportCategory === 'swim' ? 15 : 12,
+                        callback: function(value, index) {
+                            const label = this.getLabelForValue(value);
+                            if (sportCategory === 'swim') {
+                                const dist = parseFloat(label);
+                                if (dist % 100 === 0) {
+                                    return label + 'm';
+                                }
+                                return '';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                y: { 
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: sportCategory === 'bike' ? 'km/h' : 'ペース' },
+                    reverse: sportCategory !== 'bike',
+                    min: yAxisRange.min,
+                    max: yAxisRange.max,
+                    ticks: {
+                        callback: function(value) {
+                            if (sportCategory === 'bike') {
+                                return value.toFixed(0);
+                            } else if (sportCategory === 'swim') {
+                                const min = Math.floor(value / 60);
+                                const sec = Math.round(value % 60);
+                                return `${min}:${String(sec).padStart(2, '0')}`;
+                            } else {
+                                const min = Math.floor(value);
+                                const sec = Math.round((value - min) * 60);
+                                return `${min}:${String(sec).padStart(2, '0')}`;
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // 標高用Y軸
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                scales.y1 = {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '標高 (m)' },
+                    grid: { drawOnChartArea: false },
+                    min: Math.min(...altData) - 10,
+                    max: Math.max(...altData) + 10
+                };
+            }
+            
             charts.pace = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: sportCategory === 'bike' ? '速度' : 'ペース',
-                        data: data,
-                        borderColor: '#3b82f6',
-                        borderWidth: sportCategory === 'swim' ? 2 : 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: sportCategory === 'swim' ? 3 : 0, // スイムはポイントを表示
-                        pointBackgroundColor: '#3b82f6',
-                        spanGaps: true
-                    }]
-                },
+                data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: xLabel },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 15 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    // スイムは100mおきにラベルを表示
-                                    if (sportCategory === 'swim') {
-                                        const dist = parseFloat(label);
-                                        if (dist % 100 === 0) {
-                                            return label + 'm';
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { 
-                            title: { display: true, text: sportCategory === 'bike' ? 'km/h' : 'ペース' },
-                            reverse: sportCategory !== 'bike',
-                            min: yAxisRange.min,
-                            max: yAxisRange.max,
-                            ticks: {
-                                callback: function(value) {
-                                    if (sportCategory === 'bike') {
-                                        return value.toFixed(0);
-                                    } else if (sportCategory === 'swim') {
-                                        // スイム: 秒を分:秒に変換
-                                        const min = Math.floor(value / 60);
-                                        const sec = Math.round(value % 60);
-                                        return `${min}:${String(sec).padStart(2, '0')}`;
-                                    } else {
-                                        // ラン: min/km（valueは分単位の小数）
-                                        const min = Math.floor(value);
-                                        const sec = Math.round((value - min) * 60);
-                                        return `${min}:${String(sec).padStart(2, '0')}`;
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: altData.length > 0 && sportCategory !== 'swim' } },
+                    scales: scales,
                     interaction: {
                         intersect: false,
                         mode: 'index'
@@ -1794,11 +1899,15 @@
                                 },
                                 label: function(context) {
                                     const value = context.raw;
-                                    if (value === null) return '停止中';
+                                    if (value === null) return `${context.dataset.label}: 停止中`;
+                                    
+                                    if (context.dataset.label === '標高') {
+                                        return `標高: ${Math.round(value)}m`;
+                                    }
+                                    
                                     if (sportCategory === 'bike') {
                                         return `速度: ${value.toFixed(1)} km/h`;
                                     } else if (sportCategory === 'swim') {
-                                        // スイム: 秒を分:秒に変換
                                         const min = Math.floor(value / 60);
                                         const sec = Math.round(value % 60);
                                         return `ペース: ${min}:${String(sec).padStart(2, '0')}/100m`;
@@ -1807,6 +1916,215 @@
                                         const sec = Math.round((value - min) * 60);
                                         return `ペース: ${min}:${String(sec).padStart(2, '0')}/km`;
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // GAP（Grade Adjusted Pace）チャート - ランのみ
+        function renderGAPChart() {
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
+            
+            // ランのみ、かつ必要なデータがある場合のみ
+            if (sportCategory !== 'run') return;
+            if (!streamData || !streamData.velocity_smooth?.data || !streamData.grade_smooth?.data) {
+                return;
+            }
+            
+            const ctx = document.getElementById('gapChart').getContext('2d');
+            if (charts.gap) charts.gap.destroy();
+            
+            const velData = streamData.velocity_smooth.data;
+            const gradeData = streamData.grade_smooth.data;
+            const distanceData = streamData.distance?.data;
+            const altitudeData = streamData.altitude?.data;
+            const timeData = streamData.time?.data || velData.map((_, i) => i);
+            
+            // GAPの計算
+            // 傾斜係数: 上り1%あたり約0.03追加、下り1%あたり約0.015削減
+            // GAP = Pace × (1 + grade * factor)
+            // ただし速度ベースで計算: GAP_velocity = velocity / (1 + grade * factor)
+            
+            const maxPoints = 500;
+            const step = Math.max(1, Math.floor(velData.length / maxPoints));
+            
+            const labels = [];
+            const paceData = [];
+            const gapData = [];
+            const altData = [];
+            const rawGapValues = [];
+            
+            const minVelocity = 0.5; // 0.5 m/s 以下は停止とみなす
+            
+            for (let i = 0; i < velData.length; i += step) {
+                if (distanceData) {
+                    labels.push((distanceData[i] / 1000).toFixed(1));
+                } else {
+                    labels.push(formatDurationShort(timeData[i]));
+                }
+                
+                const vel = velData[i];
+                const grade = gradeData[i] || 0; // パーセント
+                
+                // ペース（min/km）
+                const pace = vel > minVelocity ? 1000 / vel / 60 : null;
+                paceData.push(pace);
+                
+                // GAP計算
+                // 上り: 1%あたり+3%、下り: 1%あたり-1.5%（下りは効果が小さい）
+                let gapFactor;
+                if (grade >= 0) {
+                    gapFactor = 1 + grade * 0.03; // 上り
+                } else {
+                    gapFactor = 1 + grade * 0.015; // 下り（効果小さめ）
+                }
+                
+                // GAP = 実際のペース × 傾斜係数
+                // 上りでは実際より遅いペースでも、GAPは速くなる（努力度が高い）
+                const gap = vel > minVelocity ? (1000 / vel / 60) / gapFactor : null;
+                gapData.push(gap);
+                
+                if (gap && gap > 2 && gap < 15) { // 2:00〜15:00/kmの範囲内
+                    rawGapValues.push(gap);
+                }
+                
+                if (altitudeData) {
+                    altData.push(altitudeData[i]);
+                }
+            }
+            
+            // 平均GAP計算
+            const validGaps = rawGapValues.filter(g => g);
+            const avgGap = validGaps.length > 0 ? validGaps.reduce((a, b) => a + b, 0) / validGaps.length : 0;
+            const avgGapFormatted = avgGap > 0 ? `${Math.floor(avgGap)}:${String(Math.round((avgGap % 1) * 60)).padStart(2, '0')}` : '-';
+            
+            // 平均ペース
+            const validPaces = paceData.filter(p => p && p > 2 && p < 15);
+            const avgPace = validPaces.length > 0 ? validPaces.reduce((a, b) => a + b, 0) / validPaces.length : 0;
+            const avgPaceFormatted = avgPace > 0 ? `${Math.floor(avgPace)}:${String(Math.round((avgPace % 1) * 60)).padStart(2, '0')}` : '-';
+            
+            // メトリクス表示
+            document.getElementById('gapMetrics').innerHTML = `
+                <div class="sport-metric-item">
+                    <div class="sport-metric-value">${avgPaceFormatted}</div>
+                    <div class="sport-metric-label">平均ペース (/km)</div>
+                </div>
+                <div class="sport-metric-item">
+                    <div class="sport-metric-value">${avgGapFormatted}</div>
+                    <div class="sport-metric-label">平均GAP (/km)</div>
+                </div>
+            `;
+            
+            // Y軸範囲
+            const yAxisRange = calculateYAxisRange(rawGapValues, 'run');
+            
+            // データセット
+            const datasets = [];
+            
+            // 標高背景
+            if (altData.length > 0) {
+                datasets.push({
+                    label: '標高',
+                    data: altData,
+                    borderColor: 'rgba(156, 163, 175, 0.3)',
+                    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    yAxisID: 'y1'
+                });
+            }
+            
+            // 実際のペース（薄い色）
+            datasets.push({
+                label: 'ペース',
+                data: paceData,
+                borderColor: 'rgba(59, 130, 246, 0.4)',
+                borderWidth: 1,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                yAxisID: 'y'
+            });
+            
+            // GAP（濃い色）
+            datasets.push({
+                label: 'GAP',
+                data: gapData,
+                borderColor: '#10b981',
+                borderWidth: 1.5,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                yAxisID: 'y'
+            });
+            
+            const scales = {
+                x: { 
+                    title: { display: true, text: distanceData ? '距離 (km)' : '時間' },
+                    ticks: { maxTicksLimit: 12 }
+                },
+                y: { 
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: 'ペース (min/km)' },
+                    reverse: true,
+                    min: yAxisRange.min,
+                    max: yAxisRange.max,
+                    ticks: {
+                        callback: function(value) {
+                            const min = Math.floor(value);
+                            const sec = Math.round((value - min) * 60);
+                            return `${min}:${String(sec).padStart(2, '0')}`;
+                        }
+                    }
+                }
+            };
+            
+            // 標高用Y軸
+            if (altData.length > 0) {
+                scales.y1 = {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '標高 (m)' },
+                    grid: { drawOnChartArea: false },
+                    min: Math.min(...altData) - 10,
+                    max: Math.max(...altData) + 10
+                };
+            }
+            
+            charts.gap = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true }
+                    },
+                    scales: scales,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    if (value === null) return `${context.dataset.label}: 停止中`;
+                                    
+                                    if (context.dataset.label === '標高') {
+                                        return `標高: ${Math.round(value)}m`;
+                                    }
+                                    
+                                    const min = Math.floor(value);
+                                    const sec = Math.round((value - min) * 60);
+                                    return `${context.dataset.label}: ${min}:${String(sec).padStart(2, '0')}/km`;
                                 }
                             }
                         }
@@ -2243,12 +2561,14 @@
             const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
             const distanceData = streamData?.distance?.data;
             const timeData = streamData?.time?.data || data.map((_, i) => i);
+            const altitudeData = streamData?.altitude?.data;
             
             const maxPoints = 500;
             const step = Math.max(1, Math.floor(data.length / maxPoints));
             
             const labels = [];
             const chartData = [];
+            const altData = [];
             const validValues = []; // Y軸範囲計算用
             
             // ピッチ/ケイデンスの有効範囲を定義
@@ -2283,6 +2603,11 @@
                 const value = data[i];
                 chartData.push(value);
                 
+                // 標高データ
+                if (altitudeData && i < altitudeData.length) {
+                    altData.push(altitudeData[i]);
+                }
+                
                 // Y軸範囲計算用に有効値を収集
                 if (value >= minValid && value <= maxValid) {
                     validValues.push(value);
@@ -2312,48 +2637,83 @@
                 }
             }
             
+            // データセット
+            const datasets = [];
+            
+            // 標高背景（バイク、ランのみ）
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                datasets.push({
+                    label: '標高',
+                    data: altData,
+                    borderColor: 'rgba(156, 163, 175, 0.3)',
+                    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    yAxisID: 'y1'
+                });
+            }
+            
+            // メインデータ
+            datasets.push({
+                label: label,
+                data: chartData,
+                borderColor: color,
+                borderWidth: 1.5,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                yAxisID: 'y'
+            });
+            
+            const scales = {
+                x: { 
+                    title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
+                    ticks: {
+                        maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
+                        callback: function(value, index) {
+                            const label = this.getLabelForValue(value);
+                            if (sportCategory === 'swim' && distanceData) {
+                                const dist = parseFloat(label);
+                                if (dist % 200 === 0 || index === 0) {
+                                    return label;
+                                }
+                                return '';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                y: { 
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: unit },
+                    min: yMin,
+                    max: yMax
+                }
+            };
+            
+            // 標高用Y軸
+            if (altData.length > 0 && sportCategory !== 'swim') {
+                scales.y1 = {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '標高 (m)' },
+                    grid: { drawOnChartArea: false },
+                    min: Math.min(...altData) - 10,
+                    max: Math.max(...altData) + 10
+                };
+            }
+            
             charts[chartKey] = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: chartData,
-                        borderColor: color,
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.2,
-                        pointRadius: 0
-                    }]
-                },
+                data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: distanceData ? (sportCategory === 'swim' ? '距離 (m)' : '距離 (km)') : '時間' },
-                            ticks: {
-                                maxTicksLimit: sportCategory === 'swim' ? 10 : 12,
-                                callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    if (sportCategory === 'swim' && distanceData) {
-                                        const dist = parseFloat(label);
-                                        if (dist % 200 === 0 || index === 0) {
-                                            return label;
-                                        }
-                                        return '';
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                        y: { 
-                            title: { display: true, text: unit },
-                            min: yMin,
-                            max: yMax
-                        }
-                    },
+                    plugins: { legend: { display: altData.length > 0 && sportCategory !== 'swim' } },
+                    scales: scales,
                     interaction: {
                         intersect: false,
                         mode: 'index'

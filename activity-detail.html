@@ -1061,6 +1061,9 @@
             // Laps APIでラップデータを取得（スイムなど）
             await loadLapData(activityId);
             
+            // スイムの場合、ストロークメトリックを概要に追加
+            addSwimStrokeMetrics();
+            
             // UIを表示
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -1250,6 +1253,109 @@
                     <div class="summary-metric-label">${label}</div>
                 </div>
             `;
+        }
+        
+        // スイム用のストロークメトリックを概要に追加
+        function addSwimStrokeMetrics() {
+            const sportCategory = getSportCategory(currentActivity.sport_type || currentActivity.type);
+            if (sportCategory !== 'swim' || !currentActivity.laps || currentActivity.laps.length === 0) {
+                console.log('addSwimStrokeMetrics: スイムではないかラップデータがありません');
+                return;
+            }
+            
+            console.log('addSwimStrokeMetrics: 計算開始', currentActivity.laps.length, 'ラップ');
+            
+            // 有効なラップを抽出（RESTを除く）
+            let totalDistance = 0;
+            let totalStrokes = 0;
+            let totalTime = 0; // 秒
+            
+            currentActivity.laps.forEach((lap, i) => {
+                const distance = lap.distance || 0;
+                const movingTime = lap.moving_time || 0;
+                const cadence = lap.average_cadence;
+                
+                // ペース計算
+                let paceSeconds = null;
+                if (lap.average_speed && lap.average_speed > 0) {
+                    paceSeconds = 100 / lap.average_speed;
+                } else if (movingTime > 0 && distance > 0) {
+                    paceSeconds = (movingTime / distance) * 100;
+                }
+                
+                // レスト判定
+                const isRest = distance === 0 ||
+                               movingTime === 0 || 
+                               movingTime < 10 ||
+                               (paceSeconds && paceSeconds > 300) ||
+                               (paceSeconds && paceSeconds < 60);
+                
+                if (!isRest && distance > 0 && movingTime > 0) {
+                    // ストローク数を計算（cadenceがなくてもtotal_strokesがあれば使う）
+                    let strokes = lap.total_strokes;
+                    if (!strokes && cadence && movingTime) {
+                        strokes = Math.round(cadence * movingTime / 60);
+                    }
+                    
+                    if (strokes && strokes > 0) {
+                        totalDistance += distance;
+                        totalStrokes += strokes;
+                        totalTime += movingTime;
+                    }
+                }
+            });
+            
+            console.log('addSwimStrokeMetrics: 計算結果', { totalDistance, totalStrokes, totalTime });
+            
+            if (totalStrokes === 0 || totalDistance === 0 || totalTime === 0) {
+                console.log('addSwimStrokeMetrics: データ不足でスキップ');
+                return;
+            }
+            
+            // 加重平均を計算
+            const avgStrokeRate = Math.round(totalStrokes / totalTime * 60); // spm
+            const avgDPS = (totalDistance / totalStrokes).toFixed(2); // m/stroke
+            
+            console.log('addSwimStrokeMetrics: 平均値', { avgStrokeRate, avgDPS });
+            
+            // 概要メトリックを再構築
+            const sportType = currentActivity.sport_type || currentActivity.type;
+            let html = '';
+            
+            // 距離
+            if (currentActivity.distance) {
+                html += createMetricCard((currentActivity.distance / 1000).toFixed(2), 'km', '距離');
+            }
+            
+            // 時間
+            html += createMetricCard(formatDuration(currentActivity.moving_time), '', '時間');
+            
+            // ペース
+            if (currentActivity.average_speed) {
+                html += createMetricCard(formatSwimPace(currentActivity.average_speed), '/100m', 'ペース');
+            }
+            
+            // 心拍
+            if (currentActivity.average_heartrate) {
+                html += createMetricCard(Math.round(currentActivity.average_heartrate), 'bpm', '平均心拍');
+            }
+            
+            // ストロークレートとDPS（心拍の後、TSSの前）
+            html += createMetricCard(avgStrokeRate, 'spm', 'Stroke Rate');
+            html += createMetricCard(avgDPS, 'm', 'DPS');
+            
+            // TSS
+            if (currentActivity.tss) {
+                html += createMetricCard(currentActivity.tss, '', 'TSS');
+            }
+            
+            // 標高
+            if (currentActivity.total_elevation_gain && currentActivity.total_elevation_gain > 10) {
+                html += createMetricCard(Math.round(currentActivity.total_elevation_gain), 'm', '獲得標高');
+            }
+            
+            document.getElementById('summaryMetrics').innerHTML = html;
+            console.log('addSwimStrokeMetrics: 概要メトリック更新完了');
         }
         
         // ===== グラフ描画 =====

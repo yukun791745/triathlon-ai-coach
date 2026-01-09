@@ -1521,34 +1521,75 @@
             const ctx = document.getElementById('hrZonesChart').getContext('2d');
             if (charts.hrZones) charts.hrZones.destroy();
             
+            // 100%スタック用にデータを変換（各週の合計を100%として割合を計算）
+            const percentData = weeklyZones.map(w => {
+                const total = w.data.zone1 + w.data.zone2 + w.data.zone3 + w.data.zone4 + w.data.zone5;
+                if (total === 0) return { zone1: 0, zone2: 0, zone3: 0, zone4: 0, zone5: 0 };
+                return {
+                    zone1: (w.data.zone1 / total) * 100,
+                    zone2: (w.data.zone2 / total) * 100,
+                    zone3: (w.data.zone3 / total) * 100,
+                    zone4: (w.data.zone4 / total) * 100,
+                    zone5: (w.data.zone5 / total) * 100
+                };
+            });
+            
+            // 元の時間データも保持（ツールチップ用）
+            const originalData = weeklyZones.map(w => ({
+                zone1: w.data.zone1,
+                zone2: w.data.zone2,
+                zone3: w.data.zone3,
+                zone4: w.data.zone4,
+                zone5: w.data.zone5,
+                total: w.data.zone1 + w.data.zone2 + w.data.zone3 + w.data.zone4 + w.data.zone5
+            }));
+            
             charts.hrZones = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: weeklyZones.map(w => w.week),
                     datasets: [
-                        { label: 'Z1', data: weeklyZones.map(w => w.data.zone1), backgroundColor: ZONE_COLORS[0] },
-                        { label: 'Z2', data: weeklyZones.map(w => w.data.zone2), backgroundColor: ZONE_COLORS[1] },
-                        { label: 'Z3', data: weeklyZones.map(w => w.data.zone3), backgroundColor: ZONE_COLORS[2] },
-                        { label: 'Z4', data: weeklyZones.map(w => w.data.zone4), backgroundColor: ZONE_COLORS[3] },
-                        { label: 'Z5', data: weeklyZones.map(w => w.data.zone5), backgroundColor: ZONE_COLORS[4] }
+                        { label: 'Z1', data: percentData.map(d => d.zone1), backgroundColor: ZONE_COLORS[0], originalData: originalData.map(d => d.zone1) },
+                        { label: 'Z2', data: percentData.map(d => d.zone2), backgroundColor: ZONE_COLORS[1], originalData: originalData.map(d => d.zone2) },
+                        { label: 'Z3', data: percentData.map(d => d.zone3), backgroundColor: ZONE_COLORS[2], originalData: originalData.map(d => d.zone3) },
+                        { label: 'Z4', data: percentData.map(d => d.zone4), backgroundColor: ZONE_COLORS[3], originalData: originalData.map(d => d.zone4) },
+                        { label: 'Z5', data: percentData.map(d => d.zone5), backgroundColor: ZONE_COLORS[4], originalData: originalData.map(d => d.zone5) }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '時間 (h)' } } },
+                    scales: { 
+                        x: { stacked: true }, 
+                        y: { 
+                            stacked: true, 
+                            min: 0,
+                            max: 100,
+                            title: { display: true, text: '%' },
+                            ticks: { callback: value => value + '%' }
+                        } 
+                    },
                     plugins: {
                         legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percent = context.raw.toFixed(1);
+                                    const hours = context.dataset.originalData[context.dataIndex].toFixed(1);
+                                    return context.dataset.label + ': ' + percent + '% (' + hours + 'h)';
+                                }
+                            }
+                        },
                         datalabels: {
-                            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0.3,
+                            display: ctx => ctx.dataset.data[ctx.dataIndex] > 8,
                             color: '#fff',
                             font: { weight: 'bold', size: 9 },
-                            formatter: value => value.toFixed(1)
+                            formatter: value => Math.round(value) + '%'
                         },
-                        totalLabel: { decimalPlaces: 1 }
+                        totalLabel: false
                     }
                 },
-                plugins: [ChartDataLabels, totalLabelPlugin]
+                plugins: [ChartDataLabels]
             });
         }
         

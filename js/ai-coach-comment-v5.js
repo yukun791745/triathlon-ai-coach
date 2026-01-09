@@ -1,0 +1,697 @@
+// netlify/functions/ai-coach-comment.js
+// 改善版v5: セッションタイプ選択による断定的コメント
+
+// セッション評価基準（session-types.jsと同期）
+const SESSION_EVALUATION = {
+    // スイム
+    swim_drill_focus: {
+        purpose: 'フォーム改善・技術習得',
+        focus: 'ストローク効率（DPS）、フォームの一貫性',
+        goodSigns: ['DPSが維持/向上', '心拍Z1-Z2で技術に集中'],
+        concerns: ['後半でDPS低下', '強度が上がりすぎ']
+    },
+    swim_drill_endurance: {
+        purpose: 'テクニック確認＋有酸素ベース構築',
+        focus: 'メインセットのペース安定性、心拍Z2維持',
+        goodSigns: ['Z2維持', 'ペース安定', 'ドリルの動きをメインで実践'],
+        concerns: ['オーバーペースでZ3以上', '後半ペースダウン']
+    },
+    swim_drill_speed: {
+        purpose: 'テクニック確認＋スピード向上',
+        focus: '高強度セットでのペース、セット間の維持',
+        goodSigns: ['目標ペース達成', 'セット間でタイム維持', 'フォーム維持'],
+        concerns: ['後半タイム低下', 'フォーム崩れ']
+    },
+    swim_endurance: {
+        purpose: '有酸素能力向上・泳ぎ込み',
+        focus: 'ペース安定性、心拍ドリフト、総距離',
+        goodSigns: ['Z2で安定', '心拍ドリフト10%以内', 'ペース維持'],
+        concerns: ['心拍ドリフト大', '後半ペースダウン']
+    },
+    swim_threshold: {
+        purpose: '乳酸処理能力向上',
+        focus: 'CSSペースの維持、心拍Z3-Z4',
+        goodSigns: ['CSSペース±3秒/100m', 'セット間ペース維持', 'Z3-Z4維持'],
+        concerns: ['ペースばらつき', '後半ペースダウン']
+    },
+    swim_interval: {
+        purpose: 'スピード向上・無酸素能力強化',
+        focus: '各本のタイム、レスト中の回復',
+        goodSigns: ['設定タイムクリア', 'セット間タイム維持', 'レストで回復'],
+        concerns: ['後半タイム低下', '回復不十分']
+    },
+    swim_ow: {
+        purpose: 'レース実践・オープンウォーター適応',
+        focus: 'ヘッドアップ頻度、直進性',
+        goodSigns: ['ヘッドアップしてもペース維持', '直進できた'],
+        concerns: ['大幅ペースダウン', '蛇行']
+    },
+    swim_recovery: {
+        purpose: '疲労回復・血流促進',
+        focus: '心拍Z1維持、主観的な楽さ',
+        goodSigns: ['Z1維持', '楽に泳げた'],
+        concerns: ['強度上がりすぎ']
+    },
+    swim_test: {
+        purpose: '現状把握・CSS/閾値測定',
+        focus: 'オールアウト、ペーシング',
+        goodSigns: ['全力出し切り', '適切なペース配分'],
+        concerns: ['前半突っ込みすぎ', '力出し切れず']
+    },
+
+    // バイク
+    bike_endurance: {
+        purpose: '有酸素ベース構築・脂肪燃焼効率向上',
+        focus: 'Z2維持、心拍ドリフト、ケイデンス安定',
+        goodSigns: ['Z2維持', '心拍ドリフト10%以内', 'ケイデンス安定'],
+        concerns: ['登りでZ3-Z4', '心拍ドリフト大']
+    },
+    bike_tempo: {
+        purpose: 'FTP向上・持久力強化',
+        focus: 'FTP88-94%維持、心拍Z3-Z4',
+        goodSigns: ['スイートスポット維持', 'Z3-Z4', 'パワー維持'],
+        concerns: ['パワー低下', 'FTP超過']
+    },
+    bike_threshold: {
+        purpose: 'FTP向上・閾値耐性強化',
+        focus: 'FTP±3%維持、持続時間',
+        goodSigns: ['FTP維持', 'Z4安定', 'ペダリング滑らか'],
+        concerns: ['パワー維持できず', 'Z5突入']
+    },
+    bike_vo2max: {
+        purpose: 'VO2max向上・高強度耐性',
+        focus: '各セットのパワー維持、心拍Z5到達',
+        goodSigns: ['FTP106-120%達成', 'セット間パワー維持', 'Z5到達'],
+        concerns: ['パワー大幅低下', '強度不足']
+    },
+    bike_technique_interval: {
+        purpose: 'ペダリング技術向上＋高強度トレーニング',
+        focus: 'ケイデンスドリルの実行、インターバルのパワー',
+        goodSigns: ['ドリル実行', 'インターバルでパワー出せた'],
+        concerns: ['ドリルで疲労', 'ケイデンス不安定']
+    },
+    bike_zwift_workout: {
+        purpose: 'Zwiftメニューの完遂・計画的トレーニング',
+        focus: 'ワークアウト完遂率、各セグメントの達成度',
+        goodSigns: ['完遂', '目標パワー達成'],
+        concerns: ['中断', 'パワー乖離']
+    },
+    bike_hill: {
+        purpose: '登坂力向上・パワーウェイトレシオ改善',
+        focus: '登りでのパワー維持、W/kg',
+        goodSigns: ['パワー維持', 'シッティング/ダンシング使い分け'],
+        concerns: ['パワー低下', 'ケイデンス低下']
+    },
+    bike_brick: {
+        purpose: 'バイク→ラン移行適応',
+        focus: 'バイク後半のパワー維持、ラン移行',
+        goodSigns: ['後半パワー維持', 'T2スムーズ', 'ラン脚動いた'],
+        concerns: ['バイクで追い込みすぎ', 'ラン脚動かず']
+    },
+    bike_recovery: {
+        purpose: '疲労回復・アクティブレスト',
+        focus: 'Z1維持、低パワー',
+        goodSigns: ['Z1維持', '高ケイデンス', '楽だった'],
+        concerns: ['強度上がりすぎ']
+    },
+    bike_test: {
+        purpose: 'FTP測定・現状把握',
+        focus: 'オールアウト、ペーシング',
+        goodSigns: ['全力出し切り', '適切なペース配分'],
+        concerns: ['前半突っ込みすぎ', '追い込み不足']
+    },
+
+    // ラン
+    run_easy: {
+        purpose: '有酸素ベース構築・回復促進',
+        focus: 'Z2維持、会話ペース、心拍安定',
+        goodSigns: ['Z2維持', '会話ペース', '心拍ドリフト小'],
+        concerns: ['ペース上がりすぎ', '心拍ドリフト大']
+    },
+    run_long: {
+        purpose: '持久力向上・脂肪燃焼効率改善',
+        focus: 'Z2維持、後半ペース維持、心拍ドリフト',
+        goodSigns: ['後半までZ2', 'ネガティブ/イーブン', '心拍ドリフト10%以内'],
+        concerns: ['後半ペースダウン', '心拍ドリフト大']
+    },
+    run_tempo: {
+        purpose: '乳酸閾値向上・レースペース耐性',
+        focus: 'LTペース維持、心拍Z3-Z4',
+        goodSigns: ['閾値ペース維持', 'Z3-Z4安定', 'フォーム維持'],
+        concerns: ['ペース維持できず', 'Z5突入']
+    },
+    run_interval: {
+        purpose: 'VO2max向上・スピード強化',
+        focus: '各本のタイム、セット間の維持率',
+        goodSigns: ['設定ペースクリア', 'セット間維持', 'レストで回復'],
+        concerns: ['後半タイム低下', '回復不十分']
+    },
+    run_fartlek: {
+        purpose: 'スピード変化への適応・レース実践',
+        focus: 'ペース変化の実行、強弱のメリハリ',
+        goodSigns: ['意図したペース変化', '速い区間でしっかり上げた', '遅い区間で回復'],
+        concerns: ['ペース変化が曖昧', '全体的に強度上がりすぎ']
+    },
+    run_hill: {
+        purpose: '脚筋力強化・ランニングエコノミー向上',
+        focus: '登りでのフォーム維持、心拍回復',
+        goodSigns: ['フォーム維持', '腕振り・膝上げ意識', '下りで回復'],
+        concerns: ['フォーム崩れ', '回復できず']
+    },
+    run_brick: {
+        purpose: 'バイク後のラン適応',
+        focus: '移行直後のペース、脚の動き',
+        goodSigns: ['脚動いた', '目標ペースに乗れた'],
+        concerns: ['脚動かず', 'バイクで追い込みすぎ']
+    },
+    run_recovery: {
+        purpose: '疲労回復・血流促進',
+        focus: 'Z1維持、主観的な楽さ',
+        goodSigns: ['Z1維持', '遅すぎると感じた', '張り軽減'],
+        concerns: ['強度上がりすぎ']
+    },
+    run_test: {
+        purpose: '閾値測定・現状把握',
+        focus: 'オールアウト、ペーシング',
+        goodSigns: ['全力出し切り', 'ネガティブスプリット'],
+        concerns: ['前半突っ込みすぎ', '追い込み不足']
+    },
+
+    // 共通
+    race: {
+        purpose: 'パフォーマンス発揮',
+        focus: '目標タイム、ペーシング戦略、補給',
+        goodSigns: ['目標達成', '計画通りのペーシング', '補給成功'],
+        concerns: ['オーバーペース', '補給失敗', '想定外対応']
+    },
+    other: {
+        purpose: 'ユーザー定義',
+        focus: '補足内容に基づく',
+        goodSigns: [],
+        concerns: []
+    }
+};
+
+exports.handler = async (event) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
+
+    try {
+        const { 
+            activity, 
+            trainingStatus, 
+            streamAnalysis,
+            similarActivities,
+            userQuestion,
+            conversationHistory,
+            sessionType,        // ★ 新規: ユーザーが選択したセッションタイプ
+            sessionSupplement   // ★ 新規: 補足コメント
+        } = JSON.parse(event.body);
+
+        if (!activity) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'アクティビティデータが必要です' })
+            };
+        }
+
+        const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+        
+        if (!OPENAI_API_KEY) {
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: 'OpenAI APIキーが設定されていません' })
+            };
+        }
+
+        // データの信頼性を評価
+        const dataReliability = assessDataReliability(activity, trainingStatus, streamAnalysis);
+        
+        // 観察できる事実を抽出
+        const observations = extractObservations(activity, streamAnalysis, sessionType);
+        
+        // システムプロンプト
+        const systemPrompt = buildSystemPrompt(!!userQuestion, sessionType);
+        
+        // ユーザーメッセージの構築
+        const userMessage = buildUserMessage(
+            activity, 
+            trainingStatus, 
+            streamAnalysis, 
+            similarActivities, 
+            userQuestion, 
+            sessionType,
+            sessionSupplement,
+            observations, 
+            dataReliability
+        );
+
+        const messages = [
+            { role: 'system', content: systemPrompt }
+        ];
+        
+        if (conversationHistory && conversationHistory.length > 0) {
+            conversationHistory.forEach(function(msg) {
+                messages.push(msg);
+            });
+        }
+        
+        messages.push({ role: 'user', content: userMessage });
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + OPENAI_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: messages,
+                max_tokens: 800,
+                temperature: 0.6
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('OpenAI API error:', errorData);
+            return {
+                statusCode: response.status,
+                headers,
+                body: JSON.stringify({ 
+                    error: 'AI APIエラー',
+                    details: errorData.error?.message || 'Unknown error'
+                })
+            };
+        }
+
+        const data = await response.json();
+        const comment = data.choices[0]?.message?.content || 'コメントを生成できませんでした';
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                comment: comment,
+                usage: data.usage,
+                sessionType: sessionType
+            })
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+                error: error.message 
+            })
+        };
+    }
+};
+
+// ============================================
+// システムプロンプト（断定的コメント版）
+// ============================================
+function buildSystemPrompt(isQuestion, sessionType) {
+    if (isQuestion) {
+        return `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、選手の質問にデータを根拠に回答します。
+
+【回答の原則】
+- 選手の目標達成を応援する姿勢で回答
+- 推測には「〜と思われます」と表現
+- 難しい概念は噛み砕いて説明
+- 具体的で実践的なアドバイスを心がける
+
+250-350字程度で回答してください。`;
+    }
+
+    const evaluation = SESSION_EVALUATION[sessionType] || SESSION_EVALUATION.other;
+
+    return `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、スイム・バイク・ランのトレーニング、栄養、リカバリー、レース戦略、ケガと予防について専門的な知見を持っています。
+
+【基本姿勢】
+- 親しみやすく、プロフェッショナル
+- ユーザーの目標達成を常に応援し励ます
+- データに基づいた客観的な分析を行う
+- 難解な運動生理学の知識も分かりやすく噛み砕いて伝える
+
+【今回のセッション】
+- 目的: ${evaluation.purpose}
+- 評価の焦点: ${evaluation.focus}
+- 成功の指標: ${evaluation.goodSigns.join('、')}
+- 注意すべき点: ${evaluation.concerns.join('、')}
+
+【コメントの原則】
+1. セッションの目的に対して「達成できたか/できなかったか」を明確に評価する
+2. 良かった点は具体的に称え、「なぜ良いのか」を説明する
+3. 改善点は断定的に指摘し、「次回どうすべきか」を具体的に提案する
+4. 曖昧な表現（「〜かもしれません」「〜の可能性があります」）は最小限に
+5. データが示す事実に基づいて断定する
+
+【避けること】
+- 「良いトレーニングでした」だけの漠然とした評価
+- すべてを褒めるだけのコメント
+- 箇条書きでの羅列
+- 「冒頭：」「本文：」などのラベル
+
+【出力形式】
+- 自然な日本語の段落形式
+- 300-450字程度
+- 絵文字は使わない
+- 最初に結論（目的達成度の評価）を述べる`;
+}
+
+// ============================================
+// ユーザーメッセージ構築
+// ============================================
+function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, sessionType, sessionSupplement, observations, dataReliability) {
+    const sportType = activity.sport_type || activity.type;
+    const sportName = getSportName(sportType);
+    const sportCategory = getSportCategory(sportType);
+    const distance = activity.distance ? (activity.distance / 1000).toFixed(2) : 0;
+    const durationMin = Math.round((activity.moving_time || activity.elapsed_time || 0) / 60);
+    
+    const evaluation = SESSION_EVALUATION[sessionType] || SESSION_EVALUATION.other;
+    
+    let message = '';
+    
+    // セッション情報
+    message += '## セッション情報\n';
+    message += '- アクティビティ名: ' + (activity.name || '（名称なし）') + '\n';
+    message += '- 種目: ' + sportName + '\n';
+    message += '- 選択されたセッションタイプ: ' + sessionType + '\n';
+    message += '- セッションの目的: ' + evaluation.purpose + '\n';
+    if (sessionSupplement) {
+        message += '- ユーザーからの補足: ' + sessionSupplement + '\n';
+    }
+    message += '\n';
+    
+    // 基本データ
+    message += '## 基本データ\n';
+    message += '- 日時: ' + new Date(activity.start_date).toLocaleString('ja-JP') + '\n';
+    message += '- 距離: ' + distance + 'km / 時間: ' + durationMin + '分\n';
+    
+    if (activity.average_speed) {
+        message += '- ペース: ' + formatPace(activity.average_speed, sportType) + '\n';
+    }
+    if (activity.average_heartrate) {
+        message += '- 心拍: 平均' + Math.round(activity.average_heartrate) + 'bpm';
+        if (activity.max_heartrate) {
+            message += ' / 最大' + Math.round(activity.max_heartrate) + 'bpm';
+        }
+        message += '\n';
+    }
+    if (sportCategory === 'run' && activity.average_cadence) {
+        message += '- ピッチ: ' + Math.round(activity.average_cadence * 2) + 'spm\n';
+    }
+    if (sportCategory === 'bike' && activity.average_watts) {
+        message += '- パワー: ' + Math.round(activity.average_watts) + 'W\n';
+        if (activity.weighted_average_watts) {
+            message += '- NP: ' + Math.round(activity.weighted_average_watts) + 'W\n';
+        }
+    }
+    if (activity.total_elevation_gain > 20) {
+        message += '- 獲得標高: ' + Math.round(activity.total_elevation_gain) + 'm\n';
+    }
+    message += '\n';
+    
+    // 観察された事実
+    if (observations.length > 0) {
+        message += '## 観察された特徴\n';
+        observations.forEach(function(obs) {
+            message += '- ' + obs.fact;
+            if (obs.interpretation) {
+                message += ' → ' + obs.interpretation;
+            }
+            message += '\n';
+        });
+        message += '\n';
+    }
+    
+    // ペーシング詳細
+    if (streamAnalysis && streamAnalysis.paceAnalysis) {
+        const pa = streamAnalysis.paceAnalysis;
+        message += '## ペーシング\n';
+        message += '前半 ' + pa.firstHalfPace + ' → 後半 ' + pa.secondHalfPace + '\n';
+        if (pa.variability) {
+            message += 'ペース変動係数: ' + pa.variability + '%\n';
+        }
+        if (pa.splitDiff) {
+            const diff = parseFloat(pa.splitDiff);
+            if (diff > 0) {
+                message += '→ ネガティブスプリット（後半' + diff.toFixed(1) + '%速い）\n';
+            } else if (diff < -5) {
+                message += '→ ポジティブスプリット（後半' + Math.abs(diff).toFixed(1) + '%遅い）\n';
+            }
+        }
+        message += '\n';
+    }
+    
+    // 心拍詳細
+    if (streamAnalysis && streamAnalysis.heartRateAnalysis) {
+        const hra = streamAnalysis.heartRateAnalysis;
+        message += '## 心拍データ\n';
+        if (hra.drift !== undefined) {
+            message += '心拍ドリフト: ' + (hra.drift > 0 ? '+' : '') + hra.drift + '%\n';
+        }
+        if (hra.zones) {
+            message += 'Zone分布: Z1=' + hra.zones.z1 + '% Z2=' + hra.zones.z2 + '% Z3=' + hra.zones.z3 + '% Z4=' + hra.zones.z4 + '% Z5=' + hra.zones.z5 + '%\n';
+            
+            // Zone分布の解釈を追加
+            const z1z2 = (hra.zones.z1 || 0) + (hra.zones.z2 || 0);
+            const z4z5 = (hra.zones.z4 || 0) + (hra.zones.z5 || 0);
+            if (z1z2 > 80) {
+                message += '→ 低強度（Z1-Z2）中心のセッション\n';
+            } else if (z4z5 > 30) {
+                message += '→ 高強度（Z4-Z5）の時間が多いセッション\n';
+            }
+        }
+        message += '\n';
+    }
+    
+    // 類似トレーニング比較
+    if (similarActivities && similarActivities.length > 0) {
+        const comparableActivities = similarActivities.slice(0, 2);
+        if (comparableActivities.length > 0) {
+            message += '## 過去の類似トレーニング\n';
+            comparableActivities.forEach(function(sim, i) {
+                const simDate = new Date(sim.start_date).toLocaleDateString('ja-JP');
+                const simPace = formatPace(sim.average_speed, sportType);
+                const simHr = sim.average_heartrate ? Math.round(sim.average_heartrate) + 'bpm' : '-';
+                message += (i + 1) + '. ' + simDate + ': ' + (sim.distance/1000).toFixed(1) + 'km, ' + simPace + ', HR ' + simHr + '\n';
+            });
+            message += '\n';
+        }
+    }
+    
+    // 評価基準のリマインド
+    message += '## 評価してほしいポイント\n';
+    message += '- 成功の指標: ' + evaluation.goodSigns.join('、') + '\n';
+    message += '- 注意すべき点: ' + evaluation.concerns.join('、') + '\n';
+    message += '\n';
+    
+    // 指示
+    if (userQuestion) {
+        message += '---\n## 選手からの質問\n' + userQuestion + '\n\nこの質問に対して、上記データを参照しながら回答してください。';
+    } else {
+        message += '---\n';
+        message += '上記のデータを踏まえて、「' + evaluation.purpose + '」というセッション目的に対する達成度を評価してください。\n';
+        message += '最初に結論（達成できた/部分的に達成/達成できなかった）を明確に述べ、その理由をデータで説明してください。\n';
+        message += '改善点がある場合は、次回のトレーニングで具体的に何をすべきか提案してください。';
+    }
+    
+    return message;
+}
+
+// ============================================
+// データの信頼性を評価
+// ============================================
+function assessDataReliability(activity, trainingStatus, streamAnalysis) {
+    const reliability = {
+        hasHeartRate: !!activity.average_heartrate,
+        hasPower: !!activity.average_watts,
+        hasGPS: !!activity.start_latlng || activity.distance > 0,
+        hasCadence: !!activity.average_cadence,
+        hasStreamData: !!(streamAnalysis && (streamAnalysis.paceAnalysis || streamAnalysis.heartRateAnalysis)),
+        overallLevel: 'low'
+    };
+    
+    let score = 0;
+    if (reliability.hasHeartRate) score += 2;
+    if (reliability.hasPower) score += 2;
+    if (reliability.hasGPS) score += 1;
+    if (reliability.hasCadence) score += 1;
+    if (reliability.hasStreamData) score += 2;
+    
+    if (score >= 6) {
+        reliability.overallLevel = 'high';
+    } else if (score >= 3) {
+        reliability.overallLevel = 'medium';
+    }
+    
+    return reliability;
+}
+
+// ============================================
+// 観察できる事実を抽出
+// ============================================
+function extractObservations(activity, streamAnalysis, sessionType) {
+    const observations = [];
+    const sportCategory = getSportCategory(activity.sport_type || activity.type);
+    
+    // ペーシングの観察
+    if (streamAnalysis && streamAnalysis.paceAnalysis) {
+        const pa = streamAnalysis.paceAnalysis;
+        const splitDiff = parseFloat(pa.splitDiff);
+        
+        if (!isNaN(splitDiff)) {
+            if (splitDiff > 5) {
+                observations.push({
+                    type: 'pacing',
+                    fact: '後半ペースが' + Math.abs(splitDiff).toFixed(1) + '%向上（ネガティブスプリット）',
+                    interpretation: 'ペース配分成功'
+                });
+            } else if (splitDiff < -10) {
+                observations.push({
+                    type: 'pacing',
+                    fact: '後半ペースが' + Math.abs(splitDiff).toFixed(1) + '%低下',
+                    interpretation: '前半のオーバーペース、または後半の疲労'
+                });
+            }
+        }
+        
+        const cv = parseFloat(pa.variability);
+        if (!isNaN(cv) && cv > 20 && !sessionType.includes('interval')) {
+            observations.push({
+                type: 'pacing',
+                fact: 'ペース変動係数が' + cv.toFixed(1) + '%と大きい',
+                interpretation: 'ペースが安定していない'
+            });
+        }
+    }
+    
+    // 心拍の観察
+    if (streamAnalysis && streamAnalysis.heartRateAnalysis) {
+        const hra = streamAnalysis.heartRateAnalysis;
+        const drift = parseFloat(hra.drift);
+        
+        if (!isNaN(drift)) {
+            if (drift < 5 && activity.moving_time > 2400) {
+                observations.push({
+                    type: 'heart_rate',
+                    fact: '40分以上で心拍ドリフト' + drift.toFixed(1) + '%',
+                    interpretation: '優秀な有酸素効率'
+                });
+            } else if (drift > 12) {
+                observations.push({
+                    type: 'heart_rate',
+                    fact: '心拍ドリフト' + drift.toFixed(1) + '%',
+                    interpretation: '脱水、暑熱、またはオーバーペースの影響'
+                });
+            }
+        }
+    }
+    
+    // スイムのストローク効率
+    if (sportCategory === 'swim' && activity.laps && activity.laps.length > 0) {
+        let totalDPS = 0;
+        let validLaps = 0;
+        
+        activity.laps.forEach(function(lap) {
+            if (lap.distance > 0 && lap.moving_time >= 10) {
+                let strokes = lap.total_strokes;
+                if (!strokes && lap.average_cadence && lap.moving_time) {
+                    strokes = Math.round(lap.average_cadence * lap.moving_time / 60);
+                }
+                if (strokes && strokes > 0) {
+                    const dps = lap.distance / strokes;
+                    if (dps > 0.5 && dps < 3.0) {
+                        totalDPS += dps;
+                        validLaps++;
+                    }
+                }
+            }
+        });
+        
+        if (validLaps > 0) {
+            const avgDPS = totalDPS / validLaps;
+            let interpretation = null;
+            if (avgDPS >= 1.4) {
+                interpretation = '効率的なストローク';
+            } else if (avgDPS < 1.0) {
+                interpretation = 'ストローク効率に改善余地';
+            }
+            observations.push({
+                type: 'swim_efficiency',
+                fact: '平均DPS ' + avgDPS.toFixed(2) + 'm/ストローク',
+                interpretation: interpretation
+            });
+        }
+    }
+    
+    return observations;
+}
+
+// ============================================
+// ユーティリティ関数
+// ============================================
+function getSportName(sportType) {
+    const names = {
+        'Run': 'ランニング',
+        'TrailRun': 'トレイルラン',
+        'VirtualRun': 'トレッドミル',
+        'Ride': 'バイク',
+        'VirtualRide': 'インドアバイク',
+        'EBikeRide': 'E-Bike',
+        'Swim': 'スイム',
+        'WeightTraining': 'ウェイト',
+        'Yoga': 'ヨガ',
+        'Workout': 'ワークアウト'
+    };
+    return names[sportType] || sportType;
+}
+
+function getSportCategory(sportType) {
+    if (sportType === 'Swim') return 'swim';
+    if (sportType === 'Ride' || sportType === 'VirtualRide' || sportType === 'EBikeRide') return 'bike';
+    if (sportType === 'Run' || sportType === 'TrailRun' || sportType === 'VirtualRun') return 'run';
+    return 'other';
+}
+
+function formatPace(avgSpeed, sportType) {
+    if (!avgSpeed || avgSpeed <= 0) return '-';
+    
+    if (sportType === 'Swim') {
+        const pace = 100 / avgSpeed;
+        const min = Math.floor(pace / 60);
+        const sec = Math.round(pace % 60);
+        return min + ':' + String(sec).padStart(2, '0') + '/100m';
+    } else if (sportType && sportType.indexOf('Ride') !== -1) {
+        return (avgSpeed * 3.6).toFixed(1) + 'km/h';
+    } else {
+        const pace = 1000 / avgSpeed;
+        const min = Math.floor(pace / 60);
+        const sec = Math.round(pace % 60);
+        return min + ':' + String(sec).padStart(2, '0') + '/km';
+    }
+}

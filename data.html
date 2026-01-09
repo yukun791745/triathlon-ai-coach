@@ -1174,62 +1174,141 @@
             }
         }
         
-        // ===== TSS計算 =====
+        // ===== TSS計算（改善版） =====
         function calculateAllTSS() {
             const thresholds = getUserThresholds();
             
             activities.forEach(activity => {
                 const sportType = activity.sport_type || activity.type;
-                const movingTime = activity.moving_time || activity.elapsed_time || 0;
-                const durationHours = movingTime / 3600;
+                const sport = getSportCategory(sportType);
+                
+                // 経過時間を使用（休憩含む）- TrainingPeaksに近づける
+                const totalTime = activity.elapsed_time || activity.moving_time || 0;
+                const movingTime = activity.moving_time || totalTime;
+                const durationHours = totalTime / 3600;
                 
                 let tss = 0;
-                let sport = getSportCategory(sportType);
                 
                 if (sport === 'bike') {
-                    const np = activity.weighted_average_watts || activity.average_watts;
-                    if (np && np > 0) {
-                        const intensityFactor = np / thresholds.ftp;
-                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
-                    } else if (activity.average_heartrate) {
-                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
-                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
-                    } else {
-                        tss = Math.round(durationHours * 50);
-                    }
+                    tss = calculateBikeTSS(activity, thresholds, durationHours);
                 } else if (sport === 'run') {
-                    if (activity.average_speed && activity.average_speed > 0) {
-                        const avgPacePerKm = 1000 / activity.average_speed;
-                        const intensityFactor = thresholds.rFtpPacePerKm / avgPacePerKm;
-                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
-                    } else if (activity.average_heartrate) {
-                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
-                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
-                    } else {
-                        tss = Math.round(durationHours * 60);
-                    }
+                    tss = calculateRunTSS(activity, thresholds, durationHours);
                 } else if (sport === 'swim') {
-                    if (activity.average_speed && activity.average_speed > 0) {
-                        const avgPacePer100m = 100 / activity.average_speed;
-                        const intensityFactor = thresholds.sFtpPacePer100m / avgPacePer100m;
-                        tss = Math.round(Math.pow(intensityFactor, 2) * durationHours * 100);
-                    } else if (activity.average_heartrate) {
-                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
-                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
-                    } else {
-                        tss = Math.round(durationHours * 50);
-                    }
+                    tss = calculateSwimTSS(activity, thresholds, totalTime, movingTime);
                 } else {
-                    if (activity.average_heartrate) {
-                        const hrIF = activity.average_heartrate / thresholds.thresholdHr;
-                        tss = Math.round(Math.pow(hrIF, 2) * durationHours * 100 * 0.9);
-                    } else {
-                        tss = Math.round(durationHours * 40);
-                    }
+                    tss = calculateOtherTSS(activity, thresholds, durationHours);
                 }
                 
-                activity.tss = Math.max(0, Math.min(tss, 500));
+                activity.tss = Math.max(0, Math.min(Math.round(tss), 500));
             });
+        }
+        
+        // バイクTSS計算
+        function calculateBikeTSS(activity, thresholds, durationHours) {
+            const np = activity.weighted_average_watts || activity.average_watts;
+            
+            if (np && np > 0) {
+                const intensityFactor = np / thresholds.ftp;
+                return Math.pow(intensityFactor, 2) * durationHours * 100;
+            } else if (activity.average_heartrate) {
+                const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                return Math.pow(hrIF, 2) * durationHours * 100 * 0.9;
+            } else {
+                return durationHours * 50;
+            }
+        }
+        
+        // ランTSS計算
+        function calculateRunTSS(activity, thresholds, durationHours) {
+            if (activity.average_speed && activity.average_speed > 0) {
+                const avgPacePerKm = 1000 / activity.average_speed;
+                const intensityFactor = thresholds.rFtpPacePerKm / avgPacePerKm;
+                return Math.pow(intensityFactor, 2) * durationHours * 100;
+            } else if (activity.average_heartrate) {
+                const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                return Math.pow(hrIF, 2) * durationHours * 100 * 0.9;
+            } else {
+                return durationHours * 60;
+            }
+        }
+        
+        // スイムTSS計算（改善版 - TrainingPeaksに近い計算）
+        function calculateSwimTSS(activity, thresholds, totalTime, movingTime) {
+            const distance = activity.distance || 0;
+            
+            if (distance <= 0 || totalTime <= 0) {
+                if (activity.average_heartrate) {
+                    const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                    return Math.pow(hrIF, 2) * (totalTime / 3600) * 100 * 0.9;
+                }
+                return (totalTime / 3600) * 50;
+            }
+            
+            // 移動時間での平均ペース（秒/100m）
+            const avgPacePer100m = (movingTime / distance) * 100;
+            
+            // 閾値ペース（秒/100m）
+            const thresholdPace = thresholds.sFtpPacePer100m;
+            
+            // 基本IF計算
+            let intensityFactor = thresholdPace / avgPacePer100m;
+            
+            // ===== Variability Index（VI）の適用 =====
+            // インターバルトレーニングでは、平均ペースよりも実際の負荷が高くなる
+            // TrainingPeaksはNSS（Normalized Swim Speed）を使用するが、
+            // Stravaからはラップデータが取れないため、以下のヒューリスティックを適用
+            
+            // 1. 経過時間と移動時間の差から休憩時間を推定
+            const restTime = totalTime - movingTime;
+            const restRatio = restTime / totalTime;
+            
+            // 2. 休憩が多い = インターバルの可能性が高い = VIを上げる
+            // 典型的なインターバルでは休憩比率が10-30%程度
+            let variabilityIndex = 1.0;
+            
+            if (restRatio > 0.05) {
+                // 休憩比率に応じてVIを調整（最大1.15）
+                // これはTrainingPeaksのNSSが平均速度より高くなる効果を模倣
+                variabilityIndex = 1.0 + Math.min(restRatio * 0.5, 0.15);
+            }
+            
+            // 3. 短い距離で高強度の場合もVIを上げる（スプリントセット）
+            if (distance < 2000 && intensityFactor > 0.9) {
+                variabilityIndex = Math.max(variabilityIndex, 1.05);
+            }
+            
+            // 4. 心拍数データがある場合、心拍数ベースのIFとの加重平均を取る
+            let finalIF = intensityFactor * variabilityIndex;
+            
+            if (activity.average_heartrate && thresholds.thresholdHr) {
+                const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                // 心拍数ベースのIFと速度ベースのIFの加重平均（心拍数を重視）
+                // これにより、高強度インターバルの実際の生理的負荷を反映
+                finalIF = (finalIF * 0.4) + (hrIF * 0.6);
+            }
+            
+            // 5. TSS計算 - 経過時間を使用（休憩時間も含む）
+            // TrainingPeaksは総時間でTSSを計算する
+            const durationHours = totalTime / 3600;
+            const tss = Math.pow(finalIF, 2) * durationHours * 100;
+            
+            // デバッグ用ログ（開発時のみ）
+            console.log(`Swim TSS Debug: distance=${distance}m, avgPace=${avgPacePer100m.toFixed(1)}s/100m, ` +
+                        `threshold=${thresholdPace}s/100m, baseIF=${intensityFactor.toFixed(3)}, ` +
+                        `VI=${variabilityIndex.toFixed(3)}, finalIF=${finalIF.toFixed(3)}, ` +
+                        `duration=${durationHours.toFixed(2)}h, TSS=${tss.toFixed(1)}`);
+            
+            return tss;
+        }
+        
+        // その他のTSS計算
+        function calculateOtherTSS(activity, thresholds, durationHours) {
+            if (activity.average_heartrate) {
+                const hrIF = activity.average_heartrate / thresholds.thresholdHr;
+                return Math.pow(hrIF, 2) * durationHours * 100 * 0.9;
+            } else {
+                return durationHours * 40;
+            }
         }
         
         function getSportCategory(sportType) {

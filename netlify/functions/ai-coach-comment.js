@@ -1,5 +1,5 @@
 // netlify/functions/ai-coach-comment.js
-// 改善版v3: トレーニング目的の推測、CTL/TSB依存削減、合理的な洞察
+// 改善版v4: 共通コーチプロファイル統合、数値解釈基準追加、Few-shot品質向上
 
 exports.handler = async (event) => {
     const headers = {
@@ -49,16 +49,16 @@ exports.handler = async (event) => {
             };
         }
 
-        // ★ 改善: トレーニング目的を推測
+        // トレーニング目的を推測
         const trainingType = inferTrainingType(activity, streamAnalysis);
         
-        // ★ 改善: データの信頼性を評価
+        // データの信頼性を評価
         const dataReliability = assessDataReliability(activity, trainingStatus, streamAnalysis);
         
-        // ★ 改善: 実際に観察できる事実のみを抽出
+        // 実際に観察できる事実のみを抽出
         const observations = extractObservations(activity, streamAnalysis, trainingType);
         
-        // システムプロンプト（改善版）
+        // システムプロンプト（改善版v4）
         const systemPrompt = buildSystemPrompt(!!userQuestion, trainingType, dataReliability);
         
         // ユーザーメッセージの構築
@@ -85,8 +85,8 @@ exports.handler = async (event) => {
             body: JSON.stringify({
                 model: 'gpt-4o-mini',
                 messages: messages,
-                max_tokens: 1000,  // 短縮して応答速度向上
-                temperature: 0.6   // 少し下げて一貫性向上
+                max_tokens: 800,
+                temperature: 0.65
             })
         });
 
@@ -113,7 +113,7 @@ exports.handler = async (event) => {
                 success: true,
                 comment: comment,
                 usage: data.usage,
-                trainingType: trainingType  // デバッグ用
+                trainingType: trainingType
             })
         };
 
@@ -130,7 +130,134 @@ exports.handler = async (event) => {
 };
 
 // ============================================
-// ★ 新機能: トレーニング目的を推測
+// ★ 改善版v4: システムプロンプト
+// ============================================
+function buildSystemPrompt(isQuestion, trainingType, dataReliability) {
+    if (isQuestion) {
+        // 質問への回答用（短縮版）
+        return `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、選手の質問にデータを根拠に回答します。
+
+【回答の原則】
+- 選手の目標達成を応援する姿勢で回答
+- 推測には「〜と思われます」「〜の可能性があります」と表現
+- 難しい概念は噛み砕いて説明
+- 具体的で実践的なアドバイスを心がける
+
+250-350字程度で回答してください。`;
+    }
+
+    // 自動コメント用（完全版）
+    var prompt = `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、スイム・バイク・ランのトレーニング、栄養、リカバリー、レース戦略、ケガと予防について専門的な知見を持っています。
+
+【基本姿勢】
+- 親しみやすく、プロフェッショナル
+- ユーザーの目標達成を常に応援し励ます
+- データに基づいた客観的な分析を行う
+- 推測と事実を明確に区別する
+- 難解な運動生理学の専門知識も分かりやすく噛み砕いて伝える
+- 選手の自主性を尊重し、決めつけない
+
+【数値の解釈基準】
+■ 心拍ドリフト（同一ペースでの心拍上昇率）
+- <5%: 優秀。安定した有酸素運動
+- 5-10%: 正常範囲
+- 10-15%: やや高め（暑さ、脱水、オーバーペースの可能性）
+- >15%: 要注意
+
+■ ペース変動係数（CV）
+- <5%: 非常に安定
+- 5-15%: 通常範囲
+- >25%: インターバル系または大きな変動
+
+■ 心拍ゾーン分布
+- Z1-Z2が80%以上 → リカバリー/有酸素ベース向き
+- Z3-Z4が50%以上 → テンポ/閾値トレーニング
+- Z4-Z5が30%以上 → 高強度トレーニング
+
+■ スイムDPS
+- <1.0m: 改善の余地あり
+- 1.0-1.4m: 一般的
+- >1.4m: 効率的
+
+`;
+
+    // トレーニングタイプ別の評価観点を追加
+    prompt += '【今回のトレーニングタイプ: ' + trainingType.label + '】\n';
+    prompt += getTrainingTypeGuidance(trainingType.type) + '\n\n';
+
+    prompt += `【コメント作成の原則】
+1. まず、このトレーニングの「良かった点」を具体的に挙げて称える
+2. データから読み取れる客観的な観察を述べる
+3. 推測が含まれる場合は「〜かもしれません」「〜の可能性があります」と表現
+4. 改善点や次への提案は、建設的かつ具体的に
+5. トレーニングの意図が不明な場合は、選手に確認する質問を含める
+
+【避けること】
+- 箇条書きでの羅列（自然な文章で書く）
+- CTL/ATL/TSBの数値を中心に据えた分析
+- 異なる目的のトレーニング同士の単純比較
+- 否定的な表現から始めること
+- 「冒頭：」「本文：」などのラベル
+
+【出力形式】
+- 自然な日本語の段落形式
+- 300-450字程度
+- 絵文字は使わない`;
+
+    return prompt;
+}
+
+// トレーニングタイプ別のガイダンス
+function getTrainingTypeGuidance(type) {
+    const guidance = {
+        recovery: `■ リカバリー/イージーの評価観点
+- Z1-Z2を維持できたか
+- 心拍ドリフトは小さいか
+- 主観的に楽だったか
+- ペースが速すぎていないか`,
+
+        long: `■ 有酸素ベース/ロングの評価観点
+- Z2中心で走れたか
+- 後半までペースを維持できたか
+- 心拍ドリフトは10%以内か
+- ネガティブスプリットができていれば称賛`,
+
+        tempo: `■ テンポ/閾値の評価観点
+- 設定強度（Z3-Z4）を維持できたか
+- ペースの一貫性はあるか
+- 目標とするペース/パワーに近いか`,
+
+        interval: `■ インターバル/VO2maxの評価観点
+- 各セットでZ4-Z5に到達できたか
+- セット間で品質は維持できたか
+- レスト中の心拍回復はどうか
+- ペース変動が大きいのは正常`,
+
+        high_intensity: `■ 高強度トレーニングの評価観点
+- 目標強度に到達できたか
+- 高強度区間の持続時間は適切か
+- 回復のための低強度区間があるか`,
+
+        race: `■ レース/タイムトライアルの評価観点
+- 目標達成度
+- ペーシング戦略の実行度
+- 結果だけでなくプロセスも評価
+- 次への学びと課題`,
+
+        short: `■ 短めのトレーニングの評価観点
+- 限られた時間で効果的な内容だったか
+- 目的に合った強度だったか`,
+
+        general: `■ 通常トレーニングの評価観点
+- データから読み取れる特徴を観察
+- トレーニングの意図を選手に確認することも有効`
+    };
+    
+    return guidance[type] || guidance.general;
+}
+
+// ============================================
+// トレーニング目的を推測
 // ============================================
 function inferTrainingType(activity, streamAnalysis) {
     const sportCategory = getSportCategory(activity.sport_type || activity.type);
@@ -138,7 +265,7 @@ function inferTrainingType(activity, streamAnalysis) {
     const durationMin = (activity.moving_time || 0) / 60;
     const distance = (activity.distance || 0) / 1000;
     
-    // アクティビティ名からの推測
+    // アクティビティ名からの推測（高確度）
     if (name.includes('インターバル') || name.includes('interval') || name.includes('vo2') || name.includes('スピード')) {
         return { type: 'interval', confidence: 'high', label: 'インターバル/スピード練習' };
     }
@@ -207,7 +334,7 @@ function inferTrainingType(activity, streamAnalysis) {
 }
 
 // ============================================
-// ★ 新機能: データの信頼性を評価
+// データの信頼性を評価
 // ============================================
 function assessDataReliability(activity, trainingStatus, streamAnalysis) {
     const reliability = {
@@ -217,15 +344,11 @@ function assessDataReliability(activity, trainingStatus, streamAnalysis) {
         hasCadence: !!activity.average_cadence,
         hasTrainingStatus: !!(trainingStatus && trainingStatus.ctl),
         hasStreamData: !!(streamAnalysis && (streamAnalysis.paceAnalysis || streamAnalysis.heartRateAnalysis)),
-        
-        // CTL/ATL/TSBの信頼性（十分な履歴データがあるか）
         trainingStatusReliable: false,
-        
         overallLevel: 'low'
     };
     
     // トレーニングステータスの信頼性判定
-    // CTLが10未満の場合、十分なデータが蓄積されていない可能性
     if (trainingStatus && trainingStatus.ctl && trainingStatus.ctl >= 20) {
         reliability.trainingStatusReliable = true;
     }
@@ -248,13 +371,13 @@ function assessDataReliability(activity, trainingStatus, streamAnalysis) {
 }
 
 // ============================================
-// ★ 新機能: 観察できる事実のみを抽出
+// 観察できる事実を抽出
 // ============================================
 function extractObservations(activity, streamAnalysis, trainingType) {
     const observations = [];
     const sportCategory = getSportCategory(activity.sport_type || activity.type);
     
-    // ペーシングの観察（インターバル以外のみ）
+    // ペーシングの観察（インターバル以外）
     if (streamAnalysis && streamAnalysis.paceAnalysis && trainingType.type !== 'interval') {
         const pa = streamAnalysis.paceAnalysis;
         const splitDiff = parseFloat(pa.splitDiff);
@@ -270,7 +393,7 @@ function extractObservations(activity, streamAnalysis, trainingType) {
                 observations.push({
                     type: 'pacing',
                     fact: '後半のペースが' + Math.abs(splitDiff).toFixed(1) + '%落ちている',
-                    interpretation: null,  // 解釈は状況による
+                    interpretation: null,
                     question: '意図的なビルドダウンでしたか？それとも後半きつくなりましたか？'
                 });
             }
@@ -287,14 +410,14 @@ function extractObservations(activity, streamAnalysis, trainingType) {
                 observations.push({
                     type: 'heart_rate',
                     fact: '心拍ドリフトが' + drift.toFixed(1) + '%',
-                    interpretation: '後半で心臓血管系への負荷が増加',
+                    interpretation: '後半で心臓血管系への負荷が増加。暑さ、脱水、オーバーペースの可能性',
                     possibleFactors: ['気温', '脱水', 'ペース', '地形']
                 });
-            } else if (drift < 3 && activity.moving_time > 2400) {
+            } else if (drift < 5 && activity.moving_time > 2400) {
                 observations.push({
                     type: 'heart_rate',
                     fact: '40分以上で心拍ドリフトが' + drift.toFixed(1) + '%と小さい',
-                    interpretation: '安定した有酸素運動ができている'
+                    interpretation: '安定した有酸素運動ができている証拠'
                 });
             }
         }
@@ -323,10 +446,16 @@ function extractObservations(activity, streamAnalysis, trainingType) {
         
         if (validLaps > 0) {
             var avgDPS = totalDPS / validLaps;
+            var interpretation = null;
+            if (avgDPS >= 1.4) {
+                interpretation = 'ストローク効率が良い';
+            } else if (avgDPS < 1.0) {
+                interpretation = 'ストローク効率に改善の余地あり';
+            }
             observations.push({
                 type: 'swim_efficiency',
-                fact: '平均DPS（1ストロークあたりの進む距離）は' + avgDPS.toFixed(2) + 'm',
-                interpretation: avgDPS >= 1.4 ? 'ストローク効率が良い' : avgDPS < 1.0 ? 'ストローク効率に改善の余地あり' : null
+                fact: '平均DPS（1ストロークあたりの距離）は' + avgDPS.toFixed(2) + 'm',
+                interpretation: interpretation
             });
         }
     }
@@ -338,7 +467,7 @@ function extractObservations(activity, streamAnalysis, trainingType) {
             observations.push({
                 type: 'run_cadence',
                 fact: '平均ピッチは' + Math.round(pitch) + 'spm',
-                interpretation: null  // ピッチは個人差が大きいので解釈は慎重に
+                interpretation: null
             });
         }
     }
@@ -347,47 +476,7 @@ function extractObservations(activity, streamAnalysis, trainingType) {
 }
 
 // ============================================
-// 改善版システムプロンプト
-// ============================================
-function buildSystemPrompt(isQuestion, trainingType, dataReliability) {
-    if (isQuestion) {
-        return 'あなたは経験豊富なトライアスロンコーチです。選手の質問に対して、提供されたデータを根拠に回答してください。推測で答える場合は「〜と思われます」「〜の可能性があります」と表現してください。300-400字程度で回答してください。';
-    }
-
-    var prompt = 'あなたは経験豊富で謙虚なトライアスロンコーチです。\n\n';
-    
-    prompt += '【重要な原則】\n';
-    prompt += '1. 観察できる事実と、解釈・推測は明確に区別する\n';
-    prompt += '2. データが不十分な場合は断定を避け、「〜かもしれません」「〜の可能性があります」と表現する\n';
-    prompt += '3. トレーニングの意図は選手本人にしかわからないので、決めつけない\n';
-    prompt += '4. 不明な点があれば、選手に質問を投げかける\n\n';
-    
-    prompt += '【避けること】\n';
-    prompt += '- CTL/ATL/TSBなどの指標を中心に据えた分析（データが不完全な場合が多い）\n';
-    prompt += '- 異なる目的のトレーニング同士の単純比較（インターバルとジョグの比較など）\n';
-    prompt += '- 「冒頭：」「本文：」などのラベル\n';
-    prompt += '- 箇条書き\n\n';
-    
-    prompt += '【今回のトレーニング】\n';
-    prompt += '推測されるタイプ: ' + trainingType.label + '\n';
-    if (trainingType.inferred) {
-        prompt += '（データから推測。選手の意図と異なる可能性あり）\n';
-    }
-    prompt += '\n';
-    
-    prompt += '【出力形式】\n';
-    prompt += '自然な日本語の文章で、以下の流れで書いてください：\n';
-    prompt += '1. このトレーニングで観察できた特徴的なポイント\n';
-    prompt += '2. それが意味すること（推測の場合はその旨を明記）\n';
-    prompt += '3. 次に活かせる具体的なポイント、または選手への質問\n\n';
-    
-    prompt += '350-500字程度で書いてください。';
-    
-    return prompt;
-}
-
-// ============================================
-// 改善版ユーザーメッセージ構築
+// ユーザーメッセージ構築
 // ============================================
 function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, trainingType, observations, dataReliability) {
     var sportType = activity.sport_type || activity.type;
@@ -398,12 +487,17 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
     
     var message = '';
     
+    // アクティビティ名を含める
+    if (activity.name) {
+        message += '## アクティビティ名: ' + activity.name + '\n\n';
+    }
+    
     // トレーニングタイプと信頼性情報
     message += '## トレーニング概要\n';
     message += '- 種目: ' + sportName + '\n';
     message += '- 推測されるタイプ: ' + trainingType.label + '（確度: ' + trainingType.confidence + '）\n';
     if (trainingType.inferred) {
-        message += '  ※ アクティビティ名やデータから推測\n';
+        message += '  ※ データから推測。選手の意図と異なる可能性あり\n';
     }
     message += '\n';
     
@@ -483,7 +577,6 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
     
     // 類似トレーニング（同じタイプのみ比較）
     if (similarActivities && similarActivities.length > 0) {
-        // 同じトレーニングタイプのものだけをフィルタ（名前から推測）
         var comparableActivities = similarActivities.filter(function(sim) {
             var simType = inferTrainingTypeFromName(sim.name || '');
             return simType === trainingType.type || trainingType.type === 'general';
@@ -509,8 +602,9 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
         message += '---\n';
         message += '上記のデータを踏まえて、このトレーニングについてコメントしてください。\n';
         message += '推測されるトレーニングタイプ（' + trainingType.label + '）を考慮し、そのタイプに適した観点で分析してください。\n';
+        message += 'まず良かった点を称えてから、客観的な観察と建設的な提案を述べてください。\n';
         if (trainingType.inferred) {
-            message += 'トレーニングの意図が不明確な場合は、「もし〜を目的としていたなら」という形で条件付きのコメントをするか、選手に目的を確認する質問を含めてください。';
+            message += 'トレーニングの意図が不明確な場合は、選手に目的を確認する質問を含めてください。';
         }
     }
     

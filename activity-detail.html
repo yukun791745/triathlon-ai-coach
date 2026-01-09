@@ -3571,6 +3571,29 @@
                 finalSupplement = otherInput + (supplement ? '。' + supplement : '');
             }
             
+            // Aレース目標を取得
+            let raceGoal = null;
+            try {
+                const savedRace = localStorage.getItem('selected_race');
+                const savedGoals = localStorage.getItem('race_goals');
+                if (savedRace) {
+                    const race = JSON.parse(savedRace);
+                    raceGoal = {
+                        raceName: race.name || race.raceName,
+                        raceDate: race.date || race.raceDate,
+                        raceDistance: race.distance || race.raceDistance
+                    };
+                    if (savedGoals) {
+                        const goals = JSON.parse(savedGoals);
+                        if (goals.goalTime) {
+                            raceGoal.goalTime = goals.goalTime;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Race goal not found:', e);
+            }
+            
             // UI更新
             document.getElementById('sessionTypeSelector').style.display = 'none';
             document.getElementById('aiCommentLoading').style.display = 'flex';
@@ -3590,6 +3613,7 @@
                         similarActivities: similarActivities,
                         sessionType: selectedSessionType,
                         sessionSupplement: finalSupplement,
+                        raceGoal: raceGoal,
                         conversationHistory: []
                     })
                 });

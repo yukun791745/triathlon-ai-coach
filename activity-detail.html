@@ -1017,6 +1017,119 @@
         let trainingStatus = null;
         let map = null;
         let charts = {};
+        // ===== トークン管理 =====
+        async function ensureValidToken() {
+            const authData = localStorage.getItem('strava_auth');
+            if (!authData) {
+                console.error('No auth data found');
+                return null;
+            }
+            
+            const auth = JSON.parse(authData);
+            
+            // 有効期限をチェック（5分の余裕を持たせる）
+            const now = Math.floor(Date.now() / 1000);
+            const expiresAt = auth.expires_at || 0;
+            
+            if (now < expiresAt - 300) {
+                // まだ有効
+                return auth.access_token;
+            }
+            
+            // 期限切れまたは間もなく切れる - リフレッシュが必要
+            console.log('Token expired or expiring soon, refreshing...');
+            
+            if (!auth.refresh_token) {
+                console.error('No refresh token found');
+                alert('セッションの有効期限が切れました。再度ログインしてください。');
+                window.location.href = 'index.html';
+                return null;
+            }
+            
+            try {
+                const response = await fetch('/.netlify/functions/strava-refresh-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        refresh_token: auth.refresh_token
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Token refresh failed');
+                }
+                
+                const newTokenData = await response.json();
+                
+                // 新しいトークンを保存
+                const updatedAuth = {
+                    ...auth,
+                    access_token: newTokenData.access_token,
+                    refresh_token: newTokenData.refresh_token,
+                    expires_at: newTokenData.expires_at
+                };
+                localStorage.setItem('strava_auth', JSON.stringify(updatedAuth));
+                
+                console.log('Token refreshed successfully');
+                return newTokenData.access_token;
+                
+            } catch (error) {
+                console.error('Token refresh error:', error);
+                alert('セッションの更新に失敗しました。再度ログインしてください。');
+                window.location.href = 'index.html';
+                return null;
+            }
+        }
+
+        // 401エラー時にリフレッシュして再試行するラッパー
+        async function fetchWithTokenRefresh(url, options, bodyWithoutToken) {
+            let response = await fetch(url, options);
+            
+            if (response.status === 401) {
+                console.log('Got 401, attempting token refresh...');
+                
+                const authData = localStorage.getItem('strava_auth');
+                if (authData) {
+                    const auth = JSON.parse(authData);
+                    
+                    if (auth.refresh_token) {
+                        try {
+                            const refreshResponse = await fetch('/.netlify/functions/strava-refresh-token', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ refresh_token: auth.refresh_token })
+                            });
+                            
+                            if (refreshResponse.ok) {
+                                const newTokenData = await refreshResponse.json();
+                                
+                                // 新しいトークンを保存
+                                localStorage.setItem('strava_auth', JSON.stringify({
+                                    ...auth,
+                                    access_token: newTokenData.access_token,
+                                    refresh_token: newTokenData.refresh_token,
+                                    expires_at: newTokenData.expires_at
+                                }));
+                                
+                                // 新しいトークンで再試行
+                                const newBody = { ...bodyWithoutToken, token: newTokenData.access_token };
+                                response = await fetch(url, {
+                                    ...options,
+                                    body: JSON.stringify(newBody)
+                                });
+                                
+                                console.log('Retry with new token successful');
+                            }
+                        } catch (error) {
+                            console.error('Retry after refresh failed:', error);
+                        }
+                    }
+                }
+            }
+            
+            return response;
+        }
+
         
         // ===== 初期化 =====
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1090,15 +1203,21 @@
             }
             
             try {
-                const auth = JSON.parse(authData);
-                const response = await fetch('/.netlify/functions/strava-streams', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: auth.access_token,
-                        activityId: activityId
-                    })
-                });
+                // まずトークンが有効か確認
+                const token = await ensureValidToken();
+                if (!token) return;
+                
+                const bodyData = { activityId: activityId };
+                
+                const response = await fetchWithTokenRefresh(
+                    '/.netlify/functions/strava-streams',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: token, ...bodyData })
+                    },
+                    bodyData
+                );
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -1106,6 +1225,8 @@
                         streamData = data.streams;
                         console.log('Stream data loaded:', Object.keys(streamData));
                     }
+                } else {
+                    console.error('Stream API error:', response.status);
                 }
             } catch (error) {
                 console.error('Failed to load streams:', error);
@@ -1121,25 +1242,29 @@
             }
             
             try {
-                const auth = JSON.parse(authData);
-                const response = await fetch('/.netlify/functions/strava-laps', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: auth.access_token,
-                        activityId: activityId
-                    })
-                });
+                // まずトークンが有効か確認
+                const token = await ensureValidToken();
+                if (!token) return;
+                
+                const bodyData = { activityId: activityId };
+                
+                const response = await fetchWithTokenRefresh(
+                    '/.netlify/functions/strava-laps',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: token, ...bodyData })
+                    },
+                    bodyData
+                );
                 
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Lap API response:', data);
                     
-                    // 既存APIは lapCount を返す
                     if (data.laps && data.laps.length > 0) {
                         currentActivity.laps = data.laps;
                         console.log('Lap data loaded:', data.laps.length, 'laps');
-                        console.log('First lap sample:', data.laps[0]);
                         if (data.analysis) {
                             console.log('Lap analysis:', data.analysis);
                         }

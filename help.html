@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヘルプ - AI Triathlon Coach</title>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* ヘルプページ固有のスタイル */
+        .help-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .help-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .help-header p {
+            font-size: 1rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 目次 */
+        .toc-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .toc-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #334155;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .toc-item:hover {
+            background: #e2e8f0;
+            transform: translateX(4px);
+        }
+
+        .toc-icon {
+            font-size: 1.3rem;
+        }
+
+        /* 指標セクション */
+        .metric-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            scroll-margin-top: 24px;
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .metric-icon-large {
+            font-size: 3rem;
+            line-height: 1;
+        }
+
+        .metric-title-group {
+            flex: 1;
+        }
+
+        .metric-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .metric-equivalent {
+            font-size: 0.9rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metric-equivalent-badge {
+            background: #e2e8f0;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .metric-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 24px 0 12px 0;
+        }
+
+        .metric-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .metric-content p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .metric-content ul, .metric-content ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .metric-content li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .metric-content strong {
+            color: #1e293b;
+        }
+
+        /* 計算式ボックス */
+        .formula-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 20px 24px;
+            border-radius: 0 12px 12px 0;
+            margin: 16px 0;
+        }
+
+        .formula-box code {
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 1rem;
+            color: #1e40af;
+            background: transparent;
+        }
+
+        .formula-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        /* 解釈テーブル */
+        .interpretation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9rem;
+        }
+
+        .interpretation-table th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .interpretation-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+
+        .interpretation-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .interpretation-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* 値のバッジ */
+        .value-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .value-badge.green { background: #dcfce7; color: #166534; }
+        .value-badge.blue { background: #dbeafe; color: #1e40af; }
+        .value-badge.yellow { background: #fef3c7; color: #92400e; }
+        .value-badge.red { background: #fee2e2; color: #991b1b; }
+        .value-badge.purple { background: #f3e8ff; color: #6b21a8; }
+
+        /* ヒントボックス */
+        .hint-box {
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            display: flex;
+            gap: 12px;
+        }
+
+        .hint-box-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .hint-box-content {
+            font-size: 0.9rem;
+            color: #713f12;
+            line-height: 1.6;
+        }
+
+        /* 科学的背景ボックス */
+        .science-box {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+
+        .science-box-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .science-box-content {
+            font-size: 0.9rem;
+            color: #166534;
+            line-height: 1.6;
+        }
+
+        /* フッター */
+        .help-footer {
+            text-align: center;
+            padding: 40px 0;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .help-footer a {
+            color: #64748b;
+            text-decoration: none;
+        }
+
+        .help-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .metric-header {
+                flex-direction: column;
+            }
+
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .interpretation-table {
+                font-size: 0.8rem;
+            }
+
+            .interpretation-table th,
+            .interpretation-table td {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="flow-navbar">
+        <div class="flow-nav-container">
+            <div class="flow-nav-logo">AI Triathlon Coach</div>
+            <div class="flow-nav-steps">
+                <a href="home.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏠</span>
+                    <span>ホーム</span>
+                </a>
+                <a href="index.html" class="flow-nav-step available">
+                    <span class="nav-icon">🤖</span>
+                    <span>AIコーチ</span>
+                </a>
+                <a href="news.html" class="flow-nav-step available">
+                    <span class="nav-icon">📰</span>
+                    <span>ニュース</span>
+                </a>
+                <a href="race-selection.html" class="flow-nav-step available">
+                    <span class="nav-icon">🎯</span>
+                    <span>レース選択</span>
+                </a>
+                <a href="goal-setting.html" class="flow-nav-step available">
+                    <span class="nav-icon">🏆</span>
+                    <span>目標設定</span>
+                </a>
+                <a href="training-plan.html" class="flow-nav-step available">
+                    <span class="nav-icon">📋</span>
+                    <span>計画</span>
+                </a>
+                <a href="simulator.html" class="flow-nav-step available">
+                    <span class="nav-icon">🔬</span>
+                    <span>シミュレーター</span>
+                </a>
+                <a href="data.html" class="flow-nav-step available">
+                    <span class="nav-icon">📊</span>
+                    <span>進捗</span>
+                </a>
+                <a href="settings.html" class="flow-nav-step available">
+                    <span class="nav-icon">⚙️</span>
+                    <span>設定</span>
+                </a>
+                <div class="nav-divider"></div>
+                <a href="help.html" class="flow-nav-step current">
+                    <span class="nav-icon">❓</span>
+                    <span>ヘルプ</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <div class="main-container">
+            <!-- ヘッダー -->
+            <div class="help-header">
+                <h1>📚 トレーニング指標ガイド</h1>
+                <p>AI Triathlon Coachで使用するトレーニング指標の計算方法と科学的根拠を説明します。</p>
+            </div>
+
+            <!-- 目次 -->
+            <div class="toc-card">
+                <div class="toc-title">📑 目次</div>
+                <div class="toc-grid">
+                    <a href="#trainingLoad" class="toc-item">
+                        <span class="toc-icon">📊</span>
+                        <span>トレーニング負荷</span>
+                    </a>
+                    <a href="#normalizedPower" class="toc-item">
+                        <span class="toc-icon">⚡</span>
+                        <span>正規化パワー</span>
+                    </a>
+                    <a href="#intensityFactor" class="toc-item">
+                        <span class="toc-icon">🎯</span>
+                        <span>相対強度</span>
+                    </a>
+                    <a href="#fitness" class="toc-item">
+                        <span class="toc-icon">💪</span>
+                        <span>フィットネス</span>
+                    </a>
+                    <a href="#fatigue" class="toc-item">
+                        <span class="toc-icon">😓</span>
+                        <span>疲労</span>
+                    </a>
+                    <a href="#condition" class="toc-item">
+                        <span class="toc-icon">🎭</span>
+                        <span>コンディション</span>
+                    </a>
+                    <a href="#thresholds" class="toc-item">
+                        <span class="toc-icon">🔧</span>
+                        <span>閾値の設定方法</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- トレーニング負荷 -->
+            <section class="metric-section" id="trainingLoad">
+                <div class="metric-header">
+                    <span class="metric-icon-large">📊</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">トレーニング負荷</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">TSS® (Training Stress Score)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>トレーニング負荷とは？</h3>
+                    <p>ワークアウトの<strong>強度と時間を統合した単一の数値</strong>で、そのセッションがもたらす総合的な生理的ストレスを表します。</p>
+                    <p>異なる種類のワークアウトを比較できる共通の「通貨」として機能します。例えば、3時間のロングライドと1時間のインターバル、どちらが体に負担かを数値で比較できます。</p>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算式</div>
+                        <code>トレーニング負荷 = (相対強度)² × 時間(時間) × 100</code>
+                    </div>
+
+                    <div class="hint-box">
+                        <span class="hint-box-icon">💡</span>
+                        <div class="hint-box-content">
+                            <strong>基準点:</strong> あなたの閾値強度（FTP/閾値ペース）で1時間走ると、トレーニング負荷は100になります。
+                        </div>
+                    </div>
+
+                    <h3>値の解釈</h3>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>トレーニング負荷</th>
+                                <th>負荷レベル</th>
+                                <th>回復目安</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="value-badge green">&lt; 150</span></td>
+                                <td>低負荷</td>
+                                <td>翌日には回復</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge blue">150 - 300</span></td>
+                                <td>中負荷</td>
+                                <td>翌日に軽い疲労が残る可能性</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge yellow">300 - 450</span></td>
+                                <td>高負荷</td>
+                                <td>2日程度の回復が必要</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge red">&gt; 450</span></td>
+                                <td>非常に高負荷</td>
+                                <td>2日以上の回復が必要</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="science-box">
+                        <div class="science-box-title">🔬 科学的背景</div>
+                        <div class="science-box-content">
+                            この概念は、Dr. Eric Banisterが1970年代に提唱した<strong>TRIMP（Training Impulse）</strong>モデルに基づいています。強度が高いほど単位時間あたりのストレスが大きく、その影響は線形ではなく指数関数的に増加します。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 正規化パワー -->
+            <section class="metric-section" id="normalizedPower">
+                <div class="metric-header">
+                    <span class="metric-icon-large">⚡</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">正規化パワー</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">NP® (Normalized Power)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>正規化パワーとは？</h3>
+                    <p>パワー出力の変動を考慮し、<strong>一定ペースで走った場合の等価パワー</strong>を推定する指標です。バイクでのみ使用されます。</p>
+
+                    <h3>なぜ必要か？</h3>
+                    <p>同じ平均パワーでも、実際の辛さは異なります：</p>
+                    <ul>
+                        <li><strong>シナリオA:</strong> 1時間、常に200Wで走行 → 平均200W</li>
+                        <li><strong>シナリオB:</strong> 30分300W + 30分100W → 平均200W</li>
+                    </ul>
+                    <p>どちらも平均200Wですが、<strong>シナリオBの方が明らかに辛い</strong>です。正規化パワーはこの違いを正しく反映します。</p>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算ステップ</div>
+                        <code>
+                            1. 30秒移動平均を計算<br>
+                            2. 各値を4乗<br>
+                            3. 全体の平均を計算<br>
+                            4. 4乗根を取る
+                        </code>
+                    </div>
+
+                    <div class="science-box">
+                        <div class="science-box-title">🔬 科学的背景</div>
+                        <div class="science-box-content">
+                            Dr. Andrew Cogganの研究（2003年）により、血中乳酸濃度はパワー出力の約<strong>4乗</strong>に比例して上昇することが示されました。30秒という時間は、心肺系が変化に反応するのに必要な時間に対応しています。
+                        </div>
+                    </div>
+
+                    <div class="hint-box">
+                        <span class="hint-box-icon">⚠️</span>
+                        <div class="hint-box-content">
+                            <strong>注意:</strong> 20分未満のワークアウトでは信頼性が低下します。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 相対強度 -->
+            <section class="metric-section" id="intensityFactor">
+                <div class="metric-header">
+                    <span class="metric-icon-large">🎯</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">相対強度</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">IF® (Intensity Factor)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>相対強度とは？</h3>
+                    <p>ワークアウトの強度を、あなたの<strong>機能的閾値（FTP）に対する割合</strong>として表したものです。</p>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算式</div>
+                        <code>相対強度 = 正規化パワー ÷ FTP</code>
+                    </div>
+
+                    <h3>なぜ必要か？</h3>
+                    <p>「200Wで1時間走った」という情報だけでは、それがどれくらい辛かったかわかりません。FTPが300Wの選手には楽、FTPが220Wの選手にはハードです。相対強度により<strong>異なる能力レベル間で比較可能</strong>になります。</p>
+
+                    <h3>値の解釈</h3>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>相対強度</th>
+                                <th>強度レベル</th>
+                                <th>典型的なワークアウト</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="value-badge green">&lt; 0.75</span></td>
+                                <td>リカバリー / イージー</td>
+                                <td>回復走、ウォームアップ</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge blue">0.75 - 0.85</span></td>
+                                <td>エンデュランス</td>
+                                <td>ロングライド、LSD</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge purple">0.85 - 0.95</span></td>
+                                <td>テンポ</td>
+                                <td>スイートスポット、テンポ走</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge yellow">0.95 - 1.05</span></td>
+                                <td>閾値</td>
+                                <td>FTPインターバル、タイムトライアル</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge red">&gt; 1.05</span></td>
+                                <td>VO2max以上</td>
+                                <td>ショートインターバル、スプリント</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- フィットネス -->
+            <section class="metric-section" id="fitness">
+                <div class="metric-header">
+                    <span class="metric-icon-large">💪</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">フィットネス</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">CTL® (Chronic Training Load)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>フィットネスとは？</h3>
+                    <p>過去約<strong>6週間（42日間）</strong>のトレーニング負荷の指数加重移動平均で、長期的な体力レベルを表します。</p>
+
+                    <h3>特徴</h3>
+                    <ul>
+                        <li>時間をかけて<strong>徐々に向上</strong>する</li>
+                        <li>トレーニングを止めると<strong>徐々に低下</strong>する</li>
+                        <li>最近のトレーニングほど<strong>影響が大きい</strong></li>
+                    </ul>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算式（指数加重移動平均）</div>
+                        <code>今日のフィットネス = 昨日のフィットネス + (今日の負荷 - 昨日のフィットネス) × 0.024</code>
+                    </div>
+
+                    <h3>レベルの目安</h3>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>フィットネス値</th>
+                                <th>レベル</th>
+                                <th>対象者</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="value-badge green">0 - 25</span></td>
+                                <td>入門</td>
+                                <td>運動を始めたばかり</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge blue">25 - 50</span></td>
+                                <td>初級</td>
+                                <td>週に数回トレーニング</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge purple">50 - 75</span></td>
+                                <td>中級</td>
+                                <td>定期的にトレーニング</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge yellow">75 - 100</span></td>
+                                <td>上級</td>
+                                <td>本格的なアマチュア</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge red">100+</span></td>
+                                <td>エリート</td>
+                                <td>トップアマチュア / プロ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="science-box">
+                        <div class="science-box-title">🔬 科学的背景</div>
+                        <div class="science-box-content">
+                            42日という期間は、<strong>ミトコンドリアの増加</strong>や<strong>毛細血管の発達</strong>など、持久系の適応に必要な時間に対応しています。Banisterのインパルス応答モデルに基づいています。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 疲労 -->
+            <section class="metric-section" id="fatigue">
+                <div class="metric-header">
+                    <span class="metric-icon-large">😓</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">疲労</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">ATL® (Acute Training Load)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>疲労とは？</h3>
+                    <p>過去約<strong>1週間（7日間）</strong>のトレーニング負荷の指数加重移動平均で、短期的な疲労の蓄積を表します。</p>
+
+                    <h3>特徴</h3>
+                    <ul>
+                        <li><strong>すぐに蓄積</strong>する（数日）</li>
+                        <li><strong>比較的早く回復</strong>する（1〜2週間）</li>
+                        <li>フィットネスより<strong>変動が大きい</strong></li>
+                    </ul>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算式（指数加重移動平均）</div>
+                        <code>今日の疲労 = 昨日の疲労 + (今日の負荷 - 昨日の疲労) × 0.133</code>
+                    </div>
+
+                    <div class="science-box">
+                        <div class="science-box-title">🔬 科学的背景</div>
+                        <div class="science-box-content">
+                            7日の時定数は、<strong>筋グリコーゲンの回復</strong>、<strong>筋損傷の修復</strong>、<strong>ホルモンバランスの回復</strong>など、短期的な生理的回復に対応しています。
+                        </div>
+                    </div>
+
+                    <div class="hint-box">
+                        <span class="hint-box-icon">⚠️</span>
+                        <div class="hint-box-content">
+                            <strong>注意:</strong> 疲労が高い状態が続くと、オーバートレーニングのリスクがあります。定期的な回復週（3-4週ごと）を設けることが重要です。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- コンディション -->
+            <section class="metric-section" id="condition">
+                <div class="metric-header">
+                    <span class="metric-icon-large">🎭</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">コンディション</h2>
+                        <div class="metric-equivalent">
+                            TrainingPeaks®での名称:
+                            <span class="metric-equivalent-badge">TSB® (Training Stress Balance)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <h3>コンディションとは？</h3>
+                    <p>フィットネスから疲労を引いた値で、<strong>パフォーマンスを発揮する準備がどれだけ整っているか</strong>を表します。</p>
+
+                    <div class="formula-box">
+                        <div class="formula-label">計算式</div>
+                        <code>コンディション = フィットネス - 疲労</code>
+                    </div>
+
+                    <h3>トレーニングのパラドックス</h3>
+                    <ul>
+                        <li>体力を向上させるには<strong>トレーニング</strong>が必要</li>
+                        <li>しかしトレーニングは<strong>疲労</strong>も蓄積させる</li>
+                        <li>疲労した状態では<strong>パフォーマンスを発揮できない</strong></li>
+                    </ul>
+                    <p>コンディションは、この<strong>フィットネスと疲労のバランス</strong>を可視化します。</p>
+
+                    <h3>値の解釈</h3>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>コンディション</th>
+                                <th>状態</th>
+                                <th>推奨アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="value-badge green">+25 以上</span></td>
+                                <td>🏆 レースに最適</td>
+                                <td>ただし長期間続くとディトレーニング</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge blue">+10 〜 +25</span></td>
+                                <td>✨ フレッシュ</td>
+                                <td>重要なワークアウトやレースに良い状態</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge purple">-10 〜 +10</span></td>
+                                <td>⚖️ 通常</td>
+                                <td>通常のトレーニング状態</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge yellow">-25 〜 -10</span></td>
+                                <td>😰 疲労蓄積</td>
+                                <td>計画的なオーバーリーチング期間</td>
+                            </tr>
+                            <tr>
+                                <td><span class="value-badge red">-25 以下</span></td>
+                                <td>🚨 要回復</td>
+                                <td>オーバートレーニングのリスク</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="hint-box">
+                        <span class="hint-box-icon">🏁</span>
+                        <div class="hint-box-content">
+                            <strong>レースに向けて:</strong> 理想的なレース当日のコンディションは<strong>+15〜+25</strong>です。レース2〜3週間前からトレーニング量を減らし（テーパリング）、疲労を回復させます。
+                        </div>
+                    </div>
+
+                    <div class="science-box">
+                        <div class="science-box-title">🔬 科学的背景</div>
+                        <div class="science-box-content">
+                            <strong>超回復（Supercompensation）理論</strong>に基づいています。トレーニング → 一時的なパフォーマンス低下（疲労） → 回復 → パフォーマンスが以前より向上（超回復）というサイクルを数値化しています。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 閾値の設定方法 -->
+            <section class="metric-section" id="thresholds">
+                <div class="metric-header">
+                    <span class="metric-icon-large">🔧</span>
+                    <div class="metric-title-group">
+                        <h2 class="metric-name">閾値の設定方法</h2>
+                        <div class="metric-equivalent">
+                            正確な指標計算のために
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <p>正確なトレーニング負荷を計算するには、正確な閾値設定が不可欠です。</p>
+
+                    <h3>🚴 バイク FTP（機能的閾値パワー）</h3>
+                    <p>約1時間維持できる最大パワーです。</p>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>測定方法</th>
+                                <th>手順</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>20分テスト</strong></td>
+                                <td>20分間の全力走の平均パワー × 0.95</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ランプテスト</strong></td>
+                                <td>段階的に負荷を上げていくテスト</td>
+                            </tr>
+                            <tr>
+                                <td><strong>レース結果</strong></td>
+                                <td>40kmTTの平均パワー</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>🏃 ラン閾値ペース</h3>
+                    <p>約1時間維持できる最速ペースです。</p>
+                    <table class="interpretation-table">
+                        <thead>
+                            <tr>
+                                <th>測定方法</th>
+                                <th>手順</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>30分テスト</strong></td>
+                                <td>30分間の全力走の平均ペース</td>
+                            </tr>
+                            <tr>
+                                <td><strong>10kmレース</strong></td>
+                                <td>10kmレースペースとほぼ同等</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>🏊 スイム CSS（Critical Swim Speed）</h3>
+                    <p>約30分維持できる最速ペースです。</p>
+                    <div class="formula-box">
+                        <div class="formula-label">400m-200mテスト</div>
+                        <code>
+                            1. 400mを全力で泳ぎ、タイムを記録<br>
+                            2. 十分な休憩を取る<br>
+                            3. 200mを全力で泳ぎ、タイムを記録<br>
+                            4. CSS = 200m ÷ (400mタイム - 200mタイム)
+                        </code>
+                    </div>
+                    <p><strong>例:</strong> 400m = 6:00(360秒)、200m = 2:40(160秒) の場合<br>
+                    CSS = 200 ÷ (360 - 160) = 1.0 m/s = <strong>1:40/100m</strong></p>
+
+                    <div class="hint-box">
+                        <span class="hint-box-icon">🔄</span>
+                        <div class="hint-box-content">
+                            <strong>更新頻度:</strong> 閾値は1〜2ヶ月ごとに再測定することをお勧めします。トレーニングの効果で閾値は変化します。
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- フッター -->
+            <div class="help-footer">
+                <p>
+                    このガイドは<a href="https://www.trainingpeaks.com" target="_blank">TrainingPeaks</a>の公開ドキュメント、Dr. Andrew Cogganの研究、Dr. Eric Banisterのモデルに基づいています。<br>
+                    TSS®, NP®, IF®, CTL®, ATL®, TSB® は Peaksware LLC の登録商標です。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/metrics-data.js"></script>
+    <script src="js/metrics-tooltip.js"></script>
+</body>
+</html>

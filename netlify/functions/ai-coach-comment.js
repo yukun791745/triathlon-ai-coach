@@ -220,8 +220,9 @@ exports.handler = async (event) => {
             similarActivities,
             userQuestion,
             conversationHistory,
-            sessionType,        // ★ 新規: ユーザーが選択したセッションタイプ
-            sessionSupplement   // ★ 新規: 補足コメント
+            sessionType,        // ユーザーが選択したセッションタイプ
+            sessionSupplement,  // 補足コメント
+            raceGoal            // Aレース目標（あれば）
         } = JSON.parse(event.body);
 
         if (!activity) {
@@ -248,8 +249,12 @@ exports.handler = async (event) => {
         // 観察できる事実を抽出
         const observations = extractObservations(activity, streamAnalysis, sessionType);
         
+        // フラグを設定
+        const hasRaceGoal = !!(raceGoal && raceGoal.raceName);
+        const hasSupplement = !!(sessionSupplement && sessionSupplement.trim());
+        
         // システムプロンプト
-        const systemPrompt = buildSystemPrompt(!!userQuestion, sessionType);
+        const systemPrompt = buildSystemPrompt(!!userQuestion, sessionType, hasRaceGoal, hasSupplement);
         
         // ユーザーメッセージの構築
         const userMessage = buildUserMessage(
@@ -260,6 +265,7 @@ exports.handler = async (event) => {
             userQuestion, 
             sessionType,
             sessionSupplement,
+            raceGoal,
             observations, 
             dataReliability
         );
@@ -330,9 +336,9 @@ exports.handler = async (event) => {
 };
 
 // ============================================
-// システムプロンプト（断定的コメント版）
+// システムプロンプト（改善版：称賛から、補足への言及）
 // ============================================
-function buildSystemPrompt(isQuestion, sessionType) {
+function buildSystemPrompt(isQuestion, sessionType, hasRaceGoal, hasSupplement) {
     if (isQuestion) {
         return `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、選手の質問にデータを根拠に回答します。
 
@@ -347,7 +353,7 @@ function buildSystemPrompt(isQuestion, sessionType) {
 
     const evaluation = SESSION_EVALUATION[sessionType] || SESSION_EVALUATION.other;
 
-    return `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、スイム・バイク・ランのトレーニング、栄養、リカバリー、レース戦略、ケガと予防について専門的な知見を持っています。
+    let prompt = `あなたは「AIトライアスロンコーチ」です。運動生理学に精通し、スイム・バイク・ランのトレーニング、栄養、リカバリー、レース戦略、ケガと予防について専門的な知見を持っています。
 
 【基本姿勢】
 - 親しみやすく、プロフェッショナル
@@ -358,33 +364,66 @@ function buildSystemPrompt(isQuestion, sessionType) {
 【今回のセッション】
 - 目的: ${evaluation.purpose}
 - 評価の焦点: ${evaluation.focus}
-- 成功の指標: ${evaluation.goodSigns.join('、')}
+- 良いサイン: ${evaluation.goodSigns.join('、')}
 - 注意すべき点: ${evaluation.concerns.join('、')}
 
-【コメントの原則】
-1. セッションの目的に対して「達成できたか/できなかったか」を明確に評価する
-2. 良かった点は具体的に称え、「なぜ良いのか」を説明する
-3. 改善点は断定的に指摘し、「次回どうすべきか」を具体的に提案する
-4. 曖昧な表現（「〜かもしれません」「〜の可能性があります」）は最小限に
-5. データが示す事実に基づいて断定する
+【コメントの構成（この順番で書く）】
+1. **称賛・ねぎらい**（必須・冒頭）
+   - 「お疲れ様でした！」「よく頑張りましたね！」などで始める
+   - トレーニングを完遂したこと自体を称える
+   - 距離や時間など、具体的な数字を挙げて労う
+
+2. **良かった点**（必須）
+   - データから読み取れるポジティブな観察を具体的に述べる
+   - 「なぜ良いのか」を運動生理学的に簡潔に説明する
+
+3. **改善点・次への提案**（必須）
+   - 建設的なトーンで改善点を述べる
+   - 「次回は〜を試してみてください」と具体的なアクションを提案
+   - 否定的な表現は避け、前向きな言い方にする`;
+
+    // 補足コメントがある場合の指示を追加
+    if (hasSupplement) {
+        prompt += `
+
+4. **補足コメントへの言及**（必須）
+   - ユーザーが入力した補足コメントの内容に必ず触れる
+   - 「〜とのことですが」「〜を意識されたんですね」など、認識していることを明示する
+   - 補足の内容を踏まえた上でコメントする`;
+    }
+
+    // Aレース目標がある場合の指示を追加
+    if (hasRaceGoal) {
+        prompt += `
+
+5. **レース目標との関連**（該当する場合のみ）
+   - Aレースの目標が設定されています
+   - このトレーニングが目標達成にどう貢献するか、必要に応じて簡潔に言及
+   - 毎回言及する必要はなく、特に関連が深い場合のみ触れる`;
+    }
+
+    prompt += `
 
 【避けること】
-- 「良いトレーニングでした」だけの漠然とした評価
-- すべてを褒めるだけのコメント
-- 箇条書きでの羅列
+- 冒頭で「達成できた/できなかった」と断定的に評価すること
+- 否定的な表現から始めること
+- 箇条書きでの羅列（自然な文章で書く）
 - 「冒頭：」「本文：」などのラベル
+- すべてを褒めるだけの空虚なコメント
 
 【出力形式】
 - 自然な日本語の段落形式
-- 300-450字程度
+- 350-450字程度
 - 絵文字は使わない
-- 最初に結論（目的達成度の評価）を述べる`;
+- 温かみのある、コーチらしい語り口`;
+
+    return prompt;
 }
 
 // ============================================
 // ユーザーメッセージ構築
 // ============================================
-function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, sessionType, sessionSupplement, observations, dataReliability) {
+function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActivities, userQuestion, sessionType, sessionSupplement, raceGoal, observations, dataReliability) {
     const sportType = activity.sport_type || activity.type;
     const sportName = getSportName(sportType);
     const sportCategory = getSportCategory(sportType);
@@ -401,10 +440,32 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
     message += '- 種目: ' + sportName + '\n';
     message += '- 選択されたセッションタイプ: ' + sessionType + '\n';
     message += '- セッションの目的: ' + evaluation.purpose + '\n';
-    if (sessionSupplement) {
-        message += '- ユーザーからの補足: ' + sessionSupplement + '\n';
-    }
     message += '\n';
+    
+    // ★ 補足コメントがある場合、強調して伝える
+    if (sessionSupplement && sessionSupplement.trim()) {
+        message += '## ★ ユーザーからの補足コメント（重要：必ずコメント内で言及すること）\n';
+        message += '「' + sessionSupplement.trim() + '」\n';
+        message += '→ この補足内容を認識していることを、コメントの中で「〜とのことですが」「〜を意識されたんですね」などの形で明示的に触れてください。\n';
+        message += '\n';
+    }
+    
+    // ★ Aレース目標がある場合
+    if (raceGoal && raceGoal.raceName) {
+        message += '## Aレース目標\n';
+        message += '- レース名: ' + raceGoal.raceName + '\n';
+        if (raceGoal.raceDate) {
+            message += '- レース日: ' + raceGoal.raceDate + '\n';
+        }
+        if (raceGoal.goalTime) {
+            message += '- 目標タイム: ' + raceGoal.goalTime + '\n';
+        }
+        if (raceGoal.raceDistance) {
+            message += '- 距離: ' + raceGoal.raceDistance + '\n';
+        }
+        message += '→ このトレーニングがレース目標にどう貢献するか、特に関連が深い場合のみ簡潔に言及してください（毎回は不要）。\n';
+        message += '\n';
+    }
     
     // 基本データ
     message += '## 基本データ\n';
@@ -504,9 +565,9 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
         }
     }
     
-    // 評価基準のリマインド
-    message += '## 評価してほしいポイント\n';
-    message += '- 成功の指標: ' + evaluation.goodSigns.join('、') + '\n';
+    // 評価の参考情報
+    message += '## 評価の参考情報\n';
+    message += '- 良いサイン: ' + evaluation.goodSigns.join('、') + '\n';
     message += '- 注意すべき点: ' + evaluation.concerns.join('、') + '\n';
     message += '\n';
     
@@ -515,9 +576,12 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
         message += '---\n## 選手からの質問\n' + userQuestion + '\n\nこの質問に対して、上記データを参照しながら回答してください。';
     } else {
         message += '---\n';
-        message += '上記のデータを踏まえて、「' + evaluation.purpose + '」というセッション目的に対する達成度を評価してください。\n';
-        message += '最初に結論（達成できた/部分的に達成/達成できなかった）を明確に述べ、その理由をデータで説明してください。\n';
-        message += '改善点がある場合は、次回のトレーニングで具体的に何をすべきか提案してください。';
+        message += '上記のデータを踏まえて、このトレーニングについてコメントしてください。\n\n';
+        message += '【コメントの構成】\n';
+        message += '1. まず「お疲れ様でした！」「よく頑張りましたね！」などの称賛・ねぎらいから始める\n';
+        message += '2. 次にデータから読み取れる良かった点を具体的に述べる\n';
+        message += '3. 最後に改善点や次への提案を建設的に述べる\n\n';
+        message += '※ 冒頭で「達成できた/できなかった」という断定的な評価は避けてください。良い点と改善点を述べれば、自然と理解できます。';
     }
     
     return message;

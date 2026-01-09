@@ -1,0 +1,549 @@
+<!-- ============================================
+     activity-detail.html に追加するコード
+     AIコーチコメントセクションを置き換え
+     ============================================ -->
+
+<!-- ===== CSS（<style>タグ内に追加） ===== -->
+<style>
+/* セッションタイプ選択UI */
+.session-type-selector {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.session-type-header {
+    margin-bottom: 16px;
+}
+
+.session-type-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.session-type-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.session-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.session-type-btn {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-type-btn:hover {
+    border-color: #667eea;
+    background: #f5f3ff;
+}
+
+.session-type-btn.selected {
+    border-color: #667eea;
+    background: #ede9fe;
+}
+
+.session-type-btn-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+    display: block;
+}
+
+.session-type-btn-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.session-supplement {
+    margin-top: 12px;
+}
+
+.session-supplement-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.session-supplement-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    resize: none;
+}
+
+.session-supplement-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.generate-comment-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 16px;
+}
+
+.generate-comment-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.generate-comment-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* その他選択時の入力欄 */
+.other-input-container {
+    display: none;
+    margin-top: 12px;
+}
+
+.other-input-container.visible {
+    display: block;
+}
+
+.other-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* AIコメント表示エリア */
+.ai-comment-result {
+    display: none;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+    border-left: 4px solid #667eea;
+}
+
+.ai-comment-result.visible {
+    display: block;
+}
+
+.ai-comment-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.ai-comment-result-title {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.ai-comment-result-type {
+    font-size: 0.8rem;
+    background: #ede9fe;
+    color: #667eea;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.ai-comment-text {
+    color: #374151;
+    line-height: 1.7;
+}
+
+.regenerate-btn {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+}
+
+.regenerate-btn:hover {
+    background: #e5e7eb;
+}
+</style>
+
+
+<!-- ===== HTML（AIコーチパネル部分を置き換え） ===== -->
+<div class="panel">
+    <div class="panel-header">
+        <h3 class="panel-title">🤖 AIコーチ</h3>
+    </div>
+    <div class="panel-body" style="padding: 20px;">
+        
+        <!-- セッションタイプ選択 -->
+        <div class="session-type-selector" id="sessionTypeSelector">
+            <div class="session-type-header">
+                <div class="session-type-title">🎯 今日のトレーニングの目的は？</div>
+                <div class="session-type-subtitle">教えていただければ、AIコーチがより的確なコメントをお届けします</div>
+            </div>
+            
+            <div class="session-type-grid" id="sessionTypeGrid">
+                <!-- JavaScriptで動的に生成 -->
+            </div>
+            
+            <!-- その他選択時の入力欄 -->
+            <div class="other-input-container" id="otherInputContainer">
+                <input type="text" class="other-input" id="otherInput" 
+                       placeholder="例：前半キック練習、後半プルブイで1500m">
+            </div>
+            
+            <!-- 補足入力 -->
+            <div class="session-supplement">
+                <label class="session-supplement-label">💬 補足（任意）</label>
+                <textarea class="session-supplement-input" id="sessionSupplement" rows="2"
+                          placeholder="例：後半ビルドアップを意識した、暑くてペースを抑えた、など"></textarea>
+            </div>
+            
+            <button class="generate-comment-btn" id="generateCommentBtn" disabled>
+                AIコーチのコメントを見る
+            </button>
+        </div>
+        
+        <!-- ローディング -->
+        <div id="aiCommentLoading" style="display: none; text-align: center; padding: 30px;">
+            <div class="loading-spinner"></div>
+            <p style="color: #6b7280; margin-top: 12px;">AIコーチが分析中...</p>
+        </div>
+        
+        <!-- コメント結果 -->
+        <div class="ai-comment-result" id="aiCommentResult">
+            <div class="ai-comment-result-header">
+                <span class="ai-comment-result-title">AIコーチのコメント</span>
+                <span class="ai-comment-result-type" id="commentSessionType"></span>
+            </div>
+            <div class="ai-comment-text" id="aiCommentText"></div>
+            <button class="regenerate-btn" onclick="regenerateComment()">🔄 別の視点でコメント</button>
+        </div>
+        
+        <!-- 質問入力（コメント表示後に表示） -->
+        <div id="questionSection" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+            <div style="font-weight: 600; margin-bottom: 8px;">💬 質問する</div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="questionInput" placeholder="このトレーニングについて質問..."
+                       style="flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;">
+                <button id="askBtn" onclick="askQuestion()" 
+                        style="background: #667eea; color: white; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer;">
+                    質問する
+                </button>
+            </div>
+            <div id="chatHistory" style="display: none; margin-top: 16px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- ===== JavaScript（<script>タグ内に追加） ===== -->
+<script>
+// セッションタイプ定義
+const SESSION_TYPES = {
+    swim: [
+        { id: 'swim_drill_focus', label: 'テクニック重視', description: 'ドリル中心' },
+        { id: 'swim_drill_endurance', label: 'ドリル＋有酸素', description: 'ドリル後にZ2' },
+        { id: 'swim_drill_speed', label: 'ドリル＋スピード', description: 'ドリル後に高強度' },
+        { id: 'swim_endurance', label: '有酸素（泳ぎ込み）', description: '距離重視' },
+        { id: 'swim_threshold', label: '閾値/CSSペース', description: 'テンポスイム' },
+        { id: 'swim_interval', label: '高強度インターバル', description: 'スプリント等' },
+        { id: 'swim_ow', label: 'オープンウォーター', description: '海・湖' },
+        { id: 'swim_recovery', label: 'リカバリー', description: '軽く流す' },
+        { id: 'swim_test', label: 'テスト/TT', description: 'CSS測定等' }
+    ],
+    bike: [
+        { id: 'bike_endurance', label: '有酸素エンデュランス', description: 'Z2中心' },
+        { id: 'bike_tempo', label: 'テンポ/SST', description: 'FTP88-94%' },
+        { id: 'bike_threshold', label: '閾値/FTP走', description: 'FTP付近持続' },
+        { id: 'bike_vo2max', label: 'VO2max/高強度', description: '高強度インターバル' },
+        { id: 'bike_technique_interval', label: 'テクニック＋インターバル', description: 'ドリル＋高強度' },
+        { id: 'bike_zwift_workout', label: 'Zwiftワークアウト', description: '構造化メニュー' },
+        { id: 'bike_hill', label: 'ヒルクライム', description: '登坂' },
+        { id: 'bike_brick', label: 'ブリック（→ラン）', description: 'バイク後ラン' },
+        { id: 'bike_recovery', label: 'リカバリー', description: '軽く回す' },
+        { id: 'bike_test', label: 'テスト/TT', description: 'FTP測定等' }
+    ],
+    run: [
+        { id: 'run_easy', label: 'イージー/ジョグ', description: '会話ペース' },
+        { id: 'run_long', label: 'ロング走', description: '長距離' },
+        { id: 'run_tempo', label: 'テンポ/閾値走', description: 'LTペース' },
+        { id: 'run_interval', label: 'インターバル', description: '高強度反復' },
+        { id: 'run_fartlek', label: 'ファルトレク', description: 'ペース変化' },
+        { id: 'run_hill', label: '坂道トレーニング', description: '坂ダッシュ等' },
+        { id: 'run_brick', label: 'ブリック（バイク後）', description: 'バイク直後' },
+        { id: 'run_recovery', label: 'リカバリー', description: '非常に軽く' },
+        { id: 'run_test', label: 'テスト/TT', description: 'タイム計測' }
+    ],
+    common: [
+        { id: 'race', label: 'レース/大会', description: '本番' },
+        { id: 'other', label: 'その他', description: '上記以外' }
+    ]
+};
+
+let selectedSessionType = null;
+let conversationHistory = [];
+
+// セッションタイプ選択UIを初期化
+function initSessionTypeSelector() {
+    const sportType = currentActivity.sport_type || currentActivity.type;
+    const sportCategory = getSportCategory(sportType);
+    
+    // 種目に応じた選択肢を取得
+    let options = [];
+    if (sportCategory === 'swim') {
+        options = SESSION_TYPES.swim;
+    } else if (sportCategory === 'bike') {
+        options = SESSION_TYPES.bike;
+    } else if (sportCategory === 'run') {
+        options = SESSION_TYPES.run;
+    }
+    // 共通オプションを追加
+    options = options.concat(SESSION_TYPES.common);
+    
+    // グリッドにボタンを生成
+    const grid = document.getElementById('sessionTypeGrid');
+    grid.innerHTML = '';
+    
+    options.forEach(function(opt) {
+        const btn = document.createElement('button');
+        btn.className = 'session-type-btn';
+        btn.dataset.type = opt.id;
+        btn.innerHTML = `
+            <span class="session-type-btn-label">${opt.label}</span>
+            <span class="session-type-btn-desc">${opt.description}</span>
+        `;
+        btn.addEventListener('click', function() {
+            selectSessionType(opt.id, opt.label);
+        });
+        grid.appendChild(btn);
+    });
+}
+
+// セッションタイプを選択
+function selectSessionType(typeId, typeLabel) {
+    // 前の選択を解除
+    document.querySelectorAll('.session-type-btn').forEach(function(btn) {
+        btn.classList.remove('selected');
+    });
+    
+    // 新しい選択をマーク
+    const selectedBtn = document.querySelector(`.session-type-btn[data-type="${typeId}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+    
+    selectedSessionType = typeId;
+    
+    // 「その他」の場合は入力欄を表示
+    const otherContainer = document.getElementById('otherInputContainer');
+    if (typeId === 'other') {
+        otherContainer.classList.add('visible');
+    } else {
+        otherContainer.classList.remove('visible');
+    }
+    
+    // ボタンを有効化
+    document.getElementById('generateCommentBtn').disabled = false;
+}
+
+// コメント生成
+async function generateAIComment() {
+    if (!selectedSessionType) {
+        alert('セッションタイプを選択してください');
+        return;
+    }
+    
+    const supplement = document.getElementById('sessionSupplement').value.trim();
+    const otherInput = document.getElementById('otherInput').value.trim();
+    
+    // 「その他」の場合は入力内容を補足に追加
+    let finalSupplement = supplement;
+    if (selectedSessionType === 'other' && otherInput) {
+        finalSupplement = otherInput + (supplement ? '。' + supplement : '');
+    }
+    
+    // UI更新
+    document.getElementById('sessionTypeSelector').style.display = 'none';
+    document.getElementById('aiCommentLoading').style.display = 'block';
+    document.getElementById('aiCommentResult').classList.remove('visible');
+    
+    try {
+        const streamAnalysis = analyzeStreamData();
+        const similarActivities = findSimilarActivities();
+        
+        const response = await fetch('/.netlify/functions/ai-coach-comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activity: currentActivity,
+                trainingStatus: trainingStatus,
+                streamAnalysis: streamAnalysis,
+                similarActivities: similarActivities,
+                sessionType: selectedSessionType,
+                sessionSupplement: finalSupplement,
+                conversationHistory: []
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('コメント生成に失敗しました');
+        }
+        
+        const data = await response.json();
+        
+        // 結果を表示
+        document.getElementById('aiCommentLoading').style.display = 'none';
+        document.getElementById('aiCommentResult').classList.add('visible');
+        document.getElementById('aiCommentText').innerHTML = formatAIComment(data.comment);
+        document.getElementById('commentSessionType').textContent = getSessionTypeLabel(selectedSessionType);
+        document.getElementById('questionSection').style.display = 'block';
+        
+        // 会話履歴に追加
+        conversationHistory = [
+            { role: 'assistant', content: data.comment }
+        ];
+        
+    } catch (error) {
+        console.error('AI comment error:', error);
+        document.getElementById('aiCommentLoading').style.display = 'none';
+        document.getElementById('sessionTypeSelector').style.display = 'block';
+        alert('コメント生成に失敗しました: ' + error.message);
+    }
+}
+
+// 再生成
+function regenerateComment() {
+    document.getElementById('aiCommentResult').classList.remove('visible');
+    document.getElementById('questionSection').style.display = 'none';
+    document.getElementById('sessionTypeSelector').style.display = 'block';
+}
+
+// 質問する
+async function askQuestion() {
+    const input = document.getElementById('questionInput');
+    const question = input.value.trim();
+    
+    if (!question) return;
+    
+    // 履歴を表示
+    const historyEl = document.getElementById('chatHistory');
+    historyEl.style.display = 'block';
+    
+    // ユーザーの質問を追加
+    historyEl.innerHTML += `
+        <div style="background: #f3f4f6; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+            <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">👤 あなた</div>
+            <div>${question}</div>
+        </div>
+    `;
+    
+    input.value = '';
+    
+    // ローディング表示
+    historyEl.innerHTML += `
+        <div id="questionLoading" style="text-align: center; padding: 10px;">
+            <span style="color: #6b7280;">回答を生成中...</span>
+        </div>
+    `;
+    historyEl.scrollTop = historyEl.scrollHeight;
+    
+    try {
+        const streamAnalysis = analyzeStreamData();
+        
+        conversationHistory.push({ role: 'user', content: question });
+        
+        const response = await fetch('/.netlify/functions/ai-coach-comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activity: currentActivity,
+                trainingStatus: trainingStatus,
+                streamAnalysis: streamAnalysis,
+                sessionType: selectedSessionType,
+                userQuestion: question,
+                conversationHistory: conversationHistory
+            })
+        });
+        
+        const data = await response.json();
+        
+        // ローディングを削除
+        document.getElementById('questionLoading')?.remove();
+        
+        // 回答を追加
+        historyEl.innerHTML += `
+            <div style="background: #ede9fe; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+                <div style="font-size: 0.8rem; color: #667eea; margin-bottom: 4px;">🤖 AIコーチ</div>
+                <div>${formatAIComment(data.comment)}</div>
+            </div>
+        `;
+        historyEl.scrollTop = historyEl.scrollHeight;
+        
+        conversationHistory.push({ role: 'assistant', content: data.comment });
+        
+    } catch (error) {
+        document.getElementById('questionLoading')?.remove();
+        historyEl.innerHTML += `
+            <div style="color: #ef4444; padding: 10px;">エラーが発生しました</div>
+        `;
+    }
+}
+
+// セッションタイプのラベルを取得
+function getSessionTypeLabel(typeId) {
+    const allTypes = [
+        ...SESSION_TYPES.swim,
+        ...SESSION_TYPES.bike,
+        ...SESSION_TYPES.run,
+        ...SESSION_TYPES.common
+    ];
+    const found = allTypes.find(t => t.id === typeId);
+    return found ? found.label : typeId;
+}
+
+// AIコメントのフォーマット
+function formatAIComment(text) {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}
+
+// イベントリスナー
+document.getElementById('generateCommentBtn').addEventListener('click', generateAIComment);
+document.getElementById('questionInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') askQuestion();
+});
+
+// ページ読み込み時に初期化
+// displayActivityDetails関数の最後に以下を追加:
+// initSessionTypeSelector();
+</script>

@@ -641,6 +641,122 @@
                 justify-content: center;
             }
         }
+
+        /* ナビゲーション区切り線 */
+        .nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 12px 16px;
+        }
+
+        /* ツールチップ対象要素 */
+        .has-tooltip {
+            cursor: help;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .has-tooltip::after {
+            content: 'ⓘ';
+            font-size: 0.75em;
+            color: #9ca3af;
+            transition: color 0.2s ease;
+        }
+
+        .has-tooltip:hover::after {
+            color: #3b82f6;
+        }
+
+        /* ツールチップ本体 */
+        .metric-tooltip {
+            position: fixed;
+            z-index: 10000;
+            max-width: 360px;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+
+        .metric-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .metric-tooltip::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            transform: rotate(45deg);
+            box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-tooltip.arrow-top::before {
+            top: -6px;
+            left: 50%;
+            margin-left: -6px;
+        }
+
+        .metric-tooltip.arrow-bottom::before {
+            bottom: -6px;
+            left: 50%;
+            margin-left: -6px;
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tooltip-icon {
+            font-size: 1.5rem;
+        }
+
+        .tooltip-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .tooltip-equivalent {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .tooltip-body {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+
+        .tooltip-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .tooltip-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -684,6 +800,11 @@
                     <span class="nav-icon">⚙️</span>
                     <span>設定</span>
                 </a>
+                <div class="nav-divider"></div>
+                <a href="help.html" class="flow-nav-step available">
+                    <span class="nav-icon">❓</span>
+                    <span>ヘルプ</span>
+                </a>
             </div>
         </div>
     </nav>
@@ -694,24 +815,25 @@
             <div class="estimate-banner" id="estimateBanner" style="display: none;">
                 <span class="estimate-banner-icon">⚠️</span>
                 <div class="estimate-banner-text">
-                    <strong>TSS/CTL/ATL/TSBは推定値です</strong><br>
+                    <strong>トレーニング指標は推定値です</strong><br>
                     現在デフォルト値で計算中：FTP=200W、ラン閾値=5:00/km、スイム閾値=1:40/100m、最大心拍=190bpm<br>
                     正確な値を得るには <a href="settings.html">設定ページ</a> で閾値を入力してください。
+                    <a href="help.html" style="margin-left: 12px;">📚 指標の詳細を見る</a>
                 </div>
             </div>
 
-            <!-- Fitness / Form / Fatigue 指標 -->
+            <!-- フィットネス / コンディション / 疲労 指標 -->
             <div class="metrics-row">
                 <div class="metric-card fitness">
-                    <div class="metric-label">Fitness (CTL)</div>
+                    <div class="metric-label has-tooltip" data-metric="fitness">フィットネス</div>
                     <div class="metric-value" id="fitnessValue">--</div>
-                    <div class="metric-subtitle">長期トレーニング負荷</div>
+                    <div class="metric-subtitle">長期トレーニング負荷（42日平均）</div>
                     <div class="metric-trend neutral" id="fitnessTrend">
                         <span>→</span> <span>--</span>
                     </div>
                 </div>
                 <div class="metric-card form">
-                    <div class="metric-label">Form (TSB)</div>
+                    <div class="metric-label has-tooltip" data-metric="condition">コンディション</div>
                     <div class="metric-value" id="formValue">--</div>
                     <div class="metric-subtitle">パフォーマンス準備状態</div>
                     <div class="metric-trend neutral" id="formStatus">
@@ -719,9 +841,9 @@
                     </div>
                 </div>
                 <div class="metric-card fatigue">
-                    <div class="metric-label">Fatigue (ATL)</div>
+                    <div class="metric-label has-tooltip" data-metric="fatigue">疲労</div>
                     <div class="metric-value" id="fatigueValue">--</div>
-                    <div class="metric-subtitle">短期疲労度</div>
+                    <div class="metric-subtitle">短期疲労度（7日平均）</div>
                     <div class="metric-trend neutral" id="fatigueTrend">
                         <span>→</span> <span>--</span>
                     </div>
@@ -755,7 +877,7 @@
                             </div>
                         </div>
                         <div class="chart-section">
-                            <h3 class="chart-title">種目別TSS <span id="tssEstimateNote" style="font-size: 0.75rem; color: #f59e0b; font-weight: normal;">(* 推定値)</span></h3>
+                            <h3 class="chart-title"><span class="has-tooltip" data-metric="trainingLoad">種目別トレーニング負荷</span> <span id="tssEstimateNote" style="font-size: 0.75rem; color: #f59e0b; font-weight: normal;">(* 推定値)</span></h3>
                             <div class="chart-wrapper">
                                 <canvas id="tssChart"></canvas>
                             </div>
@@ -1881,5 +2003,9 @@
             status.innerHTML = `<span>${parts[0]}</span> <span>${parts.slice(1).join(' ')}</span>`;
         }
     </script>
+    
+    <!-- トレーニング指標ツールチップ -->
+    <script src="js/metrics-data.js"></script>
+    <script src="js/metrics-tooltip.js"></script>
 </body>
 </html>

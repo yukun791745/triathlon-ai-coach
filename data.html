@@ -881,12 +881,19 @@
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    if (parsed.ftp && parsed.rFtpPacePerKm && parsed.sFtpPacePer100m && 
-                        parsed.maxHr && parsed.thresholdHr) {
-                        isUsingDefaultThresholds = false;
-                        return parsed;
-                    }
-                } catch (e) {}
+                    // user_thresholdsが保存されていれば、ユーザーが設定済みと判断
+                    // 不足している値はデフォルトで補完
+                    isUsingDefaultThresholds = false;
+                    return {
+                        ftp: parsed.ftp || DEFAULT_THRESHOLDS.ftp,
+                        rFtpPacePerKm: parsed.rFtpPacePerKm || DEFAULT_THRESHOLDS.rFtpPacePerKm,
+                        sFtpPacePer100m: parsed.sFtpPacePer100m || DEFAULT_THRESHOLDS.sFtpPacePer100m,
+                        maxHr: parsed.maxHr || DEFAULT_THRESHOLDS.maxHr,
+                        thresholdHr: parsed.thresholdHr || DEFAULT_THRESHOLDS.thresholdHr
+                    };
+                } catch (e) {
+                    console.error('Failed to parse user_thresholds:', e);
+                }
             }
             isUsingDefaultThresholds = true;
             return DEFAULT_THRESHOLDS;

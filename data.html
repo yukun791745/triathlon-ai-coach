@@ -903,13 +903,19 @@
             const banner = document.getElementById('estimateBanner');
             const tssNote = document.getElementById('tssEstimateNote');
             
-            if (isUsingDefaultThresholds && activities.length > 0) {
+            if (!hasUserSettings() && activities.length > 0) {
                 banner.style.display = 'flex';
                 tssNote.style.display = 'inline';
             } else {
                 banner.style.display = 'none';
                 tssNote.style.display = 'none';
             }
+        }
+        
+        // ユーザーが閾値設定を保存済みかチェック
+        function hasUserSettings() {
+            const saved = localStorage.getItem('user_thresholds');
+            return saved && saved !== '{}' && saved !== 'null';
         }
 
         // ===== 初期化 =====
@@ -1696,7 +1702,7 @@
             sorted.forEach(activity => {
                 const date = new Date(activity.start_date);
                 const sport = getSportCategory(activity.sport_type || activity.type);
-                const tssClass = isUsingDefaultThresholds ? 'activity-tss estimated' : 'activity-tss';
+                const tssClass = hasUserSettings() ? 'activity-tss' : 'activity-tss estimated';
                 
                 html += `
                     <tr onclick="openActivityDetail(${activity.id})">
@@ -1713,7 +1719,7 @@
             });
             
             html += '</tbody></table>';
-            if (isUsingDefaultThresholds) {
+            if (!hasUserSettings()) {
                 html += '<div class="legend-note">* TSS値はデフォルト閾値による推定</div>';
             }
             container.innerHTML = html;

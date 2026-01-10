@@ -3647,19 +3647,56 @@
             // Aレース目標を取得
             let raceGoal = null;
             try {
-                const savedRace = localStorage.getItem('selected_race');
-                const savedGoals = localStorage.getItem('race_goals');
-                if (savedRace) {
-                    const race = JSON.parse(savedRace);
-                    raceGoal = {
-                        raceName: race.name || race.raceName,
-                        raceDate: race.date || race.raceDate,
-                        raceDistance: race.distance || race.raceDistance
-                    };
-                    if (savedGoals) {
-                        const goals = JSON.parse(savedGoals);
-                        if (goals.goalTime) {
-                            raceGoal.goalTime = goals.goalTime;
+                // selected_racesからAレースを取得
+                const savedRaces = localStorage.getItem('selected_races');
+                if (savedRaces) {
+                    const raceData = JSON.parse(savedRaces);
+                    const aRaceIds = raceData.a || [];
+                    const details = raceData.details || {};
+                    const targetTimes = raceData.targetTimes || {};
+                    
+                    // Aレースがあれば最初のものを使用
+                    if (aRaceIds.length > 0) {
+                        const aRaceId = aRaceIds[0];
+                        const aRaceDetail = details[aRaceId];
+                        
+                        if (aRaceDetail) {
+                            raceGoal = {
+                                raceName: aRaceDetail.name,
+                                raceDate: aRaceDetail.date,
+                                raceDistance: aRaceDetail.distance || aRaceDetail.raceType,
+                                goalTime: targetTimes[aRaceId] || null
+                            };
+                            
+                            // race_goalsから詳細な目標タイムを取得
+                            const savedGoals = localStorage.getItem('race_goals');
+                            if (savedGoals && !raceGoal.goalTime) {
+                                const goals = JSON.parse(savedGoals);
+                                if (goals[aRaceId] && goals[aRaceId].goalTime) {
+                                    raceGoal.goalTime = goals[aRaceId].goalTime;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // selected_raceからも試みる（旧形式互換）
+                if (!raceGoal) {
+                    const savedRace = localStorage.getItem('selected_race');
+                    if (savedRace) {
+                        const race = JSON.parse(savedRace);
+                        raceGoal = {
+                            raceName: race.name || race.raceName,
+                            raceDate: race.date || race.raceDate,
+                            raceDistance: race.distance || race.raceDistance || race.raceType
+                        };
+                        
+                        const savedGoals = localStorage.getItem('race_goals');
+                        if (savedGoals) {
+                            const goals = JSON.parse(savedGoals);
+                            if (goals.goalTime) {
+                                raceGoal.goalTime = goals.goalTime;
+                            }
                         }
                     }
                 }

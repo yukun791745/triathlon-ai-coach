@@ -342,6 +342,81 @@
             font-weight: 500;
         }
 
+        /* フィットネス/コンディション/疲労ステータス */
+        .status-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid;
+        }
+
+        .status-card.fitness {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .status-card.condition {
+            border-left-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .status-card.fatigue {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .status-card .status-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .status-card .status-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .status-card.fitness .status-value { color: #059669; }
+        .status-card.condition .status-value { color: #2563eb; }
+        .status-card.fatigue .status-value { color: #dc2626; }
+
+        .status-card .status-desc {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        /* サマリーセクション レイアウト */
+        .summary-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        .summary-left {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .summary-right {
+            display: flex;
+            flex-direction: column;
+        }
+
         .loading-spinner {
             width: 35px;
             height: 35px;
@@ -566,68 +641,17 @@
         </div>
 
         <div class="dashboard-grid">
-            <!-- 1. アクティビティサマリー -->
+            <!-- 1. AIコーチの一言（最上段） -->
             <div class="dashboard-card section-full">
-                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 20px;">
-                    <!-- 左側：グラフ2つ -->
-                    <div>
-                        <div class="card-header" style="border-bottom: none; padding-bottom: 10px;">
-                            <span class="card-icon">📊</span>
-                            <h2 class="card-title">アクティビティサマリー</h2>
-                            <div style="margin-left: auto; display: flex; gap: 8px;">
-                                <select id="periodSelector" style="padding: 6px 12px; border: 2px solid #667eea; border-radius: 8px; background: white; color: #667eea; font-weight: 600; cursor: pointer; font-size: 0.85em;">
-                                    <option value="today">今日</option>
-                                    <option value="week">過去1週間</option>
-                                    <option value="4weeks">過去4週間</option>
-                                    <option value="8weeks" selected>過去8週間</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="card-content" id="activitySummary">
-                            <div class="placeholder">
-                                <div class="placeholder-icon">📈</div>
-                                <p>Stravaデータを読み込み中...</p>
-                            </div>
-                        </div>
-                        <div style="padding: 0 25px 10px;">
-                            <a href="data.html" class="btn-primary" style="display: inline-block; margin: 0; font-size: 0.9em;">
-                                📊 アクティビティ進捗へ →
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- 右側：ポイント表示 -->
-                    <div>
-                        <div class="card-header" style="border-bottom: none; padding-bottom: 10px;">
-                            <span class="card-icon">🏆</span>
-                            <h2 class="card-title">獲得ポイント</h2>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; text-align: center;">
-                            <div style="margin-bottom: 20px;">
-                                <div style="font-size: 0.9em; color: #92400e; font-weight: 600; margin-bottom: 8px;">今月</div>
-                                <div id="monthlyPoints" style="font-size: 3em; font-weight: 700; color: #f59e0b; line-height: 1;">0</div>
-                                <div style="font-size: 0.85em; color: #92400e; margin-top: 5px;">ポイント</div>
-                            </div>
-                            <div style="border-top: 2px solid rgba(146, 64, 14, 0.2); padding-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                                <div>
-                                    <div style="font-size: 0.8em; color: #78350f; margin-bottom: 4px;">累積獲得ポイント</div>
-                                    <div style="font-size: 1.5em; font-weight: 700; color: #92400e;">xx</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.8em; color: #78350f; margin-bottom: 4px;">ポイント残高</div>
-                                    <div style="font-size: 1.5em; font-weight: 700; color: #92400e;">xx</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. AIコーチの一言 -->
-            <div class="dashboard-card">
                 <div class="card-header">
                     <span class="card-icon">💬</span>
                     <h2 class="card-title">AIコーチの一言</h2>
+                    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+                        <span id="messageTypeBadge" style="background: #f3f4f6; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; color: #6b7280; font-weight: 600;">💡 今日のTips</span>
+                        <span id="messageTime" style="font-size: 0.8em; color: #9ca3af;">--:--</span>
+                        <button onclick="refreshCoachMessage()" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85em; transition: all 0.3s ease;">🔄 更新</button>
+                        <a href="index.html" class="btn-primary" style="padding: 8px 16px; font-size: 0.85em; margin: 0;">💬 AIコーチに相談</a>
+                    </div>
                 </div>
                 <div class="card-content">
                     <div id="coachMessageContainer">
@@ -638,12 +662,82 @@
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                        <span id="messageTypeBadge" style="background: #f3f4f6; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; color: #6b7280; font-weight: 600;">💡 今日のTips</span>
-                        <span id="messageTime" style="font-size: 0.8em; color: #9ca3af;">--:--</span>
-                        <div style="margin-left: auto; display: flex; gap: 8px;">
-                            <button onclick="refreshCoachMessage()" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85em; transition: all 0.3s ease;">🔄 更新</button>
-                            <a href="index.html" class="btn-primary" style="padding: 8px 16px; font-size: 0.85em; margin: 0;">💬 AIコーチに相談</a>
+                </div>
+            </div>
+
+            <!-- 2. アクティビティサマリー（新レイアウト） -->
+            <div class="dashboard-card section-full">
+                <div class="card-header" style="border-bottom: none; padding-bottom: 10px;">
+                    <span class="card-icon">📊</span>
+                    <h2 class="card-title">アクティビティサマリー</h2>
+                    <div style="margin-left: auto; display: flex; gap: 8px;">
+                        <select id="periodSelector" style="padding: 6px 12px; border: 2px solid #667eea; border-radius: 8px; background: white; color: #667eea; font-weight: 600; cursor: pointer; font-size: 0.85em;">
+                            <option value="today">今日</option>
+                            <option value="week">過去1週間</option>
+                            <option value="4weeks">過去4週間</option>
+                            <option value="8weeks" selected>過去8週間</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="summary-layout">
+                    <!-- 左側：ステータス＋ポイント -->
+                    <div class="summary-left">
+                        <!-- フィットネス/コンディション/疲労 -->
+                        <div class="status-cards">
+                            <div class="status-card fitness">
+                                <div class="status-label">フィットネス (CTL)</div>
+                                <div class="status-value" id="homeCtlValue">--</div>
+                                <div class="status-desc">42日平均負荷</div>
+                            </div>
+                            <div class="status-card condition">
+                                <div class="status-label">コンディション (TSB)</div>
+                                <div class="status-value" id="homeTsbValue">--</div>
+                                <div class="status-desc">フォーム指標</div>
+                            </div>
+                            <div class="status-card fatigue">
+                                <div class="status-label">疲労 (ATL)</div>
+                                <div class="status-value" id="homeAtlValue">--</div>
+                                <div class="status-desc">7日平均負荷</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 獲得ポイント -->
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+                                <span style="font-size: 1.2rem;">🏆</span>
+                                <span style="font-weight: 700; color: #92400e;">獲得ポイント</span>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 0.8em; color: #92400e; margin-bottom: 4px;">今月</div>
+                                <div id="monthlyPoints" style="font-size: 2.5em; font-weight: 700; color: #f59e0b; line-height: 1;">0</div>
+                                <div style="font-size: 0.75em; color: #92400e;">ポイント</div>
+                            </div>
+                            <div style="border-top: 2px solid rgba(146, 64, 14, 0.2); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div>
+                                    <div style="font-size: 0.7em; color: #78350f;">累積</div>
+                                    <div style="font-size: 1.1em; font-weight: 700; color: #92400e;">xx</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.7em; color: #78350f;">残高</div>
+                                    <div style="font-size: 1.1em; font-weight: 700; color: #92400e;">xx</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側：グラフ2つ -->
+                    <div class="summary-right">
+                        <div class="card-content" id="activitySummary">
+                            <div class="placeholder">
+                                <div class="placeholder-icon">📈</div>
+                                <p>Stravaデータを読み込み中...</p>
+                            </div>
+                        </div>
+                        <div style="padding: 10px 0 0;">
+                            <a href="data.html" class="btn-primary" style="display: inline-block; margin: 0; font-size: 0.9em;">
+                                📊 アクティビティ進捗へ →
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -897,10 +991,104 @@
                 
                 generateActivitySummary(activities);
                 calculateMonthlyPoints(activities);
+                calculateAndDisplayTrainingStatus(activities);
             } catch (error) {
                 console.error('データ読み込みエラー:', error);
                 showErrorMessage();
             }
+        }
+
+        // ========== CTL/ATL/TSB計算と表示 ==========
+        function calculateAndDisplayTrainingStatus(activities) {
+            // ユーザー閾値を取得
+            const thresholds = getUserThresholds();
+            
+            // TSSを日付ごとに集計
+            const dailyTSS = {};
+            activities.forEach(activity => {
+                const date = activity.start_date.split('T')[0];
+                const tss = calculateActivityTSS(activity, thresholds);
+                if (!dailyTSS[date]) dailyTSS[date] = 0;
+                dailyTSS[date] += tss;
+            });
+            
+            // CTL（42日平均）とATL（7日平均）を計算
+            const today = new Date();
+            let ctl = 0;
+            let atl = 0;
+            
+            // 過去90日分を計算
+            const ctlDays = 42;
+            const atlDays = 7;
+            let ctlSum = 0;
+            let atlSum = 0;
+            
+            for (let i = 0; i < 90; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateKey = d.toISOString().split('T')[0];
+                const dayTSS = dailyTSS[dateKey] || 0;
+                
+                if (i < atlDays) atlSum += dayTSS;
+                if (i < ctlDays) ctlSum += dayTSS;
+            }
+            
+            // 指数移動平均の簡易計算
+            ctl = Math.round(ctlSum / ctlDays);
+            atl = Math.round(atlSum / atlDays);
+            const tsb = ctl - atl;
+            
+            // 表示を更新
+            document.getElementById('homeCtlValue').textContent = ctl;
+            document.getElementById('homeAtlValue').textContent = atl;
+            document.getElementById('homeTsbValue').textContent = (tsb >= 0 ? '+' : '') + tsb;
+            
+            // TSBの値に応じて色を変更
+            const tsbEl = document.getElementById('homeTsbValue');
+            if (tsb < -20) {
+                tsbEl.style.color = '#dc2626'; // 赤（疲労蓄積）
+            } else if (tsb < -10) {
+                tsbEl.style.color = '#f59e0b'; // オレンジ（適度な負荷）
+            } else if (tsb <= 10) {
+                tsbEl.style.color = '#2563eb'; // 青（バランス良い）
+            } else {
+                tsbEl.style.color = '#10b981'; // 緑（フレッシュ）
+            }
+        }
+
+        // アクティビティのTSSを計算（簡易版）
+        function calculateActivityTSS(activity, thresholds) {
+            const sportType = activity.sport_type || activity.type;
+            const duration = (activity.moving_time || 0) / 3600; // 時間
+            
+            let intensity = 0.7; // デフォルト強度係数
+            
+            // 心拍データがある場合
+            if (activity.average_heartrate && thresholds.thresholdHr) {
+                const hrRatio = activity.average_heartrate / thresholds.thresholdHr;
+                intensity = Math.min(hrRatio, 1.2);
+            }
+            
+            // パワーデータがある場合（バイク）
+            if (activity.average_watts && thresholds.ftp && sportType.includes('Ride')) {
+                const powerRatio = activity.average_watts / thresholds.ftp;
+                intensity = powerRatio;
+            }
+            
+            // TSS = 時間 × 強度^2 × 100
+            const tss = duration * Math.pow(intensity, 2) * 100;
+            return Math.round(tss);
+        }
+
+        // ユーザー閾値を取得
+        function getUserThresholds() {
+            const saved = localStorage.getItem('user_thresholds');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {}
+            }
+            return { ftp: 200, thresholdHr: 170, maxHr: 190 };
         }
 
         function showNoDataMessage() {

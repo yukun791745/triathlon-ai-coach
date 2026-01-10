@@ -396,10 +396,24 @@ function buildSystemPrompt(isQuestion, sessionType, hasRaceGoal, hasSupplement) 
     if (hasRaceGoal) {
         prompt += `
 
-5. **レース目標との関連**（該当する場合のみ）
-   - Aレースの目標が設定されています
-   - このトレーニングが目標達成にどう貢献するか、必要に応じて簡潔に言及
-   - 毎回言及する必要はなく、特に関連が深い場合のみ触れる`;
+**レース目標との関連**（状況に応じて言及）
+Aレースの目標が設定されています。以下の条件に該当する場合、コメントの最後に1-2文で言及してください：
+
+【言及すべき場合】
+- セッションがレースに直結する練習の場合（レースペース走、ブリック、シミュレーション等）
+- 残り日数が30日以内で、調整期に入っている場合
+- 残り日数が60日以内で、ピーク期の重要なセッションの場合
+- セッションの出来がレース目標達成に対して特に良い/悪い兆候を示している場合
+
+【言及の仕方】
+- 「○○に向けて順調ですね」「レースまであと○日、いい仕上がりです」など前向きに
+- 具体的な目標タイムや距離に触れつつ、現状とのギャップや進捗を示唆
+- 残り期間を踏まえた今後のトレーニングの方向性を簡潔に提案
+
+【言及不要な場合】
+- 基礎的なベーストレーニングや回復走
+- レースまで90日以上ある場合の通常練習
+- セッションとレース種目の関連が薄い場合`;
     }
 
     prompt += `
@@ -450,20 +464,52 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
         message += '\n';
     }
     
-    // ★ Aレース目標がある場合
+    // ★ Aレース目標がある場合（詳細情報付き）
     if (raceGoal && raceGoal.raceName) {
         message += '## Aレース目標\n';
         message += '- レース名: ' + raceGoal.raceName + '\n';
+        
+        // 残り日数を計算
+        let daysToRace = null;
+        let trainingPhase = '';
         if (raceGoal.raceDate) {
+            const raceDate = new Date(raceGoal.raceDate);
+            const activityDate = new Date(activity.start_date);
+            daysToRace = Math.ceil((raceDate - activityDate) / (1000 * 60 * 60 * 24));
+            
             message += '- レース日: ' + raceGoal.raceDate + '\n';
+            message += '- このトレーニング時点での残り日数: ' + daysToRace + '日\n';
+            
+            // トレーニングフェーズを判定
+            if (daysToRace <= 0) {
+                trainingPhase = 'レース当日または終了後';
+            } else if (daysToRace <= 7) {
+                trainingPhase = 'テーパー期（最終調整）- 疲労を抜きつつシャープさを維持';
+            } else if (daysToRace <= 21) {
+                trainingPhase = 'テーパー期（調整開始）- 量を落とし質を維持';
+            } else if (daysToRace <= 42) {
+                trainingPhase = 'ピーク期 - レース強度での仕上げ練習が重要';
+            } else if (daysToRace <= 84) {
+                trainingPhase = '構築期 - 強度を上げてレース特異的な練習';
+            } else {
+                trainingPhase = '基礎期 - ベースづくりと持久力向上';
+            }
+            message += '- トレーニングフェーズ: ' + trainingPhase + '\n';
         }
+        
         if (raceGoal.goalTime) {
             message += '- 目標タイム: ' + raceGoal.goalTime + '\n';
         }
         if (raceGoal.raceDistance) {
-            message += '- 距離: ' + raceGoal.raceDistance + '\n';
+            message += '- レース距離: ' + raceGoal.raceDistance + '\n';
         }
-        message += '→ このトレーニングがレース目標にどう貢献するか、特に関連が深い場合のみ簡潔に言及してください（毎回は不要）。\n';
+        
+        // セッションタイプとの関連性を示唆
+        const sessionRelevance = getSessionRaceRelevance(sessionType, raceGoal.raceDistance, daysToRace);
+        if (sessionRelevance) {
+            message += '- このセッションとレースの関連: ' + sessionRelevance + '\n';
+        }
+        
         message += '\n';
     }
     
@@ -585,6 +631,72 @@ function buildUserMessage(activity, trainingStatus, streamAnalysis, similarActiv
     }
     
     return message;
+}
+
+// ============================================
+// セッションとレース目標の関連性を判定
+// ============================================
+function getSessionRaceRelevance(sessionType, raceDistance, daysToRace) {
+    if (!sessionType || !daysToRace || daysToRace <= 0) return null;
+    
+    // レース距離の判定
+    const isShortRace = raceDistance && (
+        raceDistance.includes('スプリント') || 
+        raceDistance.includes('Sprint') ||
+        raceDistance.includes('オリンピック') ||
+        raceDistance.includes('Olympic') ||
+        raceDistance.includes('51.5')
+    );
+    const isLongRace = raceDistance && (
+        raceDistance.includes('ミドル') ||
+        raceDistance.includes('Middle') ||
+        raceDistance.includes('70.3') ||
+        raceDistance.includes('ハーフ') ||
+        raceDistance.includes('Half') ||
+        raceDistance.includes('ロング') ||
+        raceDistance.includes('Long') ||
+        raceDistance.includes('フル') ||
+        raceDistance.includes('Full') ||
+        raceDistance.includes('Ironman') ||
+        raceDistance.includes('アイアンマン')
+    );
+    
+    // セッションタイプ別の関連性
+    const highRelevanceSessions = {
+        // レースペース・閾値系（常に高関連）
+        'swim_threshold': 'CSSはレースペースに直結する重要な練習',
+        'bike_threshold': 'FTPゾーンはバイクパートの要',
+        'bike_sweetspot': 'ロングレースのバイク強度に直結',
+        'run_tempo': '閾値ペースはランパートの基盤',
+        
+        // ブリック（常に高関連）
+        'bike_brick': 'トランジションとラン適応に直結',
+        'run_brick': 'バイク後のラン感覚を身につける重要練習',
+        
+        // インターバル系（ピーク期に高関連）
+        'swim_interval': daysToRace <= 60 ? 'スピード向上でレースペースに余裕を' : null,
+        'bike_interval': daysToRace <= 60 ? 'VO2max向上でレース強度の余裕度アップ' : null,
+        'run_interval': daysToRace <= 60 ? 'スピードの底上げでレースペースに余裕を' : null,
+        
+        // ロング系（ロングレース or 基礎期に関連）
+        'swim_endurance': isLongRace ? 'ロングレースのスイムに必要な持久力' : null,
+        'bike_endurance': isLongRace ? 'ロングレースに不可欠な有酸素ベース' : null,
+        'run_long': isLongRace ? 'ロングレースのラン脚づくりに重要' : null,
+        
+        // テスト（常に高関連）
+        'swim_test': '現状把握でレースペース設定の参考に',
+        'bike_test': 'FTP更新でトレーニングゾーンを最適化',
+        'run_test': '閾値更新で適切なペース設定が可能に'
+    };
+    
+    const relevance = highRelevanceSessions[sessionType];
+    
+    // テーパー期の場合は追加コメント
+    if (relevance && daysToRace <= 21) {
+        return relevance + '（テーパー期：質を維持しながら量を落とす時期）';
+    }
+    
+    return relevance;
 }
 
 // ============================================

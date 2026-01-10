@@ -1337,6 +1337,7 @@
         let charts = {};
         let selectedSessionType = null;
         let conversationHistory = [];
+        let currentRaceGoal = null;  // Aレース目標を保持
         
         // ===== セッションタイプ定義 =====
         const SESSION_TYPES = {
@@ -3704,6 +3705,9 @@
                 console.log('Race goal not found:', e);
             }
             
+            // グローバル変数に保存（追加質問時に使用）
+            currentRaceGoal = raceGoal;
+            
             // UI更新
             document.getElementById('sessionTypeSelector').style.display = 'none';
             document.getElementById('aiCommentLoading').style.display = 'flex';
@@ -3934,6 +3938,7 @@
                         streamAnalysis: streamAnalysis,
                         sessionType: selectedSessionType,
                         userQuestion: question,
+                        raceGoal: currentRaceGoal,  // Aレース目標を追加
                         conversationHistory: conversationHistory.slice(-10) // 最新10件のみ
                     })
                 });

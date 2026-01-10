@@ -105,13 +105,16 @@
             flex: 1;
             padding: 32px;
             width: calc(100% - 240px);
-            padding-bottom: 100px;
+            padding-bottom: 20px;
+            height: 100vh;
+            overflow: hidden;
         }
 
         /* メインコンテナ */
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
+            height: 100%;
         }
 
         /* AIコーチパネル */
@@ -120,6 +123,9 @@
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 130px);
         }
 
         .ai-header {
@@ -129,6 +135,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .ai-header h1 {
@@ -161,6 +168,7 @@
             padding: 20px;
             background: #fff3cd;
             border-left: 4px solid #ffc107;
+            flex-shrink: 0;
         }
 
         .api-setup strong {
@@ -196,8 +204,7 @@
         .chat-messages {
             padding: 15px;
             background: #f8f9fa;
-            min-height: calc(100vh - 350px);
-            max-height: calc(100vh - 350px);
+            flex: 1;
             overflow-y: auto;
             display: none;
         }
@@ -223,16 +230,24 @@
             border: 1px solid #dee2e6;
         }
 
+        .ai-message p {
+            margin: 6px 0;
+        }
+
+        .ai-message .section-header {
+            margin-top: 12px;
+        }
+
+        .ai-message .section-header:first-child {
+            margin-top: 0;
+        }
+
         .chat-input-area {
-            position: fixed;
-            bottom: 0;
-            left: 240px;
-            right: 0;
             padding: 15px;
             border-top: 1px solid #dee2e6;
             background: white;
             display: none;
-            z-index: 100;
+            flex-shrink: 0;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
         }
 
@@ -397,12 +412,12 @@
             }
 
             .chat-messages {
-                min-height: calc(100vh - 380px);
-                max-height: calc(100vh - 380px);
+                flex: 1;
+                min-height: 300px;
             }
 
             .chat-input-area {
-                left: 0;
+                flex-shrink: 0;
             }
         }
     
@@ -531,19 +546,19 @@
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
             // 見出し
-            text = text.replace(/^### (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
-            text = text.replace(/^## (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
-            text = text.replace(/^# (.+)$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>$1</strong></div>');
+            text = text.replace(/^### (.+)$/gm, '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>$1</strong></div>');
+            text = text.replace(/^## (.+)$/gm, '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>$1</strong></div>');
+            text = text.replace(/^# (.+)$/gm, '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>$1</strong></div>');
             
-            // 番号付き大項目（1. 概要 など）: 上下に10px - 先に処理
+            // 番号付き大項目（1. 概要 など）: 上8px、下4px - 先に処理
             text = text.replace(/^(\d+)\.\s*(概要|科学的背景|具体的方法\/数値|具体的方法|実践への応用|注意点\/限界|注意点|まとめ)(:?)$/gm, 
-                '<div class="section-header" style="margin: 10px 0;"><strong>$1. $2$3</strong></div>');
+                '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>$1. $2$3</strong></div>');
             
-            // 「参考文献」（様々な形式に対応）: 上下に10px
-            text = text.replace(/^.*参考文献.*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>参考文献</strong></div>');
+            // 「参考文献」（様々な形式に対応）: 上8px、下4px
+            text = text.replace(/^.*参考文献.*$/gm, '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>参考文献</strong></div>');
             
-            // 「💡 次のステップ」（様々な形式に対応）: 上下に10px
-            text = text.replace(/^.*💡.*次のステップ.*$/gm, '<div class="section-header" style="margin: 10px 0;"><strong>💡 次のステップ</strong></div>');
+            // 「💡 次のステップ」（様々な形式に対応）: 上8px、下4px
+            text = text.replace(/^.*💡.*次のステップ.*$/gm, '<div class="section-header" style="margin: 8px 0 4px 0;"><strong>💡 次のステップ</strong></div>');
             
             // 👉 案内文: 上に10px
             text = text.replace(/^(👉.*)$/gm, '<div style="margin: 10px 0;">$1</div>');
@@ -593,10 +608,21 @@
                 return html;
             });
             
-            // 改行処理
-            text = text.replace(/\n{2,}/g, '\n');
+            // 改行処理 - 段落間にスペースを追加
+            // 2つ以上の改行は段落区切りとして扱う
+            text = text.replace(/\n{2,}/g, '</p><p style="margin: 8px 0;">');
+            // 単一改行は<br>に
             text = text.replace(/\n/g, '<br>');
-            text = text.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+            // 連続する<br>を整理
+            text = text.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+            
+            // 段落タグで囲む（既存のdivブロック以外）
+            if (!text.startsWith('<div') && !text.startsWith('<p') && !text.startsWith('<table')) {
+                text = '<p style="margin: 8px 0;">' + text + '</p>';
+            }
+            // 空の段落を削除
+            text = text.replace(/<p style="margin: 8px 0;"><\/p>/g, '');
+            text = text.replace(/<p style="margin: 8px 0;"><br><\/p>/g, '');
             
             // 箇条書き・リスト間の<br>を削除
             text = text.replace(/<\/div>\s*<br>\s*(<div class="bullet-item")/gi, '</div>$1');

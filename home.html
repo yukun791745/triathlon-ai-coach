@@ -573,6 +573,10 @@
             .dashboard-card.section-full > div {
                 grid-template-columns: 1fr !important;
             }
+            
+            .summary-layout {
+                grid-template-columns: 1fr;
+            }
         }
     
         /* ナビゲーション区切り線 */
@@ -868,7 +872,6 @@
                     return;
                 }
                 
-                // 全レースを集めてソート
                 const allRaces = [];
                 aRaces.forEach(id => {
                     if (details[id]) {
@@ -886,10 +889,8 @@
                     }
                 });
                 
-                // 日付でソート（近い順）
                 allRaces.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                // 過去のレースを除外し、最大5件表示
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const futureRaces = allRaces.filter(r => new Date(r.date) >= today).slice(0, 5);
@@ -932,7 +933,6 @@
             const dateStr = `${raceDate.getMonth() + 1}/${raceDate.getDate()}`;
             const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][raceDate.getDay()];
             
-            // タイプに応じたスタイル
             let itemClass = 'race-item';
             let badgeText = '';
             
@@ -947,10 +947,8 @@
                 badgeText = '?';
             }
             
-            // カウントダウン表示
             let countdownText = diffDays === 0 ? '本日!' : `${diffDays}日後`;
             
-            // 目標タイム
             const targetHtml = race.targetTime 
                 ? `<span class="race-target">🎯 ${race.targetTime}</span>` 
                 : '';
@@ -998,8 +996,27 @@
             }
         }
 
-        // ========== CTL/ATL/TSB計算と表示 ==========
+        // ========== CTL/ATL/TSB計算と表示（EMAベース・data.htmlと同じロジック） ==========
         function calculateAndDisplayTrainingStatus(activities) {
+            // まずlocalStorageに保存済みの値があれば使う（data.htmlで計算された値）
+            const savedStatus = localStorage.getItem('training_status');
+            if (savedStatus) {
+                try {
+                    const status = JSON.parse(savedStatus);
+                    // 保存日時が今日であれば使う
+                    const savedDate = status.date;
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (savedDate === today && status.ctl !== undefined) {
+                        displayTrainingStatus(status.ctl, status.atl, status.tsb);
+                        console.log('📊 保存済みのトレーニングステータスを使用');
+                        return;
+                    }
+                } catch (e) {
+                    console.log('保存済みステータスの読み込みに失敗、再計算します');
+                }
+            }
+            
             // ユーザー閾値を取得
             const thresholds = getUserThresholds();
             
@@ -1007,38 +1024,60 @@
             const dailyTSS = {};
             activities.forEach(activity => {
                 const date = activity.start_date.split('T')[0];
-                const tss = calculateActivityTSS(activity, thresholds);
+                
+                // アクティビティに既にTSSが計算されていればそれを使う
+                let tss = activity.tss;
+                if (!tss) {
+                    tss = calculateActivityTSS(activity, thresholds);
+                }
+                
                 if (!dailyTSS[date]) dailyTSS[date] = 0;
                 dailyTSS[date] += tss;
             });
             
-            // CTL（42日平均）とATL（7日平均）を計算
+            // 指数移動平均（EMA）でCTL/ATLを計算
+            const ctlDays = 42;
+            const atlDays = 7;
+            
+            // 過去120日分の日付リストを作成（古い順）
+            const dates = [];
             const today = new Date();
+            for (let i = 119; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                dates.push(d.toISOString().split('T')[0]);
+            }
+            
+            // EMA計算
             let ctl = 0;
             let atl = 0;
             
-            // 過去90日分を計算
-            const ctlDays = 42;
-            const atlDays = 7;
-            let ctlSum = 0;
-            let atlSum = 0;
-            
-            for (let i = 0; i < 90; i++) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const dateKey = d.toISOString().split('T')[0];
-                const dayTSS = dailyTSS[dateKey] || 0;
+            dates.forEach(date => {
+                const dayTSS = dailyTSS[date] || 0;
                 
-                if (i < atlDays) atlSum += dayTSS;
-                if (i < ctlDays) ctlSum += dayTSS;
-            }
+                // EMA更新: 新値 = 旧値 + (当日TSS - 旧値) / 日数
+                ctl = ctl + (dayTSS - ctl) / ctlDays;
+                atl = atl + (dayTSS - atl) / atlDays;
+            });
             
-            // 指数移動平均の簡易計算
-            ctl = Math.round(ctlSum / ctlDays);
-            atl = Math.round(atlSum / atlDays);
-            const tsb = ctl - atl;
+            const tsb = Math.round(ctl - atl);
+            ctl = Math.round(ctl);
+            atl = Math.round(atl);
             
-            // 表示を更新
+            // 計算結果を保存
+            const statusData = {
+                ctl: ctl,
+                atl: atl,
+                tsb: tsb,
+                date: today.toISOString().split('T')[0]
+            };
+            localStorage.setItem('training_status', JSON.stringify(statusData));
+            
+            displayTrainingStatus(ctl, atl, tsb);
+        }
+
+        // トレーニングステータスを表示
+        function displayTrainingStatus(ctl, atl, tsb) {
             document.getElementById('homeCtlValue').textContent = ctl;
             document.getElementById('homeAtlValue').textContent = atl;
             document.getElementById('homeTsbValue').textContent = (tsb >= 0 ? '+' : '') + tsb;
@@ -1056,28 +1095,48 @@
             }
         }
 
-        // アクティビティのTSSを計算（簡易版）
+        // アクティビティのTSSを計算（data.htmlと同じロジック）
         function calculateActivityTSS(activity, thresholds) {
             const sportType = activity.sport_type || activity.type;
             const duration = (activity.moving_time || 0) / 3600; // 時間
             
-            let intensity = 0.7; // デフォルト強度係数
+            // パワーデータがある場合（バイク）- 最も正確
+            if (activity.weighted_average_watts && thresholds.ftp) {
+                const np = activity.weighted_average_watts;
+                const intensity = np / thresholds.ftp;
+                return Math.round(duration * intensity * intensity * 100);
+            }
+            
+            if (activity.average_watts && thresholds.ftp && (sportType.includes('Ride') || sportType === 'VirtualRide')) {
+                const powerRatio = activity.average_watts / thresholds.ftp;
+                return Math.round(duration * powerRatio * powerRatio * 100);
+            }
             
             // 心拍データがある場合
             if (activity.average_heartrate && thresholds.thresholdHr) {
                 const hrRatio = activity.average_heartrate / thresholds.thresholdHr;
-                intensity = Math.min(hrRatio, 1.2);
+                const intensity = Math.min(hrRatio, 1.2);
+                return Math.round(duration * intensity * intensity * 100);
             }
             
-            // パワーデータがある場合（バイク）
-            if (activity.average_watts && thresholds.ftp && sportType.includes('Ride')) {
-                const powerRatio = activity.average_watts / thresholds.ftp;
-                intensity = powerRatio;
+            // ペースデータがある場合（ラン）
+            if (activity.average_speed && thresholds.rFtpPacePerKm && (sportType === 'Run' || sportType === 'TrailRun')) {
+                const pacePerKm = 1000 / activity.average_speed;
+                const ftpPace = thresholds.rFtpPacePerKm;
+                const intensity = ftpPace / pacePerKm;
+                return Math.round(duration * Math.min(intensity, 1.2) * Math.min(intensity, 1.2) * 100);
             }
             
-            // TSS = 時間 × 強度^2 × 100
-            const tss = duration * Math.pow(intensity, 2) * 100;
-            return Math.round(tss);
+            // ペースデータがある場合（スイム）
+            if (activity.average_speed && thresholds.sFtpPacePer100m && sportType === 'Swim') {
+                const pacePer100m = 100 / activity.average_speed;
+                const ftpPace = thresholds.sFtpPacePer100m;
+                const intensity = ftpPace / pacePer100m;
+                return Math.round(duration * Math.min(intensity, 1.2) * Math.min(intensity, 1.2) * 100);
+            }
+            
+            // データがない場合のデフォルト
+            return Math.round(duration * 0.7 * 0.7 * 100);
         }
 
         // ユーザー閾値を取得
@@ -1088,7 +1147,13 @@
                     return JSON.parse(saved);
                 } catch (e) {}
             }
-            return { ftp: 200, thresholdHr: 170, maxHr: 190 };
+            return { 
+                ftp: 200, 
+                thresholdHr: 170, 
+                maxHr: 190,
+                rFtpPacePerKm: 300,
+                sFtpPacePer100m: 100
+            };
         }
 
         function showNoDataMessage() {
@@ -1126,11 +1191,9 @@
             activities.forEach(activity => {
                 const activityDate = new Date(activity.start_date);
                 
-                // 今月のアクティビティのみ
                 if (activityDate >= firstDayOfMonth && activityDate <= now) {
                     const sportType = activity.sport_type || activity.type;
                     
-                    // 対象種目かチェック
                     let sport = null;
                     for (const [sportKey, types] of Object.entries(SPORT_TYPES)) {
                         if (types.includes(sportType)) {
@@ -1142,7 +1205,7 @@
                     if (!sport) return;
                     
                     const dayKey = activityDate.toISOString().split('T')[0];
-                    const duration = (activity.moving_time || activity.elapsed_time || 0) / 60; // 分
+                    const duration = (activity.moving_time || activity.elapsed_time || 0) / 60;
                     
                     if (!dailyPoints[dayKey]) {
                         dailyPoints[dayKey] = {};
@@ -1152,13 +1215,11 @@
                         dailyPoints[dayKey][sport] = 0;
                     }
                     
-                    // 30分単位でポイント計算
                     const points = Math.floor(duration / 30);
                     dailyPoints[dayKey][sport] += points;
                 }
             });
             
-            // 日ごとの種目別ポイントを集計
             Object.values(dailyPoints).forEach(day => {
                 Object.values(day).forEach(points => {
                     monthlyTotal += points;
@@ -1177,25 +1238,21 @@
             
             switch(period) {
                 case 'today':
-                    // 今日のみ
                     startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                     groupByDay = true;
                     break;
                 case 'week':
-                    // 過去1週間
                     startDate = new Date(now);
                     startDate.setDate(startDate.getDate() - 7);
                     groupByDay = true;
                     break;
                 case '4weeks':
-                    // 過去4週間
                     startDate = new Date(now);
                     startDate.setDate(startDate.getDate() - 28);
                     groupByDay = false;
                     break;
                 case '8weeks':
                 default:
-                    // 過去8週間
                     startDate = new Date(now);
                     startDate.setDate(startDate.getDate() - 56);
                     groupByDay = false;
@@ -1211,8 +1268,6 @@
                 
                 return isTargetSport && isWithinPeriod;
             });
-
-            console.log(`📊 ${period}の対象アクティビティ: ${filteredActivities.length}件`);
 
             let weeklyData, weeklyZones;
             
@@ -1234,7 +1289,6 @@
             return new Date(d.setDate(diff));
         }
 
-        // 日別統計計算
         function calculateDailyStats(activities, period) {
             const days = {};
             const numDays = period === 'today' ? 1 : 7;
@@ -1275,7 +1329,6 @@
             return result;
         }
 
-        // 日別Zone計算
         function calculateDailyZones(activities, period) {
             const days = {};
             const userAge = 35;
@@ -1341,7 +1394,6 @@
             return result;
         }
 
-        // 週別統計計算
         function calculateWeeklyStats(activities, period) {
             const weeks = {};
             const numWeeks = period === '4weeks' ? 4 : 8;
@@ -1381,7 +1433,6 @@
             return result;
         }
 
-        // 週別Zone計算
         function calculateWeeklyZones(activities, period) {
             const weeks = {};
             const userAge = 35;

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useStrava } from '../hooks/useStrava'
+import { useCoach } from '../hooks/useCoach'
 
 export default function ActivityDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { fetchActivityDetail, loading } = useStrava()
+  const { getComment, loading: coachLoading } = useCoach()
   const [activity, setActivity] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [coachComment, setCoachComment] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -20,6 +23,19 @@ export default function ActivityDetailPage() {
       setActivity(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load activity')
+    }
+  }
+
+  const requestCoachComment = async () => {
+    if (!activity) return
+    try {
+      const comment = await getComment({
+        activity,
+        sessionType: getDefaultSessionType(activity.sport_type)
+      })
+      setCoachComment(comment)
+    } catch (err) {
+      console.error('Coach comment error:', err)
     }
   }
 
@@ -79,16 +95,26 @@ export default function ActivityDetailPage() {
           {activity.total_elevation_gain > 0 && (
             <StatCard label="獲得標高" value={`${Math.round(activity.total_elevation_gain)} m`} />
           )}
-          {activity.average_cadence && (
-            <StatCard 
-              label={activity.sport_type === 'Run' ? 'ピッチ' : 'ケイデンス'} 
-              value={`${Math.round(activity.average_cadence * (activity.sport_type === 'Run' ? 2 : 1))} ${activity.sport_type === 'Run' ? 'spm' : 'rpm'}`} 
-            />
-          )}
-          {activity.calories && (
-            <StatCard label="カロリー" value={`${activity.calories} kcal`} />
-          )}
         </div>
+      </div>
+
+      {/* AIコーチコメントセクション */}
+      <div className="bg-white rounded-lg shadow p-6 mb-4">
+        <h2 className="font-bold mb-4">🏃 AIコーチ</h2>
+        
+        {coachComment ? (
+          <div className="bg-blue-50 rounded-lg p-4">
+            <p className="text-gray-700 whitespace-pre-wrap">{coachComment}</p>
+          </div>
+        ) : (
+          <button
+            onClick={requestCoachComment}
+            disabled={coachLoading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+          >
+            {coachLoading ? 'コメント生成中...' : 'AIコーチのコメントを取得'}
+          </button>
+        )}
       </div>
 
       {activity.description && (
@@ -108,6 +134,13 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="text-lg font-semibold">{value}</p>
     </div>
   )
+}
+
+function getDefaultSessionType(sportType: string): string {
+  if (sportType === 'Swim') return 'swim_endurance'
+  if (sportType?.includes('Ride')) return 'bike_endurance'
+  if (sportType === 'Run' || sportType === 'TrailRun') return 'run_easy'
+  return 'other'
 }
 
 function getSportName(sportType: string): string {

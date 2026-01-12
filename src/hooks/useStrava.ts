@@ -6,7 +6,6 @@ export function useStrava() {
   const [error, setError] = useState<string | null>(null)
 
   const getToken = () => localStorage.getItem('strava_access_token')
-  const getRefreshToken = () => localStorage.getItem('strava_refresh_token')
   const isAuthenticated = () => !!getToken()
 
   const saveTokens = (accessToken: string, refreshToken: string, expiresAt: number) => {

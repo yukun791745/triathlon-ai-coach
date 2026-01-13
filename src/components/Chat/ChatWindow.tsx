@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Message from './Message'
 
 type Msg = { id: string; role: 'user' | 'assistant'; text: string }
@@ -30,14 +30,14 @@ export default function ChatWindow() {
         body: JSON.stringify({ message: text }),
       })
       const data = await res.json()
-      const assistantText =
-        data?.choices?.[0]?.message?.content ??
-        data?.choices?.[0]?.text ??
-        data?.result ??
-        data?.response ??
-        JSON.stringify(data)
-      const aiMsg: Msg = { id: String(Date.now()) + '-a', role: 'assistant', text: String(assistantText) }
-      setMessages(prev => [...prev, aiMsg])
+      if (!res.ok) {
+        const errMsg = data?.error ?? 'サーバエラー'
+        setMessages(prev => [...prev, { id: String(Date.now()) + '-e', role: 'assistant', text: `エラー: ${errMsg}` }])
+      } else {
+        const aiText = (data?.text ?? JSON.stringify(data))
+        const aiMsg: Msg = { id: String(Date.now()) + '-a', role: 'assistant', text: String(aiText) }
+        setMessages(prev => [...prev, aiMsg])
+      }
     } catch (err) {
       setMessages(prev => [...prev, { id: String(Date.now()) + '-e', role: 'assistant', text: 'エラーが発生しました' }])
       console.error(err)

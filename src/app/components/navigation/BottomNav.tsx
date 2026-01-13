@@ -1,10 +1,10 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { ComponentType, SVGProps } from 'react';
 
 interface NavTab {
   id: string;
   label: string;
-  icon: LucideIcon;
+  // lucide のアイコンは実体は React コンポーネントなので汎用的な型を使う
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 interface BottomNavProps {

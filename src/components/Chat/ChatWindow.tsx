@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+// 差し替え／更新箇所: fetch 後のレスポンス処理を堅牢化
+import React, { useState, useRef, useEffect } from 'react'
 import Message from './Message'
 
 type Msg = { id: string; role: 'user' | 'assistant'; text: string }
@@ -30,12 +31,16 @@ export default function ChatWindow() {
         body: JSON.stringify({ message: text }),
       })
       const data = await res.json()
+
       if (!res.ok) {
         const errMsg = data?.error ?? 'サーバエラー'
         setMessages(prev => [...prev, { id: String(Date.now()) + '-e', role: 'assistant', text: `エラー: ${errMsg}` }])
       } else {
-        const aiText = (data?.text ?? JSON.stringify(data))
-        const aiMsg: Msg = { id: String(Date.now()) + '-a', role: 'assistant', text: String(aiText) }
+        const assistantText =
+          data?.text ??
+          (Array.isArray(data?.choices) && (data.choices[0]?.message?.content ?? data.choices[0]?.text)) ??
+          JSON.stringify(data)
+        const aiMsg: Msg = { id: String(Date.now()) + '-a', role: 'assistant', text: String(assistantText) }
         setMessages(prev => [...prev, aiMsg])
       }
     } catch (err) {

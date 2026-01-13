@@ -48,14 +48,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Extract text from OpenAI response structure
     // Try different possible response structures in order of priority
     let text: string | undefined
+    const firstChoice = data?.choices?.[0]
 
     // Standard chat/completions response: choices[0].message.content
-    if (data?.choices?.[0]?.message?.content) {
-      text = data.choices[0].message.content
+    if (firstChoice?.message?.content) {
+      text = firstChoice.message.content
     }
     // Fallback: choices[0].text (for completions endpoint)
-    else if (data?.choices?.[0]?.text) {
-      text = data.choices[0].text
+    else if (firstChoice?.text) {
+      text = firstChoice.text
     }
     // Fallback: top-level text or result
     else if (data?.text) {

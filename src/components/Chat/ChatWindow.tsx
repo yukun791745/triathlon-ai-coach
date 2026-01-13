@@ -38,12 +38,15 @@ export default function ChatWindow() {
       } else {
         // Prioritize data.text from normalized response
         let aiText = data?.text
-
+        
         // Fallback: try to extract from choices array (in case of old response format)
-        if (!aiText && data?.choices?.[0]?.message?.content) {
-          aiText = data.choices[0].message.content
-        } else if (!aiText && data?.choices?.[0]?.text) {
-          aiText = data.choices[0].text
+        if (!aiText) {
+          const firstChoice = data?.choices?.[0]
+          if (firstChoice?.message?.content) {
+            aiText = firstChoice.message.content
+          } else if (firstChoice?.text) {
+            aiText = firstChoice.text
+          }
         }
 
         // Final fallback if no text found

@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function Message({ role, text }: { role: 'user' | 'assistant'; text: string }) {
   const isUser = role === 'user'
   return (

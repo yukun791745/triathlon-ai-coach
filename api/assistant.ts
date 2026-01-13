@@ -37,7 +37,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     const data = await r.json()
-    res.status(r.status).json(data)
+
+    // Handle error responses from OpenAI
+    if (!r.ok) {
+      const errorMsg = data?.error?.message || data?.error || 'OpenAI API error'
+      res.status(r.status).json({ error: String(errorMsg) })
+      return
+    }
+
+    // Extract text from OpenAI response structure
+    // Try different possible response structures in order of priority
+    let text: string | undefined
+
+    // Standard chat/completions response: choices[0].message.content
+    if (data?.choices?.[0]?.message?.content) {
+      text = data.choices[0].message.content
+    }
+    // Fallback: choices[0].text (for completions endpoint)
+    else if (data?.choices?.[0]?.text) {
+      text = data.choices[0].text
+    }
+    // Fallback: top-level text or result
+    else if (data?.text) {
+      text = data.text
+    } else if (data?.result) {
+      text = data.result
+    }
+
+    // If no text could be extracted, stringify the response as fallback
+    if (!text) {
+      text = JSON.stringify(data)
+    }
+
+    // Always return normalized { text: string } response
+    res.status(200).json({ text: String(text) })
   } catch (err) {
     console.error('assistant proxy error', err)
     res.status(500).json({ error: 'Proxy failed' })

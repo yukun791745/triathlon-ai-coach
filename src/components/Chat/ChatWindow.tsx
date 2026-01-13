@@ -30,11 +30,27 @@ export default function ChatWindow() {
         body: JSON.stringify({ message: text }),
       })
       const data = await res.json()
-      if (!res.ok) {
+      
+      // Handle error responses
+      if (!res.ok || data?.error) {
         const errMsg = data?.error ?? 'サーバエラー'
         setMessages(prev => [...prev, { id: String(Date.now()) + '-e', role: 'assistant', text: `エラー: ${errMsg}` }])
       } else {
-        const aiText = (data?.text ?? JSON.stringify(data))
+        // Prioritize data.text from normalized response
+        let aiText = data?.text
+
+        // Fallback: try to extract from choices array (in case of old response format)
+        if (!aiText && data?.choices?.[0]?.message?.content) {
+          aiText = data.choices[0].message.content
+        } else if (!aiText && data?.choices?.[0]?.text) {
+          aiText = data.choices[0].text
+        }
+
+        // Final fallback if no text found
+        if (!aiText) {
+          aiText = 'AIから応答がありませんでした'
+        }
+
         const aiMsg: Msg = { id: String(Date.now()) + '-a', role: 'assistant', text: String(aiText) }
         setMessages(prev => [...prev, aiMsg])
       }

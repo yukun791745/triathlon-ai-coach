@@ -1,4 +1,3 @@
-// 差し替え／更新箇所: fetch 後のレスポンス処理を堅牢化
 import React, { useState, useRef, useEffect } from 'react'
 import Message from './Message'
 
